@@ -1,44 +1,53 @@
-import { StatusBar } from 'expo-status-bar';
-import { ScrollView, StyleSheet, Text, View, SafeAreaView } from 'react-native';
-import { Provider as PaperProvider, Button, TextInput } from 'react-native-paper';
-import Signup from './Pages/Signup';
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createStackNavigator } from '@react-navigation/stack';
 
+import AuthScreen from './Screens/AuthScreen';
+import RegisterScreen from './Screens/RegisterScreen';
+import CustomerScreen from './Screens/CustomerScreen';
+import WorkerScreen from './Screens/WorkerScreen';
 
-export default function App() {
+// Initialize the navigators
+const Stack = createStackNavigator();
+const Tab = createBottomTabNavigator();
+
+const AuthStack = () => (
+  <Stack.Navigator>
+    <Stack.Screen name="Login" component={AuthScreen} />
+    <Stack.Screen name="Register" component={RegisterScreen} />
+  </Stack.Navigator>
+);
+
+const CustomerTab = () => (
+  <Tab.Navigator>
+    {CustomerScreen}
+  </Tab.Navigator>
+);
+
+const WorkerTab = () => (
+  <Tab.Navigator>
+    {WorkerScreen}
+  </Tab.Navigator>
+);
+
+// Decide which navigator to show based on whether the user is logged in,
+// and what type of user they are
+const App = () => {
+  const user = null; // replace this with real authentication logic
+  const userType = null; // replace this with real authentication logic
+
   return (
-    <SafeAreaView style={styles.container}>
-        <ScrollView>
-
-        <PaperProvider>
-          <StatusBar style="auto" />
-          <Button icon='camera' mode='contained'>Yo shatup you slag</Button>
-          </PaperProvider>
-        <Signup/>
-      </ScrollView>
-    </SafeAreaView>
+    <NavigationContainer>
+      {!user ? (
+        <AuthStack />
+      ) : userType === 'customer' ? (
+        <CustomerTab />
+      ) : (
+        <WorkerTab />
+      )}
+    </NavigationContainer>
   );
-}
+};
 
-const styles = StyleSheet.create({
-  container: {
-      flex: 1,
-      marginTop:StatusBar.currentHeight
-  },
-  profile: {
-      flexDirection: 'row',
-      backgroundColor: '#EEE',
-  },
-  imageProfile: {
-      width: 34,
-      marginBottom: 5,
-      marginTop: 5,
-      borderRadius: 44/2,
-      marginLeft: 10,
-      height: 34
-  },
-  name: {
-      alignSelf: 'center',
-      marginLeft: 10,
-      fontSize: 16
-  }
-});
+export default App;
