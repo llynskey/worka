@@ -1,23 +1,19 @@
 // LoginForm.js
 import React, { useState } from 'react';
-import { TextInput, Text, View, Image } from 'react-native';
-import { useUser } from './UserContext';
-import { LinearGradient } from 'expo-linear-gradient';
+import { Text, TextInput, View, Image } from 'react-native';
 import { styles } from '../../Utils/styles';
+import { Button } from '@rneui/themed';
 
 const LoginForm = () => {
-  const { setUser } = useUser();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState(null);
+  const [password, setPassword] = useState(null);
 
   const login = () => {
     // Replace this with your actual login logic
-    setUser({ email });
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Welcome to Worka</Text>
       <Image style={styles.logo} source={require('../../assets/logo.png')} /> 
       <TextInput
         style={styles.input}
@@ -32,14 +28,22 @@ const LoginForm = () => {
         value={password}
         secureTextEntry
       />
-      <LinearGradient
-        colors={['#4c669f', '#3b5998', '#192f6a']}
-        style={styles.button}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-      >
-        <Button style={styles.buttonText}>Login</Button>
-      </LinearGradient>
+      <Button
+              title="Log in"
+              loading={false}
+              loadingProps={{ size: 'small', color: 'white' }}
+              buttonStyle={{
+                backgroundColor: 'rgba(39, 39, 39, 1)',
+                borderRadius: 5,
+              }}
+              titleStyle={{ fontWeight: 'bold', fontSize: 23 }}
+              containerStyle={{
+                marginHorizontal: 50,
+                height: 50,
+                marginVertical: 10,
+              }}
+              onPress={() => console.log('aye')}
+            />
     </View>
   );
 };

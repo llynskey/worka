@@ -5,13 +5,14 @@ export const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#fffff',
     justifyContent: 'center',
   },
   logo: {
-    width: 100,
-    height: 100,
-    marginBottom: 40,
+    padding: 50,
+    width: 250,
+    height: 50,
+    marginTop: 200,
     alignSelf: 'center',
   },
   title: {
@@ -22,12 +23,11 @@ export const styles = StyleSheet.create({
     textAlign: 'center',
   },
   input: {
+    height: 40,
+    margin: 12,
     borderWidth: 1,
-    borderColor: '#DDD',
     padding: 10,
-    fontSize: 18,
-    borderRadius: 5,
-    marginBottom: 10,
+    marginBottom: 5,
   },
   button: {
     padding: 15,

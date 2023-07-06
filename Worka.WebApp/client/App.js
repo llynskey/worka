@@ -2,7 +2,7 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
-
+import { SafeAreaView } from 'react-native';
 import AuthScreen from './Screens/AuthScreen';
 import RegisterScreen from './Screens/RegisterScreen';
 import CustomerScreen from './Screens/CustomerScreen';
@@ -38,15 +38,17 @@ const App = () => {
   const userType = null; // replace this with real authentication logic
 
   return (
-    <NavigationContainer>
-      {!user ? (
-        <AuthStack />
-      ) : userType === 'customer' ? (
-        <CustomerTab />
-      ) : (
-        <WorkerTab />
-      )}
-    </NavigationContainer>
+    <SafeAreaView>
+      <NavigationContainer>
+        {!user ? (
+          <AuthScreen />
+        ) : userType === 'customer' ? (
+          <CustomerScreen />
+        ) : (
+          <WorkerScreen />
+        )}
+      </NavigationContainer>
+    </SafeAreaView>
   );
 };
 
