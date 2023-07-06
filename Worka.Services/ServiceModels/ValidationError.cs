@@ -1,6 +1,4 @@
-﻿using Newtonsoft.Json;
-
-namespace Worka.Services.ServiceModels
+﻿namespace Worka.Services.ServiceModels
 {
     public class ValidationError
     {

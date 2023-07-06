@@ -1,10 +1,9 @@
-﻿namespace Worka.Services.ServiceModels
+﻿namespace Worka.Services.Database.Models
 {
-    public class UserServiceModel
+    public class User
     {
         [BsonId]
-        [BsonRepresentation(BsonType.ObjectId)]
-        public int UserId { get; set; }
+        public ObjectId UserId { get; set; } = ObjectId.GenerateNewId();
 
         public string FirstName { get; set; }
 
@@ -13,5 +12,7 @@
         public string Email { get; set; }
 
         public string Password { get; set; }
+
+        public DateTimeOffset CreatedDate { get; set; }
     }
 }

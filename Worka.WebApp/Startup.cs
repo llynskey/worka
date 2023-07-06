@@ -7,10 +7,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
+using MongoDB.Driver;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Worka.Services.Database;
 
 namespace Worka.WebApp
 {
@@ -27,6 +29,31 @@ namespace Worka.WebApp
         public void ConfigureServices(IServiceCollection services)
         {
 
+            services.AddCors(options =>
+            {
+                options.AddPolicy("AllowOrigin", builder =>
+                {
+                    builder.WithOrigins("http://localhost:19006")
+                           .AllowAnyHeader()
+                           .AllowAnyMethod();
+                });
+            });
+
+            // Setup MongoDB connection
+            var connectionString = "mongodb+srv://root:toor@worka.bcgzcvw.mongodb.net/?retryWrites=true&w=majority";
+            var settings = MongoClientSettings.FromConnectionString(connectionString);
+
+            var client = new MongoClient(settings);
+            var database = client.GetDatabase("Worka");
+
+            services.AddSingleton(provider =>
+            {
+                var mongoHelperContext = new MongoHelperContext(database);
+                return mongoHelperContext;
+            });
+
+            services.AddSingleton<IUsersService, UsersService>();
+
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
@@ -37,12 +64,16 @@ namespace Worka.WebApp
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+
+            app.UseCors("AllowOrigin");
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
                 app.UseSwagger();
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "WebApp v1"));
             }
+
 
             app.UseHttpsRedirection();
 

@@ -26,7 +26,8 @@
       "package": "com.llynskey.worka"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "cors": ["http://localhost:5001"]
     },
     "extra": {
       "eas": {

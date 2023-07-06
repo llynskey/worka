@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace Worka.Services.ServiceModels
+﻿namespace Worka.Services.ServiceModels
 {
     public class ValidationErrorModel
     {

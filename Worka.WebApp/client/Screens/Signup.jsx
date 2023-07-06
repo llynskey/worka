@@ -1,20 +1,90 @@
 import { View } from 'react-native'
 import React, { Component } from 'react'
 import { Text, TextInput, Button } from 'react-native-paper'
+import axios from 'axios';
 
-export default class Signup extends Component {
+class Signup extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      firstname: '',
+      lastname: '',
+      email: '',
+      username: '',
+      password: ''
+    };
+  }
+
+  handleInputChange = (fieldName, value) => {
+    this.setState({ [fieldName]: value });
+  }
+
+  handleSignUp = async () => {
+    // Access the stored values
+    const { firstname, lastname, email, username, password } = this.state;
+
+    try {
+      // Send POST request to the server
+      const response = await axios.post('http://localhost:5001/signup', {
+        firstname,
+        lastname,
+        email,
+        username,
+        password
+      });
+
+      // Handle response from the server
+      console.log(response.data); // For example, log the response data
+    } catch (error) {
+      // Handle error
+      console.error(error);
+    }
+  }
+
   render() {
     return (
       <View>
         <Text>Signup</Text>
-        <TextInput placeholder='Firstname'></TextInput>
-        <TextInput placeholder='Lastname'></TextInput>
-        <TextInput placeholder='Email' autoComplete='email'></TextInput>
-        <TextInput placeholder='Username' autoComplete='username'></TextInput>
-        <TextInput placeholder='Password' autoComplete='password'></TextInput>
+        <TextInput
+          placeholder='Firstname'
+          value={this.state.firstname}
+          onChangeText={(value) => this.handleInputChange('firstname', value)}
+        />
+        <TextInput
+          placeholder='Lastname'
+          value={this.state.lastname}
+          onChangeText={(value) => this.handleInputChange('lastname', value)}
+        />
+        <TextInput
+          placeholder='Email'
+          autoCompleteType='email'
+          value={this.state.email}
+          onChangeText={(value) => this.handleInputChange('email', value)}
+        />
+        <TextInput
+          placeholder='Username'
+          autoCompleteType='username'
+          value={this.state.username}
+          onChangeText={(value) => this.handleInputChange('username', value)}
+        />
+        <TextInput
+          placeholder='Password'
+          autoCompleteType='password'
+          secureTextEntry
+          value={this.state.password}
+          onChangeText={(value) => this.handleInputChange('password', value)}
+        />
 
-        <Button mode='contained' style={{flex:1, alignContent:'center', justifyContent:'center'}}>Sign up!</Button>
+        <Button
+          mode='contained'
+          style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}
+          onPress={this.handleSignUp}
+        >
+          Sign up
+        </Button>
       </View>
     )
   }
 }
+
+export default Signup;

@@ -1,0 +1,16 @@
+﻿global using Microsoft.AspNetCore.Authorization;
+global using Microsoft.AspNetCore.Mvc;
+global using Microsoft.Extensions.Logging;
+global using System;
+global using System.Linq;
+global using System.Threading.Tasks;
+global using System.Text;
+global using System.Security.Cryptography;
+global using Worka.WebApp.OAuth;
+global using Worka.Services.ServiceModels;
+global using Worka.Services.Users;
+global using System.ComponentModel.DataAnnotations;
+global using System.Collections.Generic;
+global using System.Security.Claims;
+global using Microsoft.IdentityModel.Tokens;
+global using System.IdentityModel.Tokens.Jwt;

@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.30907.101
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Worka.Services", "Worka.Services\Worka.Services.csproj", "{9E7CE6A5-3595-4BB5-8B80-AFCCF23E429F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Worka.WebApp", "WebApp\Worka.WebApp.csproj", "{15BA0AC2-1A3A-4D6A-BCA9-B441D386D697}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Worka.WebApp", "Worka.WebApp\Worka.WebApp.csproj", "{15BA0AC2-1A3A-4D6A-BCA9-B441D386D697}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

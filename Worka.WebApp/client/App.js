@@ -7,6 +7,7 @@ import AuthScreen from './Screens/AuthScreen';
 import RegisterScreen from './Screens/RegisterScreen';
 import CustomerScreen from './Screens/CustomerScreen';
 import WorkerScreen from './Screens/WorkerScreen';
+import SignupScreen from './Screens/Signup';
 
 // Initialize the navigators
 const Stack = createStackNavigator();
