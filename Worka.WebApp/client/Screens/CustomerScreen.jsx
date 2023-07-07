@@ -1,21 +1,24 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import JobList from '../components/customer/JobList';
-import WorkerMap from '../components/customer/workerMap';
+import JobForm from '../components/customer/JobForm';
 
 const Tab = createBottomTabNavigator();
 
-const WorkerMapScreen = () => {
-  return <WorkerMap/>;
+const JobListScreen = () => {
+  return <JobList />;
 };
 
-const JobListScreen = () => {
-  return <JobList/>;
+const JobFormScreen = () => {
+  return <JobForm />;
 };
 
 const CustomerScreen = () => {
   return (
-    <WorkerMapScreen/>
+    <Tab.Navigator>
+      <Tab.Screen name="Job List" component={JobListScreen} />
+      <Tab.Screen name="Post a Job" component={JobFormScreen} />
+    </Tab.Navigator>
   );
 };
 

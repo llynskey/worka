@@ -42,7 +42,7 @@ const App = () => {
     <SafeAreaView>
       <NavigationContainer>
         {!user ? (
-          <CustomerScreen />
+          <AuthScreen />
         ) : userType === 'customer' ? (
           <CustomerScreen />
         ) : (
