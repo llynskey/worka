@@ -28,16 +28,6 @@ namespace Worka.WebApp
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddCors(options => options.AddPolicy("CorsPolicy",
-                builder =>
-                {
-                    builder
-                    .WithOrigins("localhost:19006")
-                    .AllowAnyMethod()
-                    .AllowAnyHeader()
-                    .AllowCredentials();
-                }));
-
             // Setup MongoDB connection
             var connectionString = "mongodb+srv://root:toor@worka.bcgzcvw.mongodb.net/?retryWrites=true&w=majority";
             var settings = MongoClientSettings.FromConnectionString(connectionString);
@@ -74,10 +64,6 @@ namespace Worka.WebApp
             app.UseHttpsRedirection();
 
             app.UseRouting();
-
-            app.UseMiddleware<AuthenticationMiddleware>();
-
-            app.UseCors("CorsPolicy");
 
             app.UseAuthorization();
 

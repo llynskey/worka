@@ -10,7 +10,6 @@ class Signup extends Component {
       firstname: '',
       lastname: '',
       email: '',
-      username: '',
       password: ''
     };
   }
@@ -25,13 +24,14 @@ class Signup extends Component {
 
     try {
       // Send POST request to the server
-      const response = await axios.post('http://localhost:5001/signup', {
+      const response = await axios.post('http://192.168.88.251:5001/signup', {
         firstname,
         lastname,
         email,
-        username,
         password
-      });
+      }, {headers: {
+    'Content-Type': 'application/json'
+  }});
 
       // Handle response from the server
       console.log(response.data); // For example, log the response data
@@ -62,12 +62,6 @@ class Signup extends Component {
           onChangeText={(value) => this.handleInputChange('email', value)}
         />
         <TextInput
-          placeholder='Username'
-          autoCompleteType='username'
-          value={this.state.username}
-          onChangeText={(value) => this.handleInputChange('username', value)}
-        />
-        <TextInput
           placeholder='Password'
           autoCompleteType='password'
           secureTextEntry
@@ -77,7 +71,7 @@ class Signup extends Component {
 
         <Button
           mode='contained'
-          style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}
+          style={{alignItems: 'center', justifyContent: 'center' }}
           onPress={this.handleSignUp}
         >
           Sign up

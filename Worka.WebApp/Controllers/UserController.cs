@@ -1,7 +1,4 @@
-﻿using API.Models;
-using LoginRequest = Worka.Services.ServiceModels.LoginRequest;
-
-namespace Worka.WebApp.Controllers
+﻿namespace Worka.WebApp.Controllers
 {
     [ApiController]
     public class UserController : ControllerBase
@@ -33,7 +30,6 @@ namespace Worka.WebApp.Controllers
             }
         }
         [HttpPost]
-        [AllowAnonymous]
         [Route("login")]
         public async Task<IActionResult> Post(LoginRequest loginRequest)
         {
@@ -45,7 +41,6 @@ namespace Worka.WebApp.Controllers
         }
 
         [HttpPost]
-        [AllowAnonymous]
         [Route("signup")]
         public async Task<IActionResult> Post(UserServiceModel userModel)
         {
