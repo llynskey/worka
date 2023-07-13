@@ -20,18 +20,16 @@ class Signup extends Component {
 
   handleSignUp = async () => {
     // Access the stored values
-    const { firstname, lastname, email, username, password } = this.state;
+    const { firstname, lastname, email, password } = this.state;
 
     try {
       // Send POST request to the server
-      const response = await axios.post('http://192.168.88.251:5001/signup', {
+      const response = await axios.post('https://worka.cc/signup', {
         firstname,
         lastname,
         email,
         password
-      }, {headers: {
-    'Content-Type': 'application/json'
-  }});
+      });
 
       // Handle response from the server
       console.log(response.data); // For example, log the response data
