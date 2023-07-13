@@ -29,6 +29,12 @@
                 return final.Substring(0, 20);
             }
         }
+        [HttpGet]
+        [Route("/")]
+        public async Task<IActionResult> Get()
+        {
+            return Ok("suck it!");
+        }
         [HttpPost]
         [Route("login")]
         public async Task<IActionResult> Post(LoginRequest loginRequest)
