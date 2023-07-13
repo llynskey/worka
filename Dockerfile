@@ -1,18 +1,18 @@
 #Use your choice of image as base. Mine is alpine! 
-FROM mcr.microsoft.com/dotnet/core/aspnet:3.1-alpine AS base
+FROM mcr.microsoft.com/dotnet/sdk:7.0 AS base
 WORKDIR /app
 
-FROM mcr.microsoft.com/dotnet/core/sdk:3.1-alpine AS build
+FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /src
 COPY . .
 
-RUN dotnet restore "Worka/Worka.WebApp.csproj"
+RUN dotnet restore "Worka.WebApp/Worka.WebApp.csproj"
 WORKDIR "/src/."
 COPY . .
-RUN dotnet build "Worka/Worka.WebApp.csproj" -c Release -o /app/build
+RUN dotnet build "Worka.WebApp/Worka.WebApp.csproj" -c Release -o /app/build
 
 FROM build as publish
-RUN dotnet publish "Worka/WebApp.csproj" -c Release -o /app/publish
+RUN dotnet publish "Worka.WebApp/Worka.WebApp.csproj" -c Release -o /app/publish
 
 FROM base AS final
 WORKDIR /app
