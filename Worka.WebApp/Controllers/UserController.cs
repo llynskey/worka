@@ -33,7 +33,7 @@
         [Route("/")]
         public async Task<IActionResult> Get()
         {
-            return Ok("suck it!");
+            return Ok("Lawrence is a genius!");
         }
         [HttpPost]
         [Route("login")]
