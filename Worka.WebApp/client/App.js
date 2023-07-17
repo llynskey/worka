@@ -1,8 +1,9 @@
 import React from 'react';
+import { registerRootComponent } from 'expo';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
-import { SafeAreaView } from 'react-native';
+import { SafeAreaView, AppRegistry } from 'react-native';
 import AuthScreen from './Screens/AuthScreen';
 import RegisterScreen from './Screens/RegisterScreen';
 import CustomerScreen from './Screens/CustomerScreen';
@@ -52,5 +53,8 @@ const App = () => {
     </SafeAreaView>
   );
 };
+
+// Register the root component using AppRegistry
+AppRegistry.registerComponent('main', () => App);
 
 export default App;
