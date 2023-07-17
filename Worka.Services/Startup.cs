@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Worka.Services.Users;
 
 namespace Worka.Services
 {
@@ -6,6 +7,7 @@ namespace Worka.Services
     {
         public void ConfigureServices(IServiceCollection services)
         {
+           
             // Setup MongoDB connection
             var connectionString = "mongodb+srv://root:toor@worka.bcgzcvw.mongodb.net/?retryWrites=true&w=majority";
             var settings = MongoClientSettings.FromConnectionString(connectionString);

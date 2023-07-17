@@ -27,7 +27,8 @@
     },
     "web": {
       "favicon": "./assets/favicon.png",
-      "cors": ["http://localhost:5001"]
+      "cors": ["https://localhost:5001"],
+      "bundler": "metro"
     },
     "extra": {
       "eas": {

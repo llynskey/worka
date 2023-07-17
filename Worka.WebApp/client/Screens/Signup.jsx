@@ -1,82 +1,26 @@
-import { View } from 'react-native'
-import React, { Component } from 'react'
-import { Text, TextInput, Button } from 'react-native-paper'
-import axios from 'axios';
+import React, {Component} from 'react';
+import View from 'react-native-ui-lib/view';
+import Text from 'react-native-ui-lib/text';
+import Button from 'react-native-ui-lib/button';
+import TextField from 'react-native-ui-lib/textField';
 
-class Signup extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      firstname: '',
-      lastname: '',
-      email: '',
-      password: ''
-    };
-  }
+//import {TextField, Text, Button} from 'react-native-ui-lib';
 
-  handleInputChange = (fieldName, value) => {
-    this.setState({ [fieldName]: value });
-  }
-
-  handleSignUp = async () => {
-    // Access the stored values
-    const { firstname, lastname, email, password } = this.state;
-
-    try {
-      // Send POST request to the server
-      const response = await axios.post('https://worka.cc/signup', {
-        firstname,
-        lastname,
-        email,
-        password
-      });
-
-      // Handle response from the server
-      console.log(response.data); // For example, log the response data
-    } catch (error) {
-      // Handle error
-      console.error(error);
-    }
-  }
+class SignupScreen extends Component {
 
   render() {
     return (
-      <View>
-        <Text>Signup</Text>
-        <TextInput
-          placeholder='Firstname'
-          value={this.state.firstname}
-          onChangeText={(value) => this.handleInputChange('firstname', value)}
-        />
-        <TextInput
-          placeholder='Lastname'
-          value={this.state.lastname}
-          onChangeText={(value) => this.handleInputChange('lastname', value)}
-        />
-        <TextInput
-          placeholder='Email'
-          autoCompleteType='email'
-          value={this.state.email}
-          onChangeText={(value) => this.handleInputChange('email', value)}
-        />
-        <TextInput
-          placeholder='Password'
-          autoCompleteType='password'
-          secureTextEntry
-          value={this.state.password}
-          onChangeText={(value) => this.handleInputChange('password', value)}
-        />
-
-        <Button
-          mode='contained'
-          style={{alignItems: 'center', justifyContent: 'center' }}
-          onPress={this.handleSignUp}
-        >
-          Sign up
-        </Button>
+      <View flex paddingH-25 paddingT-120>
+        <Text blue50 text20>Welcome</Text>
+        <TextField text50 placeholder="username" grey10/>
+        <TextField text50 placeholder="password" secureTextEntry grey10/>
+        <View marginT-100 center>
+          <Button text70 white background-orange30 label="Login"/>
+          <Button link text70 orange30 label="Sign Up" marginT-20/>
+        </View>
       </View>
-    )
+    );
   }
 }
 
-export default Signup;
+export default SignupScreen;
