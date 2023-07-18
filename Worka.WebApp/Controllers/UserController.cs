@@ -35,6 +35,7 @@
         {
             return Ok("Lawrence is a genius!");
         }
+
         [HttpPost]
         [Route("login")]
         public async Task<IActionResult> Post(LoginRequest loginRequest)

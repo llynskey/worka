@@ -4,7 +4,9 @@ import Text from 'react-native-ui-lib/text';
 import Button from 'react-native-ui-lib/button';
 import TextField from 'react-native-ui-lib/textField';
 import axios from 'axios';
-//import {TextField, Text, Button} from 'react-native-ui-lib';
+import { Pressable } from 'react-native';
+import { styles } from '../Utils/styles';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 class SignupScreen extends Component {
   constructor(props) {
@@ -13,22 +15,37 @@ class SignupScreen extends Component {
       firstname: '',
       lastname: '',
       email: '',
-      password: ''
+      password: '',
+      hidePassword: true,
+      passwordVisibilityIcon: 'eye'
     };
   }
+
+  // Function to handle the toggle for showing the inputted password
+  handlePasswordVisibility = () => {
+    if (this.state.passwordVisibilityIcon === 'eye') {
+      this.setState({ ['passwordVisibilityIcon']: 'eye-off' });
+      this.setState({['hidePassword']: true});
+    } else if (this.state.passwordVisibilityIcon === 'eye-off') {
+      this.setState({ ['passwordVisibilityIcon']: 'eye' });
+      this.setState({ ['hidePassword']: false});      
+    }
+  };
 
   handleChangeText = (fieldName, value) => {
     this.setState({ [fieldName]: value });
   }
 
+  validateInput = async () => {
+
+  }
+  
   handleSignUp = async () => {
     // Access the stored values
     const { firstname, lastname, email, password } = this.state;
-    //import {TextField, Text, Button} from 'react-native-ui-lib';
 
-    console.log(this.state);
     try {
-      // Send POST request to the server
+      // Send signup request
       const response = await axios.post('https://localhost:5001/signup', {
         firstname,
         lastname,
@@ -36,8 +53,6 @@ class SignupScreen extends Component {
         password
       });
 
-      // Handle response from the server
-      console.log(response.data); // For example, log the response data
     } catch (error) {
       // Handle error
       console.error(error);
@@ -46,53 +61,72 @@ class SignupScreen extends Component {
 
   render() {
     return (
-      <View marginT-100 center>
+      <View marginT-50>
         <Text 
-          color='#006DAA' 
+          color='#1e1e1e' 
           text20 
-          >Create Account
+          style={styles.title}
+          >Registration
         </Text>
+        <View style={styles.inputContainer}>
           <TextField
-            placeholder={'firstname'}
+            placeholder={'First name'}
+            floatingPlaceholder
             onChangeText={(text) => this.handleChangeText('firstname', text)}
             enableErrors
             validate={['required', (value) => value.length > 1]}
             validationMessage={['First name is required']}
             maxLength={15}
+            style={styles.input}
           />
-        <TextField
-          placeholder={'lastname'}
-          onChangeText={(text) => this.handleChangeText('lastname', text)}
-          enableErrors
-          validate={['required', (value) => value.length > 1]}
-          validationMessage={['Last name is required']}
-          maxLength={20}
-        />
-        <TextField
-          placeholder={'email'}
-          onChangeText={(text) => this.handleChangeText('email', text)}
-          enableErrors
-          keyboardType="email-address"
-          inputMode="email"
-          validate={['required', (value) => value.length > 1]}
-          validationMessage={['Email is required']}
-          maxLength={50}
-        />
-        <TextField
-          placeholder={'password'}
-          onChangeText={(text) => this.handleChangeText('password', text)}
-          enableErrors
-          keyboardType="visible-password"
-          secureTextEntry
-          validate={['required', (value) => value.length > 1]}
-          validationMessage={['Password is required']}
-          maxLength={50}
-        />
-        <View marginT-100 center>
-          <Button 
+        </View>
+        <View style={styles.inputContainer}>
+          <TextField
+            placeholder={'Last name'}
+            floatingPlaceholder
+            onChangeText={(text) => this.handleChangeText('lastname', text)}
+            enableErrors
+            validate={['required', (value) => value.length > 1]}
+            validationMessage={['Last name is required']}
+            maxLength={20}
+            style={styles.input}
+          />
+        </View>
+        <View style={styles.inputContainer}>
+          <TextField
+            placeholder={'Email'}
+            floatingPlaceholder
+            onChangeText={(text) => this.handleChangeText('email', text)}
+            enableErrors
+            keyboardType="email-address"
+            inputMode="email"
+            validate={['required', (value) => value.length > 1]}
+            validationMessage={['Email is required']}
+            maxLength={50}
+            style={styles.input}
+          />
+        </View>
+        <View style={styles.inputContainerWithIcon}>
+          <TextField
+            placeholder={'Password'}
+            floatingPlaceholder
+            onChangeText={(text) => this.handleChangeText('password', text)}
+            enableErrors
+            secureTextEntry={this.state.hidePassword}
+            validate={['required', (value) => value.length > 1]}
+            validationMessage={['Password is required']}
+            maxLength={50}
+            style={styles.inputWithIcon}
+          />
+          <Pressable onPress={this.handlePasswordVisibility} style={styles.inputIcon}>
+            <MaterialCommunityIcons name={this.state.passwordVisibilityIcon} size={22} color="#232323" />
+          </Pressable>
+        </View>
+        <View marginT-25 center>
+          <Button
             text70 
             white 
-            backgroundColor="#061A40" 
+            backgroundColor="#1e1e1e" 
             label="Create Account"
             onPress={this.handleSignUp}
           />
@@ -101,7 +135,6 @@ class SignupScreen extends Component {
     );
   }
 }
-
 /*  <TextField text50 placeholder="username" grey10/>
         <TextField text50 placeholder="password" secureTextEntry grey10/>*/
 
@@ -131,5 +164,4 @@ class SignupScreen extends Component {
         />
          <Button link text70 orange30 label="Sign Up" marginT-20/>
         */
-
 export default SignupScreen;
