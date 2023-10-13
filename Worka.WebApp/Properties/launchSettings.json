@@ -4,8 +4,8 @@
     "windowsAuthentication": false,
     "anonymousAuthentication": true,
     "iisExpress": {
-      "applicationUrl": "http://api.worka.cc",
-      "sslPort": 443
+      "applicationUrl": "http://localhost:56281",
+      "sslPort": 44348
     }
   },
   "profiles": {
@@ -22,7 +22,7 @@
       "dotnetRunMessages": "true",
       "launchBrowser": true,
       "launchUrl": "swagger",
-      "applicationUrl": "https://api.worka.cc:80;http://api.worka.cc:443",
+      "applicationUrl": "https://localhost:5001;http://localhost:5000",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
