@@ -7,7 +7,7 @@ global using System.Threading.Tasks;
 global using System.Text;
 global using System.Security.Cryptography;
 global using Worka.WebApp.OAuth;
-global using Worka.Services.ServiceModels;
+global using Worka.Services.DTOs;
 global using Worka.Services.Users;
 global using System.ComponentModel.DataAnnotations;
 global using System.Collections.Generic;
