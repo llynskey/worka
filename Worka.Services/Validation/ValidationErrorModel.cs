@@ -1,4 +1,4 @@
-﻿namespace Worka.Services.ServiceModels
+﻿namespace Worka.Services.Validation
 {
     public class ValidationErrorModel
     {

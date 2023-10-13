@@ -1,167 +1,100 @@
-import React, {Component} from 'react';
-import View from 'react-native-ui-lib/view';
-import Text from 'react-native-ui-lib/text';
-import Button from 'react-native-ui-lib/button';
-import TextField from 'react-native-ui-lib/textField';
+import React, { useState } from 'react';
+import { View, Text, Pressable, StyleSheet, TextInput, Button, ScrollView, SafeAreaView, TouchableOpacity } from 'react-native';
 import axios from 'axios';
-import { Pressable } from 'react-native';
-import { styles } from '../Utils/styles';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Picker } from '@react-native-picker/picker';
+import { styles } from '../Utils/styles';
 
-class SignupScreen extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      firstname: '',
-      lastname: '',
-      email: '',
-      password: '',
-      hidePassword: true,
-      passwordVisibilityIcon: 'eye'
-    };
-  }
+const SignupScreen = ({navigation}) => {
+  const [formData, setFormData] = useState({
+    firstname: '',
+    lastname: '',
+    email: '',
+    password: '',
+    accountType: null
+  });
 
-  // Function to handle the toggle for showing the inputted password
-  handlePasswordVisibility = () => {
-    if (this.state.passwordVisibilityIcon === 'eye') {
-      this.setState({ ['passwordVisibilityIcon']: 'eye-off' });
-      this.setState({['hidePassword']: true});
-    } else if (this.state.passwordVisibilityIcon === 'eye-off') {
-      this.setState({ ['passwordVisibilityIcon']: 'eye' });
-      this.setState({ ['hidePassword']: false});      
+  const [selectedValue, setSelectedValue] = useState(null);
+
+  const [hidePassword, setHidePassword] = useState(true);
+
+  const handlePasswordVisibility = () => {
+    setHidePassword(!hidePassword);
+  };
+
+  const handleChangeText = (name, value) => {
+    setFormData(prevState => ({ ...prevState, [name]: value }));
+  };
+
+  const handleSignUp = async () => {
+    try {
+      const response = await axios.post('https://localhost:5001/signup', formData);
+      // Handle successful registration
+    } catch (error) {
+      console.error(error);
     }
   };
 
-  handleChangeText = (fieldName, value) => {
-    this.setState({ [fieldName]: value });
-  }
-
-  validateInput = async () => {
-
-  }
-  
-  handleSignUp = async () => {
-    // Access the stored values
-    const { firstname, lastname, email, password } = this.state;
-
-    try {
-      // Send signup request
-      const response = await axios.post('https://localhost:5001/signup', {
-        firstname,
-        lastname,
-        email,
-        password
-      });
-
-    } catch (error) {
-      // Handle error
-      console.error(error);
-    }
-  }
-
-  render() {
-    return (
-      <View marginT-50>
-        <Text 
-          color='#1e1e1e' 
-          text20 
-          style={styles.title}
-          >Registration
-        </Text>
-        <View style={styles.inputContainer}>
-          <TextField
-            placeholder={'First name'}
-            floatingPlaceholder
-            onChangeText={(text) => this.handleChangeText('firstname', text)}
-            enableErrors
-            validate={['required', (value) => value.length > 1]}
-            validationMessage={['First name is required']}
-            maxLength={15}
-            style={styles.input}
-          />
-        </View>
-        <View style={styles.inputContainer}>
-          <TextField
-            placeholder={'Last name'}
-            floatingPlaceholder
-            onChangeText={(text) => this.handleChangeText('lastname', text)}
-            enableErrors
-            validate={['required', (value) => value.length > 1]}
-            validationMessage={['Last name is required']}
-            maxLength={20}
-            style={styles.input}
-          />
-        </View>
-        <View style={styles.inputContainer}>
-          <TextField
-            placeholder={'Email'}
-            floatingPlaceholder
-            onChangeText={(text) => this.handleChangeText('email', text)}
-            enableErrors
-            keyboardType="email-address"
-            inputMode="email"
-            validate={['required', (value) => value.length > 1]}
-            validationMessage={['Email is required']}
-            maxLength={50}
-            style={styles.input}
-          />
-        </View>
-        <View style={styles.inputContainerWithIcon}>
-          <TextField
-            placeholder={'Password'}
-            floatingPlaceholder
-            onChangeText={(text) => this.handleChangeText('password', text)}
-            enableErrors
-            secureTextEntry={this.state.hidePassword}
-            validate={['required', (value) => value.length > 1]}
-            validationMessage={['Password is required']}
-            maxLength={50}
-            style={styles.inputWithIcon}
-          />
-          <Pressable onPress={this.handlePasswordVisibility} style={styles.inputIcon}>
-            <MaterialCommunityIcons name={this.state.passwordVisibilityIcon} size={22} color="#232323" />
-          </Pressable>
-        </View>
-        <View marginT-25 center>
-          <Button
-            text70 
-            white 
-            backgroundColor="#1e1e1e" 
-            label="Create Account"
-            onPress={this.handleSignUp}
-          />
-        </View>
+  return (
+    <SafeAreaView style={{ flex: 1 }}>
+    <ScrollView style={styles.scrollView} contentContainerStyle={styles.contentContainer}>
+    <View style={{ flexDirection: 'row', alignItems: 'center', margin: 15 }}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <MaterialCommunityIcons name="arrow-left" size={30} color="#000" />
+        </TouchableOpacity>
       </View>
-    );
-  }
-}
-/*  <TextField text50 placeholder="username" grey10/>
-        <TextField text50 placeholder="password" secureTextEntry grey10/>*/
+        <View style={styles.formContainer}>
+      <Text style={styles.title}>Registration</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="First name"
+        placeholderTextColor="#000"
+        onChangeText={text => handleChangeText('firstname', text)}
+        maxLength={15}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Last name"
+        placeholderTextColor="#000"
+        onChangeText={text => handleChangeText('lastname', text)}
+        maxLength={20}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Email"
+        placeholderTextColor="#000"
+        onChangeText={text => handleChangeText('email', text)}
+        keyboardType="email-address"
+        maxLength={50}
+      />
+      <View style={styles.passwordContainer}>
+  <TextInput
+    style={styles.passwordInput}
+    placeholder="Password"
+    placeholderTextColor="#000"
+    onChangeText={text => handleChangeText('password', text)}
+    secureTextEntry={hidePassword}
+    maxLength={50}
+  />
+  <Pressable style={styles.inputIcon} onPress={handlePasswordVisibility}>
+    <MaterialCommunityIcons name={hidePassword ? 'eye' : 'eye-off'} size={22} color="#000" />
+  </Pressable>
+</View>
+<View style={styles.pickerContainer}>
+            <Picker
+              selectedValue={formData.accountType}
+              onValueChange={value => handleChangeText('accountType', value)}
+            >
+              {formData.accountType === 'placeholder' && <Picker.Item label="Select Account Type" value="placeholder" />}
+              <Picker.Item label="Customer" value="0" />
+              <Picker.Item label="Professional" value="1" />
+            </Picker>
+          </View>
+</View>
+      <Button title="Create Account" onPress={handleSignUp} color="#000" />
+    </ScrollView>
+    </SafeAreaView>
+  );
+};
 
-        /*<ValidatableInput
-          field='firstname'
-          type='letter'
-          value={ this.state.firstname }
-          handleChange={ handleInputChange }
-        />
-        <ValidatableInput
-          field='lastname'
-          type='letter'
-          value={ this.state.lastname }
-          handleChange={ handleInputChange }
-        />
-        <ValidatableInput
-          field='email'
-          type='email'
-          value={ this.state.email }
-          handleChange={ handleInputChange }
-        />
-        <ValidatableInput
-          field='password'
-          type='password'
-          value={ this.state.password }
-          handleChange={ handleInputChange }
-        />
-         <Button link text70 orange30 label="Sign Up" marginT-20/>
-        */
 export default SignupScreen;

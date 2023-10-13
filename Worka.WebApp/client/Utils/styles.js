@@ -2,11 +2,13 @@
 import { StyleSheet } from 'react-native';
 
 export const styles = StyleSheet.create({
+
+
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: '#fffff',
-    justifyContent: 'center',
+    backgroundColor: '#ffffff',
+    justifyContent: 'center'
   },
   logo: {
     padding: 50,
@@ -33,9 +35,22 @@ export const styles = StyleSheet.create({
     textAlign: 'center',
   },
   input: {
-    borderBottomWidth: 1,
-    width: '75%'
+    borderWidth: 1,
+    borderColor: '#000',
+    padding: 15,
+    marginVertical: 12,
+    borderRadius: 10,
+    height: 50,  // Explicitly set the height
   },
+  
+  passwordInput: {
+    flex: 1,
+    padding: 15,
+    marginVertical: 12,
+    borderRadius: 10,
+    height: 50,  // Explicitly set the height
+  },
+  
 
   inputContainer: {
     height: 40,
@@ -62,9 +77,32 @@ export const styles = StyleSheet.create({
    width: '65%',
   },
 
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#000',
+    marginVertical: 12,
+    borderRadius: 10,
+    height: 50,  // Explicitly set the height
+  },  
+
   inputIcon: {
-    width: '10%',
+    width: '15%',
     padding: 5,
    // marginLeft: 'auto'
-  }
+  },
+  formContainer: {
+    paddingHorizontal: 20,  // Adding horizontal padding
+    paddingBottom: 20,  // Optional, if you want bottom padding
+  },
+
+  pickerContainer: {
+    borderWidth: 1,
+    borderColor: '#000',
+    marginVertical: 12,
+    borderRadius: 10,
+  },
+  
 });
+

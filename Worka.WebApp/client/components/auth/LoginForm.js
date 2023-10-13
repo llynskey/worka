@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Text, TextInput, View, Image } from 'react-native';
 import { styles } from '../../Utils/styles';
 import { Button } from '@rneui/themed';
+import axios from 'axios';
 
 const LoginForm = () => {
   const [email, setEmail] = useState(null);
@@ -10,6 +11,10 @@ const LoginForm = () => {
 
   const login = () => {
     // Replace this with your actual login logic
+    axios.post("https://localhost:5001/login",{
+        email,
+        password
+    }).then((res) => console.log(res))
   };
 
   return (
@@ -42,7 +47,7 @@ const LoginForm = () => {
                 height: 50,
                 marginVertical: 10,
               }}
-              onPress={() => console.log('aye')}
+              onPress={() => login()}
             />
     </View>
   );

@@ -1,4 +1,6 @@
-﻿namespace Worka.Services.Database.Models
+﻿using Worka.Services.Database.DatabaseModels;
+
+namespace Worka.Services.Database.Models
 {
     public class User
     {
@@ -11,7 +13,11 @@
 
         public string Email { get; set; }
 
-        public string Password { get; set; }
+        public byte[] PasswordHash { get; set; }
+
+        public byte[] PasswordSalt { get; set; }
+
+        public AccountTypeEnum AccountType { get; set; }
 
         public DateTimeOffset CreatedDate { get; set; }
     }

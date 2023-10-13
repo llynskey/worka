@@ -1,11 +1,74 @@
-import React from 'react';
-import { View } from 'react-native';
-import LoginForm from '../components/auth/LoginForm';
+// AuthScreen.js
+import React, { useState } from 'react';
+import { Text, TextInput, View, Image } from 'react-native';
+import { styles } from '../Utils/styles';
+import { Button } from '@rneui/themed';
+import axios from 'axios';
 
-const AuthScreen = () => {
+const AuthScreen = ({ navigation }) => {
+  const [email, setEmail] = useState(null);
+  const [password, setPassword] = useState(null);
+
+  const navigateToSignup = () => {
+    navigation.navigate('Signup');
+  };
+
+  const login = () => {
+    // Replace this with your actual login logic
+    axios.post("https://localhost:5001/login",{
+        email,
+        password
+    }).then((res) => console.log(res))
+  };
+
   return (
-    <View>
-      <LoginForm />
+    <View style={styles.container}>
+      <Image style={styles.logo} source={require('../assets/logo.png')} /> 
+      <TextInput
+        style={styles.input}
+        placeholder="Email"
+        onChangeText={text => setEmail(text)}
+        value={email}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Password"
+        onChangeText={text => setPassword(text)}
+        value={password}
+        secureTextEntry
+      />
+      <Button
+              title="Log in"
+              loading={false}
+              loadingProps={{ size: 'small', color: 'white' }}
+              buttonStyle={{
+                backgroundColor: 'rgba(39, 39, 39, 1)',
+                borderRadius: 5,
+              }}
+              titleStyle={{ fontWeight: 'bold', fontSize: 23 }}
+              containerStyle={{
+                marginHorizontal: 50,
+                height: 50,
+                marginVertical: 10,
+              }}
+              onPress={() => login()}
+            />
+      <Button
+        title="Sign Up"
+        loading={false}
+        loadingProps={{ size: 'small', color: 'white' }}
+        buttonStyle={{
+          backgroundColor: 'rgba(39, 39, 39, 1)',
+          borderRadius: 5,
+        }}
+        titleStyle={{ fontWeight: 'bold', fontSize: 23 }}
+        containerStyle={{
+          marginHorizontal: 50,
+          height: 50,
+          marginVertical: 10,
+        }}
+        onPress={navigateToSignup}
+      />
     </View>
   );
 };
