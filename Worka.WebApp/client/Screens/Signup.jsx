@@ -28,7 +28,7 @@ const SignupScreen = ({navigation}) => {
 
   const handleSignUp = async () => {
     try {
-      const response = await axios.post('https://localhost:5001/signup', formData);
+      const response = await axios.post('https://api.worka.cc/signup', formData);
       // Handle successful registration
     } catch (error) {
       console.error(error);
