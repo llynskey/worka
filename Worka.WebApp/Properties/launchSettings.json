@@ -5,7 +5,7 @@
     "anonymousAuthentication": true,
     "iisExpress": {
       "applicationUrl": "http://api.worka.cc",
-      "sslPort": 44348
+      "sslPort": 443
     }
   },
   "profiles": {
