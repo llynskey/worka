@@ -1,9 +1,8 @@
 import React from 'react';
-import { registerRootComponent } from 'expo';
 import { NavigationContainer } from '@react-navigation/native';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
-import { SafeAreaView, AppRegistry } from 'react-native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { AppRegistry } from 'react-native';
 import AuthScreen from './Screens/AuthScreen';
 import RegisterScreen from './Screens/RegisterScreen';
 import CustomerScreen from './Screens/CustomerScreen';
@@ -11,46 +10,37 @@ import WorkerScreen from './Screens/WorkerScreen';
 import SignupScreen from './Screens/Signup';
 
 // Initialize the navigators
-const Stack = createStackNavigator();
-const Tab = createBottomTabNavigator();
-
+const Stack = createStackNavigator();  // <-- You forgot to include this line
 const AuthStack = () => (
-  <Stack.Navigator>
+  <Stack.Navigator screenOptions={{ headerShown: false }}>
     <Stack.Screen name="Login" component={AuthScreen} />
     <Stack.Screen name="Register" component={RegisterScreen} />
+    <Stack.Screen name="Signup" component={SignupScreen} />
   </Stack.Navigator>
-);
+)
+const CustomerTab = createBottomTabNavigator();
+const WorkerTab = createBottomTabNavigator();
 
-const CustomerTab = () => (
-  <Tab.Navigator>
-    {CustomerScreen}
-  </Tab.Navigator>
-);
-
-const WorkerTab = () => (
-  <Tab.Navigator>
-    {WorkerScreen}
-  </Tab.Navigator>
-);
-
-// Decide which navigator to show based on whether the user is logged in,
-// and what type of user they are
 const App = () => {
   const user = null; // replace this with real authentication logic
   const userType = null; // replace this with real authentication logic
 
   return (
-    <SafeAreaView>
-      <NavigationContainer>
-        {!user ? (
-          <SignupScreen />
-        ) : userType === 'customer' ? (
-          <CustomerScreen />
-        ) : (
-          <WorkerScreen />
-        )}
-      </NavigationContainer>
-    </SafeAreaView>
+    <NavigationContainer>
+      {!user ? (
+        <AuthStack/>
+      ) : userType === 'customer' ? (
+        <CustomerTab.Navigator>
+          <CustomerTab.Screen name="Customer" component={CustomerScreen} />
+          {/* Add more screens here if necessary */}
+        </CustomerTab.Navigator>
+      ) : (
+        <WorkerTab.Navigator>
+          <WorkerTab.Screen name="Worker" component={WorkerScreen} />
+          {/* Add more screens here if necessary */}
+        </WorkerTab.Navigator>
+      )}
+    </NavigationContainer>
   );
 };
 

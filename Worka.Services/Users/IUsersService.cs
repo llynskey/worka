@@ -1,7 +1,10 @@
-﻿namespace Worka.Services.Users
+﻿using Worka.Services.DTOs.Users;
+
+namespace Worka.Services.Users
 {
     public interface IUsersService
     {
-        Task<bool> CreateUserAsync(UserServiceModel userServiceModel);
+        Task<string> AuthUserAsync(UserLoginDTO loginRequest);
+        Task<bool> CreateUserAsync(UserRegisterDTO userServiceModel);
     }
 }

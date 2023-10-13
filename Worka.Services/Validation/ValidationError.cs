@@ -1,4 +1,4 @@
-﻿namespace Worka.Services.ServiceModels
+﻿namespace Worka.Services.Validation
 {
     public class ValidationError
     {
@@ -38,7 +38,7 @@
         {
             unchecked
             {
-                return ((FieldName?.GetHashCode() ?? 0) * 397) ^ (ErrorMessage?.GetHashCode() ?? 0);
+                return (FieldName?.GetHashCode() ?? 0) * 397 ^ (ErrorMessage?.GetHashCode() ?? 0);
             }
         }
 
