@@ -71,6 +71,7 @@ namespace Worka.Services.Users
                     LastName = request.LastName,
                     PasswordHash = hash,
                     PasswordSalt = salt,
+                    AccountType = request.AccountType
                     CreatedDate = DateTime.Now
                 });
                 return true;
