@@ -97,12 +97,29 @@ export const styles = StyleSheet.create({
     paddingBottom: 20,  // Optional, if you want bottom padding
   },
 
-  pickerContainer: {
+  pickerWrapper: {
     borderWidth: 1,
-    borderColor: '#000',
-    marginVertical: 12,
+    borderColor: 'gray',
+    padding: 1,  // This will effectively serve as our border
+},
+
+pickerContainer: {
     borderRadius: 10,
-  },
+    overflow: 'hidden',
+    height: 50,
+},
+
+picker: {
+    backgroundColor: '#ffffff',
+    flex: 1,
+},
+buttonContainerOpen: {
+  marginTop: 80, // Adjust based on the expected height of your dropdown
+},
+buttonContainerClosed: {
+  marginTop: 20,  // Default margin top for the button
+},
+
   
 });
 
