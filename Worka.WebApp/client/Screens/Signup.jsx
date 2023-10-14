@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { View, Text, Pressable, StyleSheet, TextInput, Button, ScrollView, SafeAreaView, TouchableOpacity } from 'react-native';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage'; // <-- Add this for storing the JWT token
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import DropDownPicker from 'react-native-dropdown-picker';
 import { styles } from '../Utils/styles';
+import jwtDecode from 'jwt-decode';
 
-const SignupScreen = ({ navigation }) => {
+const SignupScreen = ({ navigation, route }) => {
+  const handleLogin = route.params.handleLogin;
   const [formData, setFormData] = useState({
     firstname: '',
     lastname: '',
@@ -34,13 +37,24 @@ const SignupScreen = ({ navigation }) => {
 
   const handleSignUp = async () => {
     try {
-      console.log(formData);
       const response = await axios.post('https://api.worka.cc/signup', formData);
+  
       // Handle successful registration
+      if (response.data && response.data.token) {
+        const token = response.data.token;
+        await AsyncStorage.setItem('token', token); // Ensure the key 'jwtToken' is consistent across the app
+        const tokenData = jwtDecode(token);
+        if (tokenData && tokenData.Type) {
+          handleLogin(tokenData);  // Use the propagated function here
+        }
+      }
     } catch (error) {
       console.error(error);
+      // Add more specific error handling logic here if needed.
+      // For instance, if the server responds with a 400 status (Bad Request),
+      // it usually means validation errors which you might want to show to the user.
     }
-  };
+  };  
 
   return (
     <SafeAreaView style={{ flex: 1 }}>

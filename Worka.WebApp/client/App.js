@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -8,36 +8,51 @@ import RegisterScreen from './Screens/RegisterScreen';
 import CustomerScreen from './Screens/CustomerScreen';
 import WorkerScreen from './Screens/WorkerScreen';
 import SignupScreen from './Screens/Signup';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import jwtDecode from 'jwt-decode';
 
 // Initialize the navigators
-const Stack = createStackNavigator();  // <-- You forgot to include this line
-const AuthStack = () => (
+const Stack = createStackNavigator();
+const AuthStack = ({handleLogin}) => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
-    <Stack.Screen name="Login" component={AuthScreen} />
-    <Stack.Screen name="Register" component={RegisterScreen} />
-    <Stack.Screen name="Signup" component={SignupScreen} />
+    <Stack.Screen name="Login" component={AuthScreen} initialParams={{ handleLogin: handleLogin }}/>
+    <Stack.Screen name="Signup" component={SignupScreen} initialParams={{ handleLogin: handleLogin }}/>
   </Stack.Navigator>
 )
 const CustomerTab = createBottomTabNavigator();
 const WorkerTab = createBottomTabNavigator();
 
 const App = () => {
-  const user = null; // replace this with real authentication logic
-  const userType = null; // replace this with real authentication logic
+  const [user, setUser] = useState(null);
+  const [userType, setUserType] = useState(null);
+
+  useEffect(() => {
+    const checkToken = async () => {
+      const token = await AsyncStorage.getItem('token');
+      if (token) {
+        const decoded = jwtDecode(token);
+        setUser(decoded);
+        setUserType(decoded.Type);
+      }
+    };
+    checkToken();
+  }, []);
+
+  const handleLogin = (decodedUser) => {
+    setUser(decodedUser);
+  };
 
   return (
     <NavigationContainer>
       {!user ? (
-        <AuthStack/>
-      ) : userType === 'customer' ? (
+        <AuthStack handleLogin={handleLogin}/>  // Pass the function down
+      ) : user.Type === 'customer' ? (
         <CustomerTab.Navigator>
-          <CustomerTab.Screen name="Customer" component={CustomerScreen} />
-          {/* Add more screens here if necessary */}
+          <CustomerTab.Screen name="CustomerScreen" component={CustomerScreen} />
         </CustomerTab.Navigator>
       ) : (
         <WorkerTab.Navigator>
-          <WorkerTab.Screen name="Worker" component={WorkerScreen} />
-          {/* Add more screens here if necessary */}
+          <WorkerTab.Screen name="WorkerScreen" component={WorkerScreen} />
         </WorkerTab.Navigator>
       )}
     </NavigationContainer>
