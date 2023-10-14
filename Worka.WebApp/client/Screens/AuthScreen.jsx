@@ -15,7 +15,7 @@ const AuthScreen = ({ navigation }) => {
 
   const login = () => {
     // Replace this with your actual login logic
-    axios.post("https://localhost:5001/login",{
+    axios.post("https://api.worka.cc/login",{
         email,
         password
     }).then((res) => console.log(res))
