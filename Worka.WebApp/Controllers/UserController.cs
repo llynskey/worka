@@ -25,17 +25,40 @@ namespace Worka.WebApp.Controllers
         [Route("login")]
         public async Task<IActionResult> Post(UserLoginDTO loginRequest)
         {
-            var jwt = await _usersService.AuthUserAsync(loginRequest);
-            return jwt != null ? Ok(jwt) : Unauthorized();
+            try
+            {
+                var jwt = await _usersService.AuthUserAsync(loginRequest);
+                return Ok(new { token = jwt });
+            }
+            catch (Exception ex)
+            {
+                // Check for specific messages related to authorization
+                if (ex.Message == "User not found." || ex.Message == "Invalid password.")
+                {
+                    return Unauthorized(new { message = ex.Message });
+                }
+
+                // Otherwise, return a generic bad request
+                return BadRequest(new { message = ex.Message });
+            }
         }
+
 
         [HttpPost]
         [Route("signup")]
         public async Task<IActionResult> Post(UserRegisterDTO userModel)
         {
-            await _usersService.CreateUserAsync(userModel);
-            // If username already exists add error        
-            return Ok();
+            try
+            {
+                var jwt = await _usersService.CreateUserAsync(userModel);
+                return Ok(new { token = jwt });
+            }
+            catch (Exception ex)
+            {
+                // Return the exception's message directly to the client.
+                return BadRequest(new { message = ex.Message });
+            }
         }
+
     }
 }

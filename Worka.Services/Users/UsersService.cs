@@ -3,8 +3,6 @@ using System.Text;
 using Worka.Services.DTOs.Users;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 using System.Security.Cryptography;
 
 namespace Worka.Services.Users
@@ -23,14 +21,58 @@ namespace Worka.Services.Users
             try
             {
                 User user = await MongoContext.Users.Find(u => u.Email == loginRequest.Email).FirstOrDefaultAsync();
+                if (user == null)
+                {
+                    throw new Exception("User not found.");
+                }
 
-                return (user != null && HashPasswordWithSalt(loginRequest.Password, user.PasswordSalt).SequenceEqual(user.PasswordHash))
+                return (HashPasswordWithSalt(loginRequest.Password, user.PasswordSalt).SequenceEqual(user.PasswordHash))
                        ? BuildToken(user.UserId.ToString(), user.Email, "customer")
-                       : null;
+                       : throw new Exception("Invalid password.");
             }
             catch (Exception ex)
             {
-                throw;
+                // Ideally, log the exception here
+                throw new Exception(ex.Message, ex);
+            }
+        }
+
+        public async Task<string> CreateUserAsync(UserRegisterDTO request)
+        {
+            try
+            {
+                if (!IsEmailAvailable(request.Email))
+                {
+                    throw new Exception("Email is already in use.");
+                }
+
+                var (hash, salt) = HashPassword(request.Password);
+                var newUser = new User
+                {
+                    FirstName = request.FirstName,
+                    Email = request.Email,
+                    LastName = request.LastName,
+                    PasswordHash = hash,
+                    PasswordSalt = salt,
+                    AccountType = request.AccountType,
+                    CreatedDate = DateTime.Now
+                };
+
+                await MongoContext.Users.InsertOneAsync(newUser);
+
+                var insertedUser = await MongoContext.Users.Find(u => u.Email == request.Email).FirstOrDefaultAsync();
+
+                if (insertedUser == null)
+                {
+                    throw new Exception("Failed to retrieve the user after insertion.");
+                }
+
+                return BuildToken(insertedUser.UserId.ToString(), insertedUser.Email, insertedUser.AccountType.ToString());
+            }
+            catch (Exception ex)
+            {
+                // Ideally, log the exception here
+                throw new Exception(ex.Message, ex);
             }
         }
 
@@ -57,26 +99,6 @@ namespace Worka.Services.Users
 
             var pbkdf2 = new Rfc2898DeriveBytes(password, salt, 1000);
             return (pbkdf2.GetBytes(32), salt);
-        }
-
-        public async Task<bool> CreateUserAsync(UserRegisterDTO request)
-        {
-            if (IsEmailAvailable(request.Email))
-            {
-                var (hash, salt) = HashPassword(request.Password);
-                await MongoContext.Users.InsertOneAsync(new User
-                {
-                    FirstName = request.FirstName,
-                    Email = request.Email,
-                    LastName = request.LastName,
-                    PasswordHash = hash,
-                    PasswordSalt = salt,
-                    AccountType = request.AccountType,
-                    CreatedDate = DateTime.Now
-                });
-                return true;
-            }
-            return false;
         }
 
         //TODO : set secret to change on system time
