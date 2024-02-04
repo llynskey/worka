@@ -30,11 +30,7 @@ namespace Worka.Services.Jobs
 
                 var insertedJob = _mongoHelperContext.Jobs.InsertOneAsync(newJob);
 
-                JobResponseDTO jobResponseDTO = new JobResponseDTO();
-
-                jobResponseDTO.JobName = JobDto.JobName;
-                jobResponseDTO.JobDescription = JobDto.JobDescription;
-                jobResponseDTO.CustomerId = JobDto.CustomerId.ToString();
+                JobResponseDTO jobResponseDTO = new JobResponseDTO(newJob);
 
                 return new ApiResponse<JobResponseDTO>(jobResponseDTO);
 
@@ -78,19 +74,34 @@ namespace Worka.Services.Jobs
 
         public async Task<ApiResponse<List<JobResponseDTO>>> GetAllJobs()
         {
-           var jobs = await _mongoHelperContext.Jobs.Find(_ => true).ToListAsync();
+            var jobs = await _mongoHelperContext.Jobs.Find(_ => true).ToListAsync();
 
-            var jobsResponseDto = jobs.Select(j => new JobResponseDTO
-            {
-                JobId = j.JobId.ToString(),
-                CustomerId= j.CustomerId.ToString(),
-                JobName = j.Name,
-                JobDescription = j.Description,
-                JobStatus = j.Status,
-                AcceptedQuoteId = j.AcceptedQuoteId.ToString()
-            }).ToList();
+            var jobsResponseDto = jobs.Select(job => new JobResponseDTO(job)).ToList();
 
             return new ApiResponse<List<JobResponseDTO>>(jobsResponseDto);
         }
+
+        public async Task<ApiResponse<JobResponseDTO>> AcceptQuoteAsync(string jobId, string quoteId)
+        {
+            try
+            {
+                ObjectId quoteObjectId = ObjectId.Parse(quoteId);
+
+                var filter = Builders<Job>.Filter.Eq(j => j.JobId, ObjectId.Parse(jobId));
+
+                var update = Builders<Job>.Update.Set(j => j.AcceptedQuoteId, quoteObjectId);
+
+                var updatedJob = await _mongoHelperContext.Jobs.FindOneAndUpdateAsync(filter, update);
+
+                var jobResponseDto = new JobResponseDTO(updatedJob);
+
+                return new ApiResponse<JobResponseDTO>(jobResponseDto);
+            }
+            catch (Exception ex)
+            {
+                return new ApiResponse<JobResponseDTO>(ex.Message);
+            }
+        }
+
     }
 }
