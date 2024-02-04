@@ -1,4 +1,6 @@
-﻿namespace API.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace API.Models
 {
     public class SignUpRequest
     {

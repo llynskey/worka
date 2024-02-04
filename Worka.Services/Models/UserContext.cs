@@ -1,4 +1,6 @@
-﻿namespace API.Models
+﻿using System.Security.Claims;
+
+namespace API.Models
 {
     public class UserContext : IUserContext
     {

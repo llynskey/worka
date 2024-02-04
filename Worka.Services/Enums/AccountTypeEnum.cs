@@ -1,4 +1,4 @@
-﻿namespace Worka.Services.Database.DatabaseModels
+﻿namespace Worka.Services.Enums
 {
     public enum AccountTypeEnum
     {

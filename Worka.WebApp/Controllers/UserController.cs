@@ -13,13 +13,6 @@ namespace Worka.WebApp.Controllers
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _usersService = usersService;
         }
-        
-        [HttpGet]
-        [Route("/")]
-        public async Task<IActionResult> Get()
-        {
-            return Ok("Lawrence is a genius!");
-        }
 
         [HttpPost]
         [Route("login")]

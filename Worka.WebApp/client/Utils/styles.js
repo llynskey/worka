@@ -1,7 +1,7 @@
 // styles.js
-import { StyleSheet } from 'react-native';
+import { StyleSheet, StatusBar } from 'react-native';
 
-export const styles = StyleSheet.create({
+const styles = StyleSheet.create({
 
 
   container: {
@@ -71,6 +71,25 @@ export const styles = StyleSheet.create({
     //borderWidth: 2
   },
 
+  header: {
+    width: '100%',
+    padding: 10,
+    alignItems: 'center',
+    backgroundColor: '#ffffff', // Standard grey background
+  },
+
+  container: {
+    flex: 1,
+    marginTop: StatusBar.currentHeight || 0,
+    backgroundColor: '#ffffff', // Standard grey background for container
+  },
+
+  logo: {
+    width: 300, // Increased width
+    height: 120, // Increased height
+    alignSelf: 'center',
+    // Remove padding and marginTop if not required
+  },
   inputWithIcon: {
    //  padding: 10,
    borderBottomWidth: 1,
@@ -93,15 +112,17 @@ export const styles = StyleSheet.create({
    // marginLeft: 'auto'
   },
   formContainer: {
-    paddingHorizontal: 20,  // Adding horizontal padding
-    paddingBottom: 20,  // Optional, if you want bottom padding
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    backgroundColor: '#ffffff', // Standard grey background for form
   },
 
   pickerWrapper: {
     borderWidth: 1,
     borderColor: 'gray',
-    padding: 1,  // This will effectively serve as our border
-},
+    padding: 1,
+    backgroundColor: '#ffffff', // Standard grey background for picker
+  },
 
 pickerContainer: {
     borderRadius: 10,
@@ -110,7 +131,6 @@ pickerContainer: {
 },
 
 picker: {
-    backgroundColor: '#ffffff',
     flex: 1,
 },
 buttonContainerOpen: {
@@ -122,4 +142,6 @@ buttonContainerClosed: {
 
   
 });
+
+export default styles;
 

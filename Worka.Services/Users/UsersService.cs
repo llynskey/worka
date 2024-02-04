@@ -4,6 +4,7 @@ using Worka.Services.DTOs.Users;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Cryptography;
+using Worka.Services.Common;
 
 namespace Worka.Services.Users
 {
@@ -16,7 +17,7 @@ namespace Worka.Services.Users
             MongoContext = context;
         }
 
-        public async Task<string> AuthUserAsync(UserLoginDTO loginRequest)
+        public async Task<ApiResponse<UserResponseDTO>> AuthUserAsync(UserLoginDTO loginRequest)
         {
             try
             {
@@ -26,9 +27,9 @@ namespace Worka.Services.Users
                     throw new Exception("User not found.");
                 }
 
-                return (HashPasswordWithSalt(loginRequest.Password, user.PasswordSalt).SequenceEqual(user.PasswordHash))
+                return new ApiResponse<UserResponseDTO>(HashPasswordWithSalt(loginRequest.Password, user.PasswordSalt).SequenceEqual(user.PasswordHash)
                        ? BuildToken(user.UserId.ToString(), user.Email, "customer")
-                       : throw new Exception("Invalid password.");
+                       : throw new Exception("Invalid password."));
             }
             catch (Exception ex)
             {
@@ -37,7 +38,7 @@ namespace Worka.Services.Users
             }
         }
 
-        public async Task<string> CreateUserAsync(UserRegisterDTO request)
+        public async Task<ApiResponse<UserResponseDTO>> CreateUserAsync(UserRegisterDTO request)
         {
             try
             {
@@ -67,7 +68,7 @@ namespace Worka.Services.Users
                     throw new Exception("Failed to retrieve the user after insertion.");
                 }
 
-                return BuildToken(insertedUser.UserId.ToString(), insertedUser.Email, insertedUser.AccountType.ToString());
+                return new ApiResponse<UserResponseDTO>(BuildToken(insertedUser.UserId.ToString(), insertedUser.Email, insertedUser.AccountType.ToString()));
             }
             catch (Exception ex)
             {

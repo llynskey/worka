@@ -1,18 +1,13 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using MongoDB.Driver;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Worka.Services.Database;
+using Worka.Services.Jobs;
+using Worka.Services.Quotes;
 
 namespace Worka.WebApp
 {
@@ -52,7 +47,8 @@ namespace Worka.WebApp
             });
 
             services.AddSingleton<IUsersService, UsersService>();
-
+            services.AddSingleton<IQuoteService, QuoteService>();
+            services.AddSingleton<IJobsService, JobsService>();
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {

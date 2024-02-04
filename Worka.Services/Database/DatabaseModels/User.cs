@@ -1,4 +1,4 @@
-﻿using Worka.Services.Database.DatabaseModels;
+﻿using Worka.Services.Enums;
 
 namespace Worka.Services.Database.Models
 {
