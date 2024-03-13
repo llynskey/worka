@@ -11,7 +11,7 @@ namespace Worka.Services.Database.DatabaseModels
         [BsonId]
         public ObjectId QuoteId { get; set; } = ObjectId.GenerateNewId();
 
-        public ObjectId? ProfessionalId { get; set; }
+        public ObjectId ProfessionalId { get; set; }
         public ObjectId? JobId { get; set; }
         public string Description { get; set; }
         public decimal? Price { get; set; }

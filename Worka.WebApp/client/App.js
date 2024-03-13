@@ -68,9 +68,6 @@ const App = () => {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
       <View style={styles.container}>
-        <View style={styles.header}>
-          <Image source={logo} style={styles.logo} resizeMode="contain" />
-        </View>
         <NavigationContainer>
           {!user ? (
             <Stack.Navigator screenOptions={{ headerShown: false }}>

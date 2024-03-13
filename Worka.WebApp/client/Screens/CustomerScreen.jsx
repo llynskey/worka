@@ -2,7 +2,7 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import JobList from '../components/customer/JobList';
-import JobTypeScreen from './screens/JobTypeScreen'; // Ensure this screen is created
+import JobTypeScreen from './JobTypeScreen'; // Ensure this screen is created
 
 const Tab = createBottomTabNavigator();
 

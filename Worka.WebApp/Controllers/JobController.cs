@@ -17,7 +17,7 @@ namespace Worka.WebApp.Controllers
         [Route("createJob")]
         public async Task<IActionResult> Post(CreateJobDTO JobRequest)
         {
-            var result = await _JobService.CreateJobAsync(JobRequest);
+            var result = await _JobService.CreateJob(JobRequest);
             return Ok(result);
         }
 

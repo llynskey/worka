@@ -13,7 +13,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import DropDownPicker from 'react-native-dropdown-picker';
-import { styles } from '../Utils/styles';
+import  styles  from '../Utils/styles';
 import jwtDecode from 'jwt-decode';
 
 const SignupScreen = ({ navigation, route }) => {

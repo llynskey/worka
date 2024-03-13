@@ -2,8 +2,6 @@
 import { StyleSheet, StatusBar } from 'react-native';
 
 const styles = StyleSheet.create({
-
-
   container: {
     flex: 1,
     padding: 20,
@@ -76,19 +74,6 @@ const styles = StyleSheet.create({
     padding: 10,
     alignItems: 'center',
     backgroundColor: '#ffffff', // Standard grey background
-  },
-
-  container: {
-    flex: 1,
-    marginTop: StatusBar.currentHeight || 0,
-    backgroundColor: '#ffffff', // Standard grey background for container
-  },
-
-  logo: {
-    width: 300, // Increased width
-    height: 120, // Increased height
-    alignSelf: 'center',
-    // Remove padding and marginTop if not required
   },
   inputWithIcon: {
    //  padding: 10,

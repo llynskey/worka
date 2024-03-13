@@ -26,8 +26,10 @@ namespace Worka.Services.Quotes
             {
                 var quote = new Quote
                 {
-                    ProfessionalId = null,
-                    Price = null
+                    ProfessionalId = ObjectId.Parse(quoteDto.ProfessionalId),
+                    Price = quoteDto.Price,
+                    JobId = ObjectId.Parse(quoteDto.JobId),
+                    Description = quoteDto.Description
                 };
 
                 await _mongoHelperContext.Quotes.InsertOneAsync(quote);
