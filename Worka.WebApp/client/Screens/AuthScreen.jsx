@@ -49,8 +49,8 @@ const AuthScreen = ({ navigation, route }) => {
       style={{ flex: 1 }} 
       behavior={Platform.OS === "ios" ? "padding" : "height"}>
       <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}>
-        <View style={styles.container}>
-          <Image style={styles.logo} source={require('../assets/logo.png')} />
+        <View >
+          <Image source={require('../assets/logo.png')} />
           <TextInput
             style={styles.input}
             placeholder="Email"

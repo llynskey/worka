@@ -48,16 +48,7 @@ namespace Worka.Services.Users
                 }
 
                 var (hash, salt) = HashPassword(request.Password);
-                var newUser = new User
-                {
-                    FirstName = request.FirstName,
-                    Email = request.Email,
-                    LastName = request.LastName,
-                    PasswordHash = hash,
-                    PasswordSalt = salt,
-                    AccountType = request.AccountType,
-                    CreatedDate = DateTime.Now
-                };
+                var newUser = new User(request.FirstName, request.Email, request.LastName, hash, salt, request.AccountType, DateTime.Now);
 
                 await MongoContext.Users.InsertOneAsync(newUser);
 

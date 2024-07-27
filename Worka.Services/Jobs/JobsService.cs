@@ -48,14 +48,7 @@ namespace Worka.Services.Jobs
                 var objectIdCustomerId = new ObjectId(customerId);
                 var jobs = await _mongoHelperContext.Jobs.Find(j => j.CustomerId == objectIdCustomerId).ToListAsync();
 
-                var jobResponseDTOs = jobs.Select(job => new JobResponseDTO
-                {
-                    // Map properties from Job to JobResponseDTO
-                    JobName = job.Name,
-                    JobDescription = job.Description,
-                    CustomerId = job.CustomerId.ToString(),
-                    JobId = job.JobId.ToString(),
-                }).ToList();
+                var jobResponseDTOs = jobs.Select(job => new JobResponseDTO(job)).ToList();
 
                 return new ApiResponse<List<JobResponseDTO>>(jobResponseDTOs);
             }

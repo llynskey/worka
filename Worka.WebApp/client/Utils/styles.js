@@ -1,7 +1,7 @@
 // styles.js
 import { StyleSheet, StatusBar } from 'react-native';
 
-const styles = StyleSheet.create({
+export const styles = StyleSheet.create({
 
 
   container: {
@@ -143,5 +143,4 @@ buttonContainerClosed: {
   
 });
 
-export default styles;
 
