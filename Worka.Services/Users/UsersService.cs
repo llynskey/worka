@@ -5,16 +5,22 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Cryptography;
 using Worka.Services.Common;
+using Worka.Services.Enums;
+using MongoDB.Driver;
+using MongoDB.Driver.Linq;
+using Microsoft.Extensions.Configuration;
 
 namespace Worka.Services.Users
 {
     public class UsersService : IUsersService
     {
         private readonly MongoHelperContext MongoContext;
+        private readonly string JwtSecret;
 
-        public UsersService(MongoHelperContext context)
+        public UsersService(MongoHelperContext context, IConfiguration configuration)
         {
             MongoContext = context;
+            JwtSecret = configuration["JwtSecret"];
         }
 
         public async Task<ApiResponse<UserResponseDTO>> AuthUserAsync(UserLoginDTO loginRequest)
@@ -24,17 +30,32 @@ namespace Worka.Services.Users
                 User user = await MongoContext.Users.Find(u => u.Email == loginRequest.Email).FirstOrDefaultAsync();
                 if (user == null)
                 {
-                    throw new Exception("User not found.");
+                    return new ApiResponse<UserResponseDTO>("User not found.");
                 }
 
-                return new ApiResponse<UserResponseDTO>(HashPasswordWithSalt(loginRequest.Password, user.PasswordSalt).SequenceEqual(user.PasswordHash)
-                       ? BuildToken(user.UserId.ToString(), user.Email, "customer")
-                       : throw new Exception("Invalid password."));
+                bool isPasswordValid = HashPasswordWithSalt(loginRequest.Password, user.PasswordSalt).SequenceEqual(user.PasswordHash);
+                if (!isPasswordValid)
+                {
+                    return new ApiResponse<UserResponseDTO>("Invalid password.");
+                }
+
+                string token = BuildToken(user.UserId.ToString(), user.Email, "customer");
+                var userResponse = new UserResponseDTO
+                {
+                    UserId = user.UserId.ToString(),
+                    FirstName = user.FirstName,
+                    LastName = user.LastName,
+                    Email = user.Email,
+                    AccountType = user.AccountType,
+                    CreatedDate = user.CreatedDate
+                };
+                return new ApiResponse<UserResponseDTO>(userResponse, token);
             }
             catch (Exception ex)
             {
-                // Ideally, log the exception here
-                throw new Exception(ex.Message, ex);
+                // Log the exception here
+                // logger.LogError(ex, "Error authenticating user.");
+                return new ApiResponse<UserResponseDTO>(ex.Message);
             }
         }
 
@@ -44,34 +65,43 @@ namespace Worka.Services.Users
             {
                 if (!IsEmailAvailable(request.Email))
                 {
-                    throw new Exception("Email is already in use.");
+                    return new ApiResponse<UserResponseDTO>("Email is already in use.");
                 }
 
                 var (hash, salt) = HashPassword(request.Password);
-                var newUser = new User(request.FirstName, request.Email, request.LastName, hash, salt, request.AccountType, DateTime.Now);
+                var newUser = new User(request.FirstName, request.Email, request.LastName, hash, salt, request.AccountType, DateTimeOffset.UtcNow);
 
                 await MongoContext.Users.InsertOneAsync(newUser);
-
                 var insertedUser = await MongoContext.Users.Find(u => u.Email == request.Email).FirstOrDefaultAsync();
 
                 if (insertedUser == null)
                 {
-                    throw new Exception("Failed to retrieve the user after insertion.");
+                    return new ApiResponse<UserResponseDTO>("Failed to retrieve the user after insertion.");
                 }
 
-                return new ApiResponse<UserResponseDTO>(BuildToken(insertedUser.UserId.ToString(), insertedUser.Email, insertedUser.AccountType.ToString()));
+                string token = BuildToken(insertedUser.UserId.ToString(), insertedUser.Email, insertedUser.AccountType.ToString());
+                var userResponse = new UserResponseDTO
+                {
+                    UserId = insertedUser.UserId.ToString(),
+                    FirstName = insertedUser.FirstName,
+                    LastName = insertedUser.LastName,
+                    Email = insertedUser.Email,
+                    AccountType = insertedUser.AccountType,
+                    CreatedDate = insertedUser.CreatedDate
+                };
+                return new ApiResponse<UserResponseDTO>(userResponse, token);
             }
             catch (Exception ex)
             {
-                // Ideally, log the exception here
-                throw new Exception(ex.Message, ex);
+                // Log the exception here
+                // logger.LogError(ex, "Error creating user.");
+                return new ApiResponse<UserResponseDTO>(ex.Message);
             }
         }
 
-        // Utility method to hash password with a given salt
         private byte[] HashPasswordWithSalt(string password, byte[] salt)
         {
-            var pbkdf2 = new Rfc2898DeriveBytes(password, salt, 1000);
+            using var pbkdf2 = new Rfc2898DeriveBytes(password, salt, 1000);
             return pbkdf2.GetBytes(32);
         }
 
@@ -89,31 +119,24 @@ namespace Worka.Services.Users
                 rng.GetBytes(salt);
             }
 
-            var pbkdf2 = new Rfc2898DeriveBytes(password, salt, 1000);
+            using var pbkdf2 = new Rfc2898DeriveBytes(password, salt, 1000);
             return (pbkdf2.GetBytes(32), salt);
         }
 
-        //TODO : set secret to change on system time
-        public string secret = "ec98e4092525b2da608f304082eaf1cbe873298942da32afea25d7536818887c";
-        public string BuildToken(string _id, string username, string type)
+        private string BuildToken(string userId, string username, string type)
         {
-            var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
-
-
+            var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(JwtSecret));
             var signingCredentials = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256);
+
             var claims = new Claim[]
             {
-                new Claim(JwtRegisteredClaimNames.Sub, _id),
-                new Claim("Username",username),
+                new Claim(JwtRegisteredClaimNames.Sub, userId),
+                new Claim("Username", username),
                 new Claim("Type", type)
             };
+
             var jwt = new JwtSecurityToken(claims: claims, signingCredentials: signingCredentials);
-            var encodedJwt = new JwtSecurityTokenHandler().WriteToken(jwt);
-
-            return encodedJwt;
+            return new JwtSecurityTokenHandler().WriteToken(jwt);
         }
-
-
     }
 }
-
