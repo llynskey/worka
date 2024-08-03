@@ -7,7 +7,7 @@ namespace Worka.Services.Jobs
     {
         Task<ApiResponse<List<JobResponseDTO>>> GetJobsByCustomerIdAsync(string customerId);
         Task<ApiResponse<List<JobResponseDTO>>> GetJobsByProfessionalIdAsync(string professionalId);
-        Task<ApiResponse<JobResponseDTO>> CreateJob(CreateJobDTO JobDto);
+        Task<ApiResponse<JobResponseDTO>> CreateJobAsync(CreateJobDTO JobDto);
         Task<ApiResponse<JobResponseDTO>> AcceptQuoteAsync(string jobId, string quoteId);
         Task<ApiResponse<List<JobResponseDTO>>> GetAllJobsAsync();
     }

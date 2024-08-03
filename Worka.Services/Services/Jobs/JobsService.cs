@@ -18,8 +18,6 @@ namespace Worka.Services.Jobs
         {
             _mongoHelperContext = mongoHelperContext;
         }
-        public async Task<ApiResponse<JobResponseDTO>> CreateJob(CreateJobDTO JobDto)
-        {
 
         public async Task<ApiResponse<JobResponseDTO>> CreateJobAsync(CreateJobDTO jobDto)
         {
@@ -43,6 +41,7 @@ namespace Worka.Services.Jobs
                 return new ApiResponse<JobResponseDTO>("An error occurred while creating the job.", ex.Message);
             }
         }
+
 
         public async Task<ApiResponse<List<JobResponseDTO>>> GetJobsByCustomerIdAsync(string customerId)
         {
