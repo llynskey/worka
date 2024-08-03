@@ -8,7 +8,6 @@ using Worka.Services.Common;
 using Worka.Services.Database;
 using Worka.Services.Database.DatabaseModels;
 using Worka.Services.DTOs.Jobs;
-using Worka.Services.DTOs.Quotes.Worka.Services.DTOs.Quotes;
 using Worka.Services.DTOs.Quotes;
 
 namespace Worka.Services.Quotes

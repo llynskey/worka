@@ -5,7 +5,6 @@ using System.Text;
 using System.Threading.Tasks;
 using Worka.Services.Common;
 using Worka.Services.DTOs.Quotes;
-using Worka.Services.DTOs.Quotes.Worka.Services.DTOs.Quotes;
 
 namespace Worka.Services.Quotes
 {
