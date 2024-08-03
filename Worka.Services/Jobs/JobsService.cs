@@ -1,8 +1,8 @@
 ﻿using MongoDB.Bson;
+using MongoDB.Driver;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Worka.Services.Common;
 using Worka.Services.Database.DatabaseModels;
@@ -12,32 +12,33 @@ namespace Worka.Services.Jobs
 {
     public class JobsService : IJobsService
     {
-        public MongoHelperContext _mongoHelperContext { get; set; }
-        public JobsService(MongoHelperContext mongoHelperContext) {
+        private readonly MongoHelperContext _mongoHelperContext;
+
+        public JobsService(MongoHelperContext mongoHelperContext)
+        {
             _mongoHelperContext = mongoHelperContext;
         }
-        public async Task<ApiResponse<JobResponseDTO>> CreateJobAsync(CreateJobDTO JobDto)
-        {
 
+        public async Task<ApiResponse<JobResponseDTO>> CreateJobAsync(CreateJobDTO jobDto)
+        {
             try
             {
-                Job newJob = new Job
+                var newJob = new Job
                 {
-                    Name = JobDto.JobName,
-                    Description = JobDto.JobDescription,
-                    CustomerId = JobDto.CustomerId
+                    Name = jobDto.JobName,
+                    Description = jobDto.JobDescription,
+                    CustomerId = new ObjectId(jobDto.CustomerId.ToString())
                 };
 
-                var insertedJob = _mongoHelperContext.Jobs.InsertOneAsync(newJob);
+                await _mongoHelperContext.Jobs.InsertOneAsync(newJob);
 
-                JobResponseDTO jobResponseDTO = new JobResponseDTO(newJob);
-
+                var jobResponseDTO = new JobResponseDTO(newJob);
                 return new ApiResponse<JobResponseDTO>(jobResponseDTO);
-
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw;
+                // Log the exception here
+                return new ApiResponse<JobResponseDTO>("An error occurred while creating the job.", ex.Message);
             }
         }
 
@@ -49,52 +50,53 @@ namespace Worka.Services.Jobs
                 var jobs = await _mongoHelperContext.Jobs.Find(j => j.CustomerId == objectIdCustomerId).ToListAsync();
 
                 var jobResponseDTOs = jobs.Select(job => new JobResponseDTO(job)).ToList();
-
                 return new ApiResponse<List<JobResponseDTO>>(jobResponseDTOs);
             }
             catch (Exception ex)
             {
                 // Log the exception here
-                return new ApiResponse<List<JobResponseDTO>>("An error occurred while retrieving the jobs.");
+                return new ApiResponse<List<JobResponseDTO>>("An error occurred while retrieving the jobs.", ex.Message);
             }
         }
 
-
-        public Task<ApiResponse<List<JobResponseDTO>>> GetJobsByProfessionalIdAsync(string professionalId)
+        public async Task<ApiResponse<List<JobResponseDTO>>> GetJobsByProfessionalIdAsync(string professionalId)
         {
             throw new NotImplementedException();
         }
 
-        public async Task<ApiResponse<List<JobResponseDTO>>> GetAllJobs()
+        public async Task<ApiResponse<List<JobResponseDTO>>> GetAllJobsAsync()
         {
-            var jobs = await _mongoHelperContext.Jobs.Find(_ => true).ToListAsync();
-
-            var jobsResponseDto = jobs.Select(job => new JobResponseDTO(job)).ToList();
-
-            return new ApiResponse<List<JobResponseDTO>>(jobsResponseDto);
+            try
+            {
+                var jobs = await _mongoHelperContext.Jobs.Find(_ => true).ToListAsync();
+                var jobResponseDTOs = jobs.Select(job => new JobResponseDTO(job)).ToList();
+                return new ApiResponse<List<JobResponseDTO>>(jobResponseDTOs);
+            }
+            catch (Exception ex)
+            {
+                // Log the exception here
+                return new ApiResponse<List<JobResponseDTO>>("An error occurred while retrieving all jobs.", ex.Message);
+            }
         }
 
         public async Task<ApiResponse<JobResponseDTO>> AcceptQuoteAsync(string jobId, string quoteId)
         {
             try
             {
-                ObjectId quoteObjectId = ObjectId.Parse(quoteId);
-
+                var quoteObjectId = ObjectId.Parse(quoteId);
                 var filter = Builders<Job>.Filter.Eq(j => j.JobId, ObjectId.Parse(jobId));
-
                 var update = Builders<Job>.Update.Set(j => j.AcceptedQuoteId, quoteObjectId);
 
                 var updatedJob = await _mongoHelperContext.Jobs.FindOneAndUpdateAsync(filter, update);
 
-                var jobResponseDto = new JobResponseDTO(updatedJob);
-
-                return new ApiResponse<JobResponseDTO>(jobResponseDto);
+                var jobResponseDTO = new JobResponseDTO(updatedJob);
+                return new ApiResponse<JobResponseDTO>(jobResponseDTO);
             }
             catch (Exception ex)
             {
-                return new ApiResponse<JobResponseDTO>(ex.Message);
+                // Log the exception here
+                return new ApiResponse<JobResponseDTO>("An error occurred while accepting the quote.", ex.Message);
             }
         }
-
     }
 }

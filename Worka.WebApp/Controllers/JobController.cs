@@ -43,7 +43,7 @@ namespace Worka.WebApp.Controllers
         [Route("Jobs")]
         public async Task<IActionResult> GetAllJobs()
         {
-            var Jobs = await _JobService.GetAllJobs();
+            var Jobs = await _JobService.GetAllJobsAsync();
 
             return Ok(Jobs);
 

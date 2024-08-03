@@ -1,20 +1,22 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using MongoDB.Bson;
 using MongoDB.Driver;
 using Worka.Services.Common;
 using Worka.Services.Database;
 using Worka.Services.Database.DatabaseModels;
 using Worka.Services.DTOs.Jobs;
+using Worka.Services.DTOs.Quotes.Worka.Services.DTOs.Quotes;
 using Worka.Services.DTOs.Quotes;
 
 namespace Worka.Services.Quotes
 {
     public class QuoteService : IQuoteService
     {
-        public MongoHelperContext _mongoHelperContext { get; set; }
+        private readonly MongoHelperContext _mongoHelperContext;
+
         public QuoteService(MongoHelperContext mongoHelperContext)
         {
             _mongoHelperContext = mongoHelperContext;
@@ -26,24 +28,20 @@ namespace Worka.Services.Quotes
             {
                 var quote = new Quote
                 {
-                    ProfessionalId = null,
-                    Price = null
+                    ProfessionalId = new ObjectId(quoteDto.ProfessionalId),
+                    Price = quoteDto.Price,
+                    JobId = new ObjectId(quoteDto.JobId)
                 };
 
                 await _mongoHelperContext.Quotes.InsertOneAsync(quote);
 
-                var responseDto = new QuoteResponseDTO
-                {
-                    QuoteId = quote.QuoteId.ToString(),
-                    ProfessionalId = quote.ProfessionalId.ToString(),
-                    Price = quote.Price
-                };
-
+                var responseDto = new QuoteResponseDTO(quote);
                 return new ApiResponse<QuoteResponseDTO>(responseDto);
             }
             catch (Exception ex)
             {
-                return new ApiResponse<QuoteResponseDTO>(ex.Message);
+                // Log the exception here
+                return new ApiResponse<QuoteResponseDTO>("An error occurred while creating the quote.", ex.Message);
             }
         }
 
@@ -56,24 +54,22 @@ namespace Worka.Services.Quotes
                     return new ApiResponse<List<QuoteResponseDTO>>("Invalid customer ID format.");
                 }
 
-                var jobIds = await _mongoHelperContext.Jobs.Find(j => j.CustomerId == objectIdCustomerId)
-                .Project(j => j.AcceptedQuoteId) // This projects the results to only include the AcceptedQuoteId field
-                .ToListAsync(); // This executes the query asynchronously and converts the results to a List
+                var jobIds = await _mongoHelperContext.Jobs
+                    .Find(j => j.CustomerId == objectIdCustomerId)
+                    .Project(j => j.AcceptedQuoteId)
+                    .ToListAsync();
 
-                var quotes = await _mongoHelperContext.Quotes.Find(q => jobIds.Contains(q.QuoteId)).ToListAsync();
+                var quotes = await _mongoHelperContext.Quotes
+                    .Find(q => jobIds.Contains(q.QuoteId))
+                    .ToListAsync();
 
-                var responseDtos = quotes.Select(q => new QuoteResponseDTO
-                {
-                    // Map properties from Quote to QuoteResponseDTO here
-                    
-                }).ToList();
-
+                var responseDtos = quotes.Select(q => new QuoteResponseDTO(q)).ToList();
                 return new ApiResponse<List<QuoteResponseDTO>>(responseDtos);
             }
             catch (Exception ex)
             {
-                // Log the exception details here if necessary
-                return new ApiResponse<List<QuoteResponseDTO>>(ex.Message);
+                // Log the exception here
+                return new ApiResponse<List<QuoteResponseDTO>>("An error occurred while retrieving the quotes.", ex.Message);
             }
         }
 
@@ -81,45 +77,61 @@ namespace Worka.Services.Quotes
         {
             try
             {
-                var quotes = await _mongoHelperContext.Quotes.Find(q => q.ProfessionalId.ToString() == professionalId).ToListAsync();
-
-                var responseDtos = quotes.Select(q => new QuoteResponseDTO
+                if (!ObjectId.TryParse(professionalId, out ObjectId objectIdProfessionalId))
                 {
-                    // Map properties from each quote
-                }).ToList();
+                    return new ApiResponse<List<QuoteResponseDTO>>("Invalid professional ID format.");
+                }
 
+                var quotes = await _mongoHelperContext.Quotes
+                    .Find(q => q.ProfessionalId == objectIdProfessionalId)
+                    .ToListAsync();
+
+                var responseDtos = quotes.Select(q => new QuoteResponseDTO(q)).ToList();
                 return new ApiResponse<List<QuoteResponseDTO>>(responseDtos);
             }
             catch (Exception ex)
             {
-                return new ApiResponse<List<QuoteResponseDTO>>(ex.Message);
+                // Log the exception here
+                return new ApiResponse<List<QuoteResponseDTO>>("An error occurred while retrieving the quotes by professional ID.", ex.Message);
             }
         }
 
-        public async Task<ApiResponse<List<QuoteResponseDTO>>> GetAllQuotes()
+        public async Task<ApiResponse<List<QuoteResponseDTO>>> GetAllQuotesAsync()
         {
-            var quotes = await _mongoHelperContext.Quotes.Find(_ => true).ToListAsync();
-            var quoteResponseDTOs = quotes.Select(quote => new QuoteResponseDTO
+            try
             {
-                QuoteId = quote.QuoteId.ToString(),
-                ProfessionalId = quote.ProfessionalId.ToString(),
-                Price = quote.Price
-            }).ToList();
-
-            return new ApiResponse<List<QuoteResponseDTO>>(quoteResponseDTOs);
+                var quotes = await _mongoHelperContext.Quotes.Find(_ => true).ToListAsync();
+                var quoteResponseDTOs = quotes.Select(quote => new QuoteResponseDTO(quote)).ToList();
+                return new ApiResponse<List<QuoteResponseDTO>>(quoteResponseDTOs);
+            }
+            catch (Exception ex)
+            {
+                // Log the exception here
+                return new ApiResponse<List<QuoteResponseDTO>>("An error occurred while retrieving all quotes.", ex.Message);
+            }
         }
 
         public async Task<ApiResponse<List<QuoteResponseDTO>>> GetQuotesByJobIdAsync(string jobId)
         {
-            var quotes = await _mongoHelperContext.Quotes.Find(q => q.JobId.ToString() == jobId).ToListAsync();
-            var quoteResponseDTOs = quotes.Select(quote => new QuoteResponseDTO
+            try
             {
-                QuoteId = quote.QuoteId.ToString(),
-                ProfessionalId = quote.ProfessionalId.ToString(),
-                Price = quote.Price
-            }).ToList();
+                if (!ObjectId.TryParse(jobId, out ObjectId objectIdJobId))
+                {
+                    return new ApiResponse<List<QuoteResponseDTO>>("Invalid job ID format.");
+                }
 
-            return new ApiResponse<List<QuoteResponseDTO>>(quoteResponseDTOs);
+                var quotes = await _mongoHelperContext.Quotes
+                    .Find(q => q.JobId == objectIdJobId)
+                    .ToListAsync();
+
+                var quoteResponseDTOs = quotes.Select(quote => new QuoteResponseDTO(quote)).ToList();
+                return new ApiResponse<List<QuoteResponseDTO>>(quoteResponseDTOs);
+            }
+            catch (Exception ex)
+            {
+                // Log the exception here
+                return new ApiResponse<List<QuoteResponseDTO>>("An error occurred while retrieving the quotes by job ID.", ex.Message);
+            }
         }
     }
 }

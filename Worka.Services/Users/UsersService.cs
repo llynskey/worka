@@ -20,7 +20,7 @@ namespace Worka.Services.Users
         public UsersService(MongoHelperContext context, IConfiguration configuration)
         {
             MongoContext = context;
-            JwtSecret = configuration["JwtSecret"];
+            JwtSecret = configuration["JwtSecret"] ?? throw new ArgumentNullException("JwtSecret", "JWT Secret is not configured.");
         }
 
         public async Task<ApiResponse<UserResponseDTO>> AuthUserAsync(UserLoginDTO loginRequest)
@@ -125,6 +125,11 @@ namespace Worka.Services.Users
 
         private string BuildToken(string userId, string username, string type)
         {
+            if (string.IsNullOrEmpty(JwtSecret))
+            {
+                throw new InvalidOperationException("JWT Secret is not set.");
+            }
+
             var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(JwtSecret));
             var signingCredentials = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256);
 

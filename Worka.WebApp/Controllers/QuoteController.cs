@@ -1,4 +1,5 @@
 ﻿using Worka.Services.DTOs.Quotes;
+using Worka.Services.DTOs.Quotes.Worka.Services.DTOs.Quotes;
 using Worka.Services.Quotes;
 namespace Worka.WebApp.Controllers
 {
@@ -43,7 +44,7 @@ namespace Worka.WebApp.Controllers
         [Route("Quotes")]
         public async Task<IActionResult> GetAllQuotes() 
         {
-            var quotes = await _quoteService.GetAllQuotes();
+            var quotes = await _quoteService.GetAllQuotesAsync();
 
             return Ok(quotes);
 
