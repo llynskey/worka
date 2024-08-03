@@ -20,7 +20,7 @@ namespace Worka.Services.Users
         public UsersService(MongoHelperContext context, IConfiguration configuration)
         {
             MongoContext = context;
-            JwtSecret = configuration["JwtSecret"] ?? throw new ArgumentNullException("JwtSecret", "JWT Secret is not configured.");
+            JwtSecret = configuration.GetRequiredSection("JwtSecret").Value ?? throw new ArgumentNullException("JwtSecret", "JWT Secret is not configured.");
         }
 
         public async Task<ApiResponse<UserResponseDTO>> AuthUserAsync(UserLoginDTO loginRequest)
