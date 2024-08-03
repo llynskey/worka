@@ -11,7 +11,7 @@ const LoginForm = () => {
 
   const login = () => {
     // Replace this with your actual login logic
-    axios.post("https://api.worka.cc/login",{
+    axios.post("https://api.worka-uk.online/login",{
         email,
         password
     }).then((res) => console.log(res))

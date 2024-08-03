@@ -26,7 +26,7 @@ const AuthScreen = ({ navigation, route }) => {
 
   const login = async () => {
     try {
-      const response = await axios.post("https://api.worka.cc/login", {
+      const response = await axios.post("https://api.worka-uk.online/login", {
         email,
         password
       });

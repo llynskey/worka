@@ -29,7 +29,7 @@ const CreateJobScreen = () => {
   const handleCreateJob = async () => {
     try {
       // Here, you would send the formData to your API to create a new job.
-      // axios.post('https://api.worka.cc/create-job', formData);
+      // axios.post('https://api.worka-uk.online/create-job', formData);
       console.log('Job created:', formData);
     } catch (error) {
       console.error('Error creating job:', error);

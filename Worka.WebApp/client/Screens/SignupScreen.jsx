@@ -44,7 +44,7 @@ const SignupScreen = ({ navigation, route }) => {
 
   const handleSignUp = async () => {
     try {
-      const response = await axios.post('https://api.worka.cc/signup', formData);
+      const response = await axios.post('https://api.worka-uk.online/signup', formData);
       if (response.data && response.data.token) {
         const token = response.data.token;
         await AsyncStorage.setItem('token', token);
