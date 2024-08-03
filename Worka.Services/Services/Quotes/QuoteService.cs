@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -28,9 +28,10 @@ namespace Worka.Services.Quotes
             {
                 var quote = new Quote
                 {
-                    ProfessionalId = new ObjectId(quoteDto.ProfessionalId),
+                    ProfessionalId = ObjectId.Parse(quoteDto.ProfessionalId),
                     Price = quoteDto.Price,
-                    JobId = new ObjectId(quoteDto.JobId)
+                    JobId = ObjectId.Parse(quoteDto.JobId),
+                    Description = quoteDto.Description
                 };
 
                 await _mongoHelperContext.Quotes.InsertOneAsync(quote);

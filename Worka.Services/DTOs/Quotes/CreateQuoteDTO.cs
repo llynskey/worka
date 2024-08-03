@@ -1,4 +1,4 @@
-﻿namespace Worka.Services.DTOs.Quotes
+namespace Worka.Services.DTOs.Quotes
 {
     namespace Worka.Services.DTOs.Quotes
     {

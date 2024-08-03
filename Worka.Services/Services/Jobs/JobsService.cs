@@ -1,4 +1,4 @@
-﻿using MongoDB.Bson;
+using MongoDB.Bson;
 using MongoDB.Driver;
 using System;
 using System.Collections.Generic;
@@ -18,6 +18,8 @@ namespace Worka.Services.Jobs
         {
             _mongoHelperContext = mongoHelperContext;
         }
+        public async Task<ApiResponse<JobResponseDTO>> CreateJob(CreateJobDTO JobDto)
+        {
 
         public async Task<ApiResponse<JobResponseDTO>> CreateJobAsync(CreateJobDTO jobDto)
         {
@@ -50,6 +52,7 @@ namespace Worka.Services.Jobs
                 var jobs = await _mongoHelperContext.Jobs.Find(j => j.CustomerId == objectIdCustomerId).ToListAsync();
 
                 var jobResponseDTOs = jobs.Select(job => new JobResponseDTO(job)).ToList();
+
                 return new ApiResponse<List<JobResponseDTO>>(jobResponseDTOs);
             }
             catch (Exception ex)

@@ -9,7 +9,7 @@ import {
   KeyboardAvoidingView,
   ScrollView
 } from 'react-native';
-import { styles } from '../Utils/styles';
+import styles from '../Utils/styles';
 import { Button } from '@rneui/themed';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';

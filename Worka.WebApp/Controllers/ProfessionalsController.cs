@@ -6,6 +6,9 @@ namespace Worka.WebApp.Controllers
     [ApiController]
     public class ProfessionalsController : ControllerBase
     {
-
+        public async Task<IActionResult> GetProfessionalByUserId(string userId)
+        {
+            return Ok();
+        }
     }
 }
