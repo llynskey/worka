@@ -1,13 +1,10 @@
 namespace Worka.Services.DTOs.Quotes
 {
-    namespace Worka.Services.DTOs.Quotes
+    public class CreateQuoteDTO
     {
-        public class CreateQuoteDTO
-        {
-            public string JobId { get; set; }
-            public string ProfessionalId { get; set; }
-            public decimal? Price { get; set; }
-            public string Description { get; set; }
-        }
+        public string JobId { get; set; }
+        public string ProfessionalId { get; set; }
+        public decimal? Price { get; set; }
+        public string Description { get; set; }
     }
 }

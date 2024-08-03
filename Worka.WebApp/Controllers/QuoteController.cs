@@ -1,5 +1,4 @@
 ﻿using Worka.Services.DTOs.Quotes;
-using Worka.Services.DTOs.Quotes.Worka.Services.DTOs.Quotes;
 using Worka.Services.Quotes;
 namespace Worka.WebApp.Controllers
 {
