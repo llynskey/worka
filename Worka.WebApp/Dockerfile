@@ -8,7 +8,7 @@ EXPOSE 443
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 COPY ["Worka.WebApp/Worka.WebApp.csproj", "Worka.WebApp/"]
-COPY ["Worka.Services/Worka.Services.csproj", "Worka.Services/"]
+COPY ["Worka.Services/Worka.csproj", "Worka.Services/"]
 RUN dotnet restore "Worka.WebApp/Worka.WebApp.csproj"
 COPY . .
 WORKDIR "/src/Worka.WebApp"
