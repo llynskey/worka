@@ -1,4 +1,4 @@
-﻿namespace API.Models
+﻿namespace Worka.Models
 {
     public interface IUserContext
     {

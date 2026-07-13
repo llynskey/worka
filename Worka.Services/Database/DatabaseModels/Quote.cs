@@ -1,19 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace Worka.Services.Database.DatabaseModels
 {
     public class Quote
     {
-        [BsonId]
-        public ObjectId QuoteId { get; set; } = ObjectId.GenerateNewId();
+        public Guid QuoteId { get; set; } = Guid.NewGuid();
 
-        public ObjectId ProfessionalId { get; set; }
-        public ObjectId? JobId { get; set; }
-        public string Description { get; set; }
-        public decimal? Price { get; set; }
+        public Guid ProfessionalId { get; set; }
+
+        public Guid JobId { get; set; }
+
+        public string Description { get; set; } = string.Empty;
+
+        public decimal Price { get; set; }
+
+        public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
     }
 }

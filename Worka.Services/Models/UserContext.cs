@@ -1,6 +1,6 @@
 ﻿using System.Security.Claims;
 
-namespace API.Models
+namespace Worka.Models
 {
     public class UserContext : IUserContext
     {

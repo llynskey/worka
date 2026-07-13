@@ -1,12 +1,26 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Worka.Services.Database.DatabaseModels;
 
-namespace Worka.DTOs.Customers
+namespace Worka.Services.DTOs.Customers
 {
-    internal class CustomerResponseDTO
+    public class CustomerResponseDTO
     {
+        public string CustomerId { get; set; }
+
+        public string UserId { get; set; }
+
+        public string FirstName { get; set; }
+
+        public string LastName { get; set; }
+
+        public string Email { get; set; }
+
+        public CustomerResponseDTO(Customer customer)
+        {
+            CustomerId = customer.CustomerId.ToString();
+            UserId = customer.UserId.ToString();
+            FirstName = customer.FirstName;
+            LastName = customer.LastName;
+            Email = customer.Email;
+        }
     }
 }

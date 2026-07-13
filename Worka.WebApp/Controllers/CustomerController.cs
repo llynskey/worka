@@ -1,10 +1,58 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+using Worka.Services.Customers;
 
 namespace Worka.WebApp.Controllers
 {
     [ApiController]
+    [Route("api/[controller]")]
+    [Authorize]
     public class CustomerController : ControllerBase
     {
+        private readonly ICustomerService _customerService;
+
+        public CustomerController(ICustomerService customerService)
+        {
+            _customerService = customerService ?? throw new ArgumentNullException(nameof(customerService));
+        }
+
+        public class UpdateAccountRequest
+        {
+            public string FirstName { get; set; } = string.Empty;
+
+            public string LastName { get; set; } = string.Empty;
+
+            public string Email { get; set; } = string.Empty;
+        }
+
+        [HttpGet("account")]
+        public async Task<IActionResult> GetAccount()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Unauthorized();
+            }
+
+            var result = await _customerService.GetByUserIdAsync(userId);
+            return result.Success ? Ok(result) : NotFound(result);
+        }
+
+        [HttpPut("account")]
+        public async Task<IActionResult> UpdateAccount([FromBody] UpdateAccountRequest request)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Unauthorized();
+            }
+
+            var result = await _customerService.UpdateAsync(
+                userId,
+                request.FirstName,
+                request.LastName,
+                request.Email);
+
+            return result.Success ? Ok(result) : BadRequest(result);
+        }
     }
 }

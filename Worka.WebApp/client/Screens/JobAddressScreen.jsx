@@ -1,35 +1,14 @@
-// JobAddressScreen.js
-import React, { useState } from 'react';
-import { View, TextInput, Button, Picker, StyleSheet } from 'react-native';
+import React from 'react';
+import { Text, TouchableOpacity, View, StyleSheet } from 'react-native';
 
-const JobAddressScreen = ({ navigation, route }) => {
-  const { jobType, title, description } = route.params;
-  const [address, setAddress] = useState('');
-  const [selectedAddress, setSelectedAddress] = useState(null);
-  const previousAddresses = ['123 Main St', '456 Elm St'];
-
-  const submitJob = () => {
-    // Handle job submission with selected or new address
-    // Example: console.log({ jobType, title, description, address: selectedAddress || address });
-  };
-
+const JobAddressScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
-      <Picker
-        selectedValue={selectedAddress}
-        onValueChange={(itemValue) => setSelectedAddress(itemValue)}
-      >
-        {previousAddresses.map((addr, index) => (
-          <Picker.Item key={index} label={addr} value={addr} />
-        ))}
-      </Picker>
-      <TextInput
-        placeholder="New Address"
-        value={address}
-        onChangeText={setAddress}
-        style={styles.input}
-      />
-      <Button title="Submit Job" onPress={submitJob} />
+      <Text style={styles.title}>Address step merged</Text>
+      <Text style={styles.text}>The current posting form now collects job address and service details together.</Text>
+      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('JobType')}>
+        <Text style={styles.buttonText}>Open post-a-job form</Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -37,13 +16,32 @@ const JobAddressScreen = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+    backgroundColor: '#f7f5ef',
   },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    padding: 10,
-    marginVertical: 10,
+  title: {
+    fontSize: 22,
+    fontWeight: '900',
+    color: '#111',
+    marginBottom: 8,
+  },
+  text: {
+    color: '#565951',
+    textAlign: 'center',
+    lineHeight: 21,
+    marginBottom: 16,
+  },
+  button: {
+    backgroundColor: '#111',
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  buttonText: {
+    color: '#fff',
+    fontWeight: '900',
   },
 });
 

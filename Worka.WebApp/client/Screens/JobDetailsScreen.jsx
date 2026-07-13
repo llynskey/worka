@@ -1,32 +1,14 @@
-// JobDetailsScreen.js
-import React, { useState } from 'react';
-import { View, TextInput, Button, StyleSheet } from 'react-native';
+import React from 'react';
+import { Text, TouchableOpacity, View, StyleSheet } from 'react-native';
 
-const JobDetailsScreen = ({ navigation, route }) => {
-  const { jobType } = route.params;
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-
-  const navigateToAddressScreen = () => {
-    navigation.navigate('JobAddressScreen', { jobType, title, description });
-  };
-
+const JobDetailsScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
-      <TextInput
-        placeholder="Job Title"
-        value={title}
-        onChangeText={setTitle}
-        style={styles.input}
-      />
-      <TextInput
-        placeholder="Job Description"
-        value={description}
-        onChangeText={setDescription}
-        style={styles.input}
-        multiline
-      />
-      <Button title="Next" onPress={navigateToAddressScreen} />
+      <Text style={styles.title}>Job details moved</Text>
+      <Text style={styles.text}>Use the streamlined posting form to add category, details, and address in one step.</Text>
+      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('JobType')}>
+        <Text style={styles.buttonText}>Open post-a-job form</Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -34,13 +16,32 @@ const JobDetailsScreen = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+    backgroundColor: '#f7f5ef',
   },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    padding: 10,
-    marginVertical: 10,
+  title: {
+    fontSize: 22,
+    fontWeight: '900',
+    color: '#111',
+    marginBottom: 8,
+  },
+  text: {
+    color: '#565951',
+    textAlign: 'center',
+    lineHeight: 21,
+    marginBottom: 16,
+  },
+  button: {
+    backgroundColor: '#111',
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  buttonText: {
+    color: '#fff',
+    fontWeight: '900',
   },
 });
 

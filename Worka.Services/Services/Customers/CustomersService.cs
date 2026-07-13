@@ -1,12 +1,99 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using Worka.Services.Common;
+using Worka.Services.Database;
+using Worka.Services.Database.DatabaseModels;
+using Worka.Services.DTOs.Customers;
 
 namespace Worka.Services.Customers
 {
-    public class CustomersService
+    public class CustomersService : ICustomerService
     {
+        private readonly WorkaDbContext _dbContext;
+
+        public CustomersService(WorkaDbContext dbContext)
+        {
+            _dbContext = dbContext;
+        }
+
+        public async Task<WorkaResponse<CustomerResponseDTO>> GetByUserIdAsync(string userId)
+        {
+            if (!Guid.TryParse(userId, out var userGuid))
+            {
+                return new WorkaResponse<CustomerResponseDTO>("Invalid user ID format.");
+            }
+
+            var customer = await _dbContext.Customers.FirstOrDefaultAsync(c => c.UserId == userGuid);
+
+            return customer == null
+                ? new WorkaResponse<CustomerResponseDTO>("Customer profile not found.")
+                : new WorkaResponse<CustomerResponseDTO>(new CustomerResponseDTO(customer));
+        }
+
+        public async Task<WorkaResponse<CustomerResponseDTO>> UpdateAsync(
+            string userId,
+            string firstName,
+            string lastName,
+            string email)
+        {
+            if (!Guid.TryParse(userId, out var userGuid))
+            {
+                return new WorkaResponse<CustomerResponseDTO>("Invalid user ID format.");
+            }
+
+            var customer = await _dbContext.Customers.FirstOrDefaultAsync(c => c.UserId == userGuid);
+            if (customer == null)
+            {
+                return new WorkaResponse<CustomerResponseDTO>("Customer profile not found.");
+            }
+
+            customer.FirstName = firstName.Trim();
+            customer.LastName = lastName.Trim();
+            customer.Email = email.Trim().ToLowerInvariant();
+            customer.UpdatedAt = DateTimeOffset.UtcNow;
+
+            var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.UserId == userGuid);
+            if (user != null)
+            {
+                user.FirstName = customer.FirstName;
+                user.LastName = customer.LastName;
+                user.Email = customer.Email;
+            }
+
+            await _dbContext.SaveChangesAsync();
+            return new WorkaResponse<CustomerResponseDTO>(new CustomerResponseDTO(customer));
+        }
+
+        public async Task<WorkaResponse<CustomerResponseDTO>> EnsureExistsAsync(
+            string userId,
+            string email,
+            string firstName,
+            string lastName)
+        {
+            if (!Guid.TryParse(userId, out var userGuid))
+            {
+                return new WorkaResponse<CustomerResponseDTO>("Invalid user ID format.");
+            }
+
+            var existing = await _dbContext.Customers.FirstOrDefaultAsync(c => c.UserId == userGuid);
+            if (existing != null)
+            {
+                return new WorkaResponse<CustomerResponseDTO>(new CustomerResponseDTO(existing));
+            }
+
+            var customer = new Customer
+            {
+                UserId = userGuid,
+                Email = email.Trim().ToLowerInvariant(),
+                FirstName = firstName.Trim(),
+                LastName = lastName.Trim(),
+                CreatedAt = DateTimeOffset.UtcNow,
+                UpdatedAt = DateTimeOffset.UtcNow
+            };
+
+            _dbContext.Customers.Add(customer);
+            await _dbContext.SaveChangesAsync();
+
+            return new WorkaResponse<CustomerResponseDTO>(new CustomerResponseDTO(customer));
+        }
     }
 }

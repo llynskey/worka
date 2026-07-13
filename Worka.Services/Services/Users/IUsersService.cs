@@ -4,7 +4,7 @@ namespace Worka.Services.Users
 {
     public interface IUsersService
     {
-        Task<ApiResponse<UserResponseDTO>> AuthUserAsync(UserLoginDTO loginRequest);
-        Task<ApiResponse<UserResponseDTO>> CreateUserAsync(UserRegisterDTO userServiceModel);
+        Task<WorkaResponse<UserResponseDTO>> AuthUserAsync(UserLoginDTO loginRequest);
+        Task<WorkaResponse<UserResponseDTO>> CreateUserAsync(UserRegisterDTO userServiceModel);
     }
 }

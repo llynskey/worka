@@ -1,5 +1,6 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Worka.Services.Users;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Worka.Services.Database;
 
 namespace Worka.Services
 {
@@ -7,19 +8,10 @@ namespace Worka.Services
     {
         public void ConfigureServices(IServiceCollection services)
         {
-           
-            // Setup MongoDB connection
-            var connectionString = "mongodb+srv://root:toor@worka.bcgzcvw.mongodb.net/?retryWrites=true&w=majority";
-            var settings = MongoClientSettings.FromConnectionString(connectionString);
+            var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__Postgres")
+                ?? "Host=localhost;Port=5432;Database=worka;Username=worka;Password=worka";
 
-            var client = new MongoClient(settings);
-            var database = client.GetDatabase("Worka");
-
-            services.AddSingleton(provider =>
-            {
-                var mongoHelperContext = new MongoHelperContext(database);
-                return mongoHelperContext;
-            });
+            services.AddDbContext<WorkaDbContext>(options => options.UseNpgsql(connectionString));
         }
     }
 }

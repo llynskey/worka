@@ -1,27 +1,37 @@
-﻿using Worka.Services.Enums;
+using Worka.Services.Enums;
 
 namespace Worka.Services.Database.Models;
 
 public class User
 {
-    [BsonId]
-    public ObjectId UserId { get; } = ObjectId.GenerateNewId();
+    public Guid UserId { get; set; } = Guid.NewGuid();
 
-    public string FirstName { get; set; }
+    public string FirstName { get; set; } = string.Empty;
 
-    public string LastName { get; set; }
+    public string LastName { get; set; } = string.Empty;
 
-    public string Email { get; set; }
+    public string Email { get; set; } = string.Empty;
 
-    public byte[] PasswordHash { get; set; }
+    public byte[] PasswordHash { get; set; } = Array.Empty<byte>();
 
-    public byte[] PasswordSalt { get; set; }
+    public byte[] PasswordSalt { get; set; } = Array.Empty<byte>();
 
     public AccountTypeEnum AccountType { get; set; }
 
-    public DateTimeOffset CreatedDate { get; set; }
+    public DateTimeOffset CreatedDate { get; set; } = DateTimeOffset.UtcNow;
 
-    public User(string firstName, string lastName, string email, byte[] passwordHash, byte[] passwordSalt, AccountTypeEnum accountType, DateTimeOffset createdDate)
+    public User()
+    {
+    }
+
+    public User(
+        string firstName,
+        string lastName,
+        string email,
+        byte[] passwordHash,
+        byte[] passwordSalt,
+        AccountTypeEnum accountType,
+        DateTimeOffset createdDate)
     {
         FirstName = firstName;
         LastName = lastName;
@@ -32,4 +42,3 @@ public class User
         CreatedDate = createdDate;
     }
 }
-

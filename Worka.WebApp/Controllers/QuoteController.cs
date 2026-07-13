@@ -1,13 +1,15 @@
-﻿using Worka.Services.DTOs.Quotes;
+using Worka.Services.DTOs.Quotes;
 using Worka.Services.Quotes;
+
 namespace Worka.WebApp.Controllers
 {
     [ApiController]
     public class QuoteController : ControllerBase
     {
-        private readonly ILogger<UserController> _logger;
+        private readonly ILogger<QuoteController> _logger;
         private readonly IQuoteService _quoteService;
-        public QuoteController(ILogger<UserController> logger, IQuoteService quoteService)
+
+        public QuoteController(ILogger<QuoteController> logger, IQuoteService quoteService)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _quoteService = quoteService ?? throw new ArgumentNullException(nameof(quoteService));
@@ -15,10 +17,10 @@ namespace Worka.WebApp.Controllers
 
         [HttpPost]
         [Route("createQuote")]
-        public async Task<IActionResult> Post(CreateQuoteDTO quoteRequest)
+        public async Task<IActionResult> Create([FromBody] CreateQuoteDTO quoteRequest)
         {
             var result = await _quoteService.CreateQuoteAsync(quoteRequest);
-            return Ok(result);
+            return result.Success ? Ok(result) : BadRequest(result);
         }
 
         [HttpGet]
@@ -26,8 +28,7 @@ namespace Worka.WebApp.Controllers
         public async Task<IActionResult> GetProfessionalQuotes(string professionalId)
         {
             var result = await _quoteService.GetQuotesByProfessionalIdAsync(professionalId);
-
-            return Ok(result);
+            return result.Success ? Ok(result) : BadRequest(result);
         }
 
         [HttpGet]
@@ -35,26 +36,23 @@ namespace Worka.WebApp.Controllers
         public async Task<IActionResult> GetCustomerQuotes(string customerId)
         {
             var result = await _quoteService.GetQuotesByCustomerIdAsync(customerId);
-
-            return Ok(result);
+            return result.Success ? Ok(result) : BadRequest(result);
         }
 
         [HttpGet]
         [Route("Quotes")]
-        public async Task<IActionResult> GetAllQuotes() 
+        public async Task<IActionResult> GetAllQuotes()
         {
-            var quotes = await _quoteService.GetAllQuotesAsync();
-
-            return Ok(quotes);
-
+            var result = await _quoteService.GetAllQuotesAsync();
+            return result.Success ? Ok(result) : BadRequest(result);
         }
 
         [HttpGet]
         [Route("QuotesByJobId")]
         public async Task<IActionResult> GetQuotesByJobId(string jobId)
         {
-            var quotes = await _quoteService.GetQuotesByJobIdAsync(jobId);
-            return Ok(quotes);
+            var result = await _quoteService.GetQuotesByJobIdAsync(jobId);
+            return result.Success ? Ok(result) : BadRequest(result);
         }
     }
 }

@@ -1,15 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace Worka.Services.Database.DatabaseModels
 {
     public class Customer
     {
-        public ObjectId CustomerId { get; set; } = ObjectId.GenerateNewId();
+        public Guid CustomerId { get; set; } = Guid.NewGuid();
 
-        public ObjectId UserId { get; set; }
+        public Guid UserId { get; set; }
+
+        public string FirstName { get; set; } = string.Empty;
+
+        public string LastName { get; set; } = string.Empty;
+
+        public string Email { get; set; } = string.Empty;
+
+        public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
+
+        public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
     }
 }

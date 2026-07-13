@@ -10,10 +10,10 @@ namespace Worka.Services.Quotes
 {
     public interface IQuoteService
     {
-        Task<ApiResponse<List<QuoteResponseDTO>>> GetQuotesByCustomerIdAsync(string customerId);
-        Task<ApiResponse<List<QuoteResponseDTO>>> GetQuotesByProfessionalIdAsync(string professionalId);
-        Task<ApiResponse<QuoteResponseDTO>> CreateQuoteAsync(CreateQuoteDTO quoteDto);
-        Task<ApiResponse<List<QuoteResponseDTO>>> GetAllQuotesAsync();
-        Task<ApiResponse<List<QuoteResponseDTO>>> GetQuotesByJobIdAsync(string jobId);
+        Task<WorkaResponse<List<QuoteResponseDTO>>> GetQuotesByCustomerIdAsync(string customerId);
+        Task<WorkaResponse<List<QuoteResponseDTO>>> GetQuotesByProfessionalIdAsync(string professionalId);
+        Task<WorkaResponse<QuoteResponseDTO>> CreateQuoteAsync(CreateQuoteDTO quoteDto);
+        Task<WorkaResponse<List<QuoteResponseDTO>>> GetAllQuotesAsync();
+        Task<WorkaResponse<List<QuoteResponseDTO>>> GetQuotesByJobIdAsync(string jobId);
     }
 }

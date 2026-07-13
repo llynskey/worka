@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace API.Models
+namespace Worka.Models
 {
     public class SignUpRequest
     {

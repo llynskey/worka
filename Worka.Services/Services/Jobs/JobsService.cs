@@ -1,103 +1,169 @@
-using MongoDB.Bson;
-using MongoDB.Driver;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using Worka.Services.Common;
+using Worka.Services.Database;
 using Worka.Services.Database.DatabaseModels;
 using Worka.Services.DTOs.Jobs;
+using Worka.Services.Enums;
 
 namespace Worka.Services.Jobs
 {
     public class JobsService : IJobsService
     {
-        private readonly MongoHelperContext _mongoHelperContext;
+        private readonly WorkaDbContext _dbContext;
 
-        public JobsService(MongoHelperContext mongoHelperContext)
+        public JobsService(WorkaDbContext dbContext)
         {
-            _mongoHelperContext = mongoHelperContext;
+            _dbContext = dbContext;
         }
 
-        public async Task<ApiResponse<JobResponseDTO>> CreateJobAsync(CreateJobDTO jobDto)
+        public async Task<WorkaResponse<JobResponseDTO>> CreateJobAsync(CreateJobDTO jobDto)
         {
             try
             {
+                if (!Guid.TryParse(jobDto.CustomerId, out var customerId))
+                {
+                    return new WorkaResponse<JobResponseDTO>("Invalid customer ID format.");
+                }
+
+                var customerExists = await _dbContext.Customers.AnyAsync(customer => customer.CustomerId == customerId);
+                if (!customerExists)
+                {
+                    return new WorkaResponse<JobResponseDTO>("Customer profile not found.");
+                }
+
                 var newJob = new Job
                 {
-                    Name = jobDto.JobName,
-                    Description = jobDto.JobDescription,
-                    CustomerId = new ObjectId(jobDto.CustomerId.ToString())
+                    Name = jobDto.JobName.Trim(),
+                    Description = jobDto.JobDescription.Trim(),
+                    Category = jobDto.Category.Trim(),
+                    Address = jobDto.Address.Trim(),
+                    CustomerId = customerId,
+                    Status = JobStatusEnum.Pending,
+                    CreatedAt = DateTimeOffset.UtcNow,
+                    UpdatedAt = DateTimeOffset.UtcNow
                 };
 
-                await _mongoHelperContext.Jobs.InsertOneAsync(newJob);
+                _dbContext.Jobs.Add(newJob);
+                await _dbContext.SaveChangesAsync();
 
-                var jobResponseDTO = new JobResponseDTO(newJob);
-                return new ApiResponse<JobResponseDTO>(jobResponseDTO);
+                return new WorkaResponse<JobResponseDTO>(new JobResponseDTO(newJob));
             }
             catch (Exception ex)
             {
-                // Log the exception here
-                return new ApiResponse<JobResponseDTO>("An error occurred while creating the job.", ex.Message);
+                return WorkaResponse<JobResponseDTO>.Fail(ex, "An error occurred while creating the job.");
             }
         }
 
-
-        public async Task<ApiResponse<List<JobResponseDTO>>> GetJobsByCustomerIdAsync(string customerId)
+        public async Task<WorkaResponse<List<JobResponseDTO>>> GetJobsByCustomerIdAsync(string customerId)
         {
             try
             {
-                var objectIdCustomerId = new ObjectId(customerId);
-                var jobs = await _mongoHelperContext.Jobs.Find(j => j.CustomerId == objectIdCustomerId).ToListAsync();
+                if (!Guid.TryParse(customerId, out var customerGuid))
+                {
+                    return new WorkaResponse<List<JobResponseDTO>>("Invalid customer ID format.");
+                }
 
-                var jobResponseDTOs = jobs.Select(job => new JobResponseDTO(job)).ToList();
+                var jobs = await _dbContext.Jobs
+                    .Where(job => job.CustomerId == customerGuid)
+                    .OrderByDescending(job => job.CreatedAt)
+                    .ToListAsync();
 
-                return new ApiResponse<List<JobResponseDTO>>(jobResponseDTOs);
+                return new WorkaResponse<List<JobResponseDTO>>(jobs.Select(job => new JobResponseDTO(job)).ToList());
             }
             catch (Exception ex)
             {
-                // Log the exception here
-                return new ApiResponse<List<JobResponseDTO>>("An error occurred while retrieving the jobs.", ex.Message);
+                return WorkaResponse<List<JobResponseDTO>>.Fail(ex, "An error occurred while retrieving the jobs.");
             }
         }
 
-        public async Task<ApiResponse<List<JobResponseDTO>>> GetJobsByProfessionalIdAsync(string professionalId)
-        {
-            throw new NotImplementedException();
-        }
-
-        public async Task<ApiResponse<List<JobResponseDTO>>> GetAllJobsAsync()
-        {
-            try
-            {
-                var jobs = await _mongoHelperContext.Jobs.Find(_ => true).ToListAsync();
-                var jobResponseDTOs = jobs.Select(job => new JobResponseDTO(job)).ToList();
-                return new ApiResponse<List<JobResponseDTO>>(jobResponseDTOs);
-            }
-            catch (Exception ex)
-            {
-                // Log the exception here
-                return new ApiResponse<List<JobResponseDTO>>("An error occurred while retrieving all jobs.", ex.Message);
-            }
-        }
-
-        public async Task<ApiResponse<JobResponseDTO>> AcceptQuoteAsync(string jobId, string quoteId)
+        public async Task<WorkaResponse<List<JobResponseDTO>>> GetJobsByProfessionalIdAsync(string professionalId)
         {
             try
             {
-                var quoteObjectId = ObjectId.Parse(quoteId);
-                var filter = Builders<Job>.Filter.Eq(j => j.JobId, ObjectId.Parse(jobId));
-                var update = Builders<Job>.Update.Set(j => j.AcceptedQuoteId, quoteObjectId);
+                if (!Guid.TryParse(professionalId, out var professionalGuid))
+                {
+                    return new WorkaResponse<List<JobResponseDTO>>("Invalid professional ID format.");
+                }
 
-                var updatedJob = await _mongoHelperContext.Jobs.FindOneAndUpdateAsync(filter, update);
+                var quoteJobIds = await _dbContext.Quotes
+                    .Where(quote => quote.ProfessionalId == professionalGuid)
+                    .Select(quote => quote.JobId)
+                    .Distinct()
+                    .ToListAsync();
 
-                var jobResponseDTO = new JobResponseDTO(updatedJob);
-                return new ApiResponse<JobResponseDTO>(jobResponseDTO);
+                if (!quoteJobIds.Any())
+                {
+                    return new WorkaResponse<List<JobResponseDTO>>(new List<JobResponseDTO>());
+                }
+
+                var jobs = await _dbContext.Jobs
+                    .Where(job => quoteJobIds.Contains(job.JobId))
+                    .OrderByDescending(job => job.CreatedAt)
+                    .ToListAsync();
+
+                return new WorkaResponse<List<JobResponseDTO>>(jobs.Select(job => new JobResponseDTO(job)).ToList());
             }
             catch (Exception ex)
             {
-                // Log the exception here
-                return new ApiResponse<JobResponseDTO>("An error occurred while accepting the quote.", ex.Message);
+                return WorkaResponse<List<JobResponseDTO>>.Fail(ex, "An error occurred while retrieving professional jobs.");
+            }
+        }
+
+        public async Task<WorkaResponse<List<JobResponseDTO>>> GetAllJobsAsync()
+        {
+            try
+            {
+                var jobs = await _dbContext.Jobs
+                    .OrderByDescending(job => job.CreatedAt)
+                    .ToListAsync();
+
+                return new WorkaResponse<List<JobResponseDTO>>(jobs.Select(job => new JobResponseDTO(job)).ToList());
+            }
+            catch (Exception ex)
+            {
+                return WorkaResponse<List<JobResponseDTO>>.Fail(ex, "An error occurred while retrieving all jobs.");
+            }
+        }
+
+        public async Task<WorkaResponse<JobResponseDTO>> AcceptQuoteAsync(string jobId, string quoteId)
+        {
+            try
+            {
+                if (!Guid.TryParse(jobId, out var jobGuid))
+                {
+                    return new WorkaResponse<JobResponseDTO>("Invalid job ID format.");
+                }
+
+                if (!Guid.TryParse(quoteId, out var quoteGuid))
+                {
+                    return new WorkaResponse<JobResponseDTO>("Invalid quote ID format.");
+                }
+
+                var quote = await _dbContext.Quotes
+                    .FirstOrDefaultAsync(q => q.QuoteId == quoteGuid && q.JobId == jobGuid);
+
+                if (quote == null)
+                {
+                    return new WorkaResponse<JobResponseDTO>("Quote not found for this job.");
+                }
+
+                var job = await _dbContext.Jobs.FirstOrDefaultAsync(j => j.JobId == jobGuid);
+                if (job == null)
+                {
+                    return new WorkaResponse<JobResponseDTO>("Job not found.");
+                }
+
+                job.AcceptedQuoteId = quoteGuid;
+                job.Status = JobStatusEnum.Accepted;
+                job.UpdatedAt = DateTimeOffset.UtcNow;
+
+                await _dbContext.SaveChangesAsync();
+
+                return new WorkaResponse<JobResponseDTO>(new JobResponseDTO(job));
+            }
+            catch (Exception ex)
+            {
+                return WorkaResponse<JobResponseDTO>.Fail(ex, "An error occurred while accepting the quote.");
             }
         }
     }

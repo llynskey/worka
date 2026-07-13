@@ -1,131 +1,231 @@
-// styles.js
-import { StyleSheet, StatusBar } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    backgroundColor: '#ffffff',
-    justifyContent: 'center'
+    backgroundColor: '#f7f5ef',
   },
-  logo: {
-    padding: 50,
-    width: 250,
-    height: 50,
-    marginTop: 200,
-    alignSelf: 'center',
+  screenScroll: {
+    flexGrow: 1,
+    padding: 16,
+    paddingBottom: 40,
+    backgroundColor: '#f7f5ef',
   },
   title: {
     fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 25,
-    color: '#333',
+    fontWeight: '900',
+    color: '#111',
     textAlign: 'center',
+    marginTop: 8,
+    marginBottom: 20,
   },
-  button: {
-    padding: 15,
-    borderRadius: 5,
+  headerRow: {
+    minHeight: 48,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  headerTitle: {
+    color: '#111',
+    fontSize: 20,
+    fontWeight: '900',
+  },
+  iconButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#e3dfd2',
+  },
+  iconButtonSpacer: {
+    width: 44,
+    height: 44,
+  },
+  formContainer: {
+    paddingHorizontal: 0,
+    paddingBottom: 32,
+  },
+  sectionEyebrow: {
+    color: '#62645c',
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 0,
+    textTransform: 'uppercase',
     marginBottom: 10,
   },
-  buttonText: {
-    fontSize: 18,
-    color: '#ff',
-    textAlign: 'center',
-  },
   input: {
+    minHeight: 50,
     borderWidth: 1,
-    borderColor: '#000',
-    padding: 15,
-    marginVertical: 12,
-    borderRadius: 10,
-    height: 50,  // Explicitly set the height
+    borderColor: '#d9d5ca',
+    backgroundColor: '#fbfaf6',
+    paddingHorizontal: 14,
+    borderRadius: 8,
+    fontSize: 16,
+    marginBottom: 14,
   },
-  
-  passwordInput: {
-    flex: 1,
-    padding: 15,
-    marginVertical: 12,
-    borderRadius: 10,
-    height: 50,  // Explicitly set the height
-  },
-  
-
-  inputContainer: {
-    height: 40,
-    width: '80%',
-    marginLeft: 35,
-    marginBottom:15,
-    // borderWidth: 0.5
-  },
-
-  inputContainerWithIcon: {
-    height: 40,
-    width: '80%',
-    marginLeft: 35,
-    marginBottom:15,
-    //display: 'flex',
-    //alignItems: 'stretch',
-    //flexDirection: 'row'
-    //borderWidth: 2
-  },
-
-  header: {
-    width: '100%',
-    padding: 10,
-    alignItems: 'center',
-    backgroundColor: '#ffffff', // Standard grey background
-  },
-  inputWithIcon: {
-   //  padding: 10,
-   borderBottomWidth: 1,
-   width: '65%',
-  },
-
   passwordContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    minHeight: 50,
     borderWidth: 1,
-    borderColor: '#000',
-    marginVertical: 12,
-    borderRadius: 10,
-    height: 50,  // Explicitly set the height
-  },  
-
-  inputIcon: {
-    width: '15%',
-    padding: 5,
-   // marginLeft: 'auto'
+    borderColor: '#d9d5ca',
+    backgroundColor: '#fbfaf6',
+    borderRadius: 8,
+    marginBottom: 14,
   },
-  formContainer: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-    backgroundColor: '#ffffff', // Standard grey background for form
-  },
-
-  pickerWrapper: {
-    borderWidth: 1,
-    borderColor: 'gray',
-    padding: 1,
-    backgroundColor: '#ffffff', // Standard grey background for picker
-  },
-
-pickerContainer: {
-    borderRadius: 10,
-    overflow: 'hidden',
-    height: 50,
-},
-
-picker: {
+  passwordInput: {
     flex: 1,
-},
-buttonContainerOpen: {
-  marginTop: 80, // Adjust based on the expected height of your dropdown
-},
-buttonContainerClosed: {
-  marginTop: 20,  // Default margin top for the button
-},
-
-  
+    height: '100%',
+    paddingHorizontal: 14,
+    fontSize: 16,
+  },
+  inputIcon: {
+    height: '100%',
+    paddingHorizontal: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  segmentGrid: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 16,
+  },
+  segmentCard: {
+    flex: 1,
+    minHeight: 132,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#e3dfd2',
+    borderRadius: 8,
+    padding: 12,
+    justifyContent: 'center',
+  },
+  segmentCardActive: {
+    backgroundColor: '#111',
+    borderColor: '#111',
+  },
+  segmentTitle: {
+    color: '#111',
+    fontWeight: '900',
+    fontSize: 16,
+    marginTop: 8,
+  },
+  segmentTitleActive: {
+    color: '#fff',
+  },
+  segmentDescription: {
+    color: '#62645c',
+    marginTop: 6,
+    lineHeight: 18,
+  },
+  segmentDescriptionActive: {
+    color: '#e8ece7',
+  },
+  button: {
+    backgroundColor: '#111',
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 8,
+  },
+  buttonText: {
+    color: '#fff',
+    fontWeight: '900',
+    fontSize: 16,
+  },
+  authScreenWrapper: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 0,
+    backgroundColor: '#f7f5ef',
+    paddingTop: Platform.OS === 'android' ? 8 : 0,
+    paddingBottom: 30,
+  },
+  authInner: {
+    alignItems: 'center',
+    alignSelf: 'center',
+    width: '88%',
+    maxWidth: 520,
+  },
+  authLogo: {
+    width: 200,
+    height: 96,
+    marginBottom: 18,
+    resizeMode: 'contain',
+  },
+  authHeroCopy: {
+    width: '100%',
+    marginBottom: 22,
+    alignItems: 'center',
+  },
+  authTitle: {
+    color: '#111',
+    fontSize: 28,
+    fontWeight: '900',
+    textAlign: 'center',
+  },
+  authSubtitle: {
+    marginTop: 8,
+    color: '#565951',
+    textAlign: 'center',
+    lineHeight: 21,
+    maxWidth: 360,
+  },
+  authInput: {
+    width: '76%',
+    minHeight: 50,
+    borderWidth: 1,
+    borderColor: '#d9d5ca',
+    backgroundColor: '#fbfaf6',
+    paddingHorizontal: 14,
+    borderRadius: 8,
+    fontSize: 16,
+    marginBottom: 14,
+  },
+  authButton: {
+    backgroundColor: '#111',
+    borderRadius: 8,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    width: '76%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 8,
+  },
+  authButtonContainer: {
+    marginTop: 16,
+  },
+  authButtonText: {
+    color: '#fff',
+    fontWeight: '900',
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  authLinkButton: {
+    marginTop: 14,
+    paddingVertical: 8,
+  },
+  authLinkText: {
+    textAlign: 'center',
+    color: '#444840',
+  },
+  authLinkStrong: {
+    color: '#111',
+    fontWeight: '900',
+  },
+  logo: {
+    width: 180,
+    height: 86,
+    resizeMode: 'contain',
+  },
 });
 
-
+export { styles };
+export default styles;

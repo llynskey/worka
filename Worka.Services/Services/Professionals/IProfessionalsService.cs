@@ -1,12 +1,25 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Worka.Services.Common;
+using Worka.Services.DTOs.Professionals;
 
 namespace Worka.Services.Professionals
 {
     public interface IProfessionalsService
     {
+        Task<WorkaResponse<ProfessionalResponseDTO>> GetByUserIdAsync(string userId);
+
+        Task<WorkaResponse<ProfessionalResponseDTO>> UpdateAsync(
+            string userId,
+            string firstName,
+            string lastName,
+            string email,
+            string specialty,
+            string bio,
+            string serviceArea);
+
+        Task<WorkaResponse<ProfessionalResponseDTO>> EnsureExistsAsync(
+            string userId,
+            string email,
+            string firstName,
+            string lastName);
     }
 }

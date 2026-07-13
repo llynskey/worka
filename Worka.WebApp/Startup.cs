@@ -1,12 +1,16 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
-using MongoDB.Driver;
+using Worka.Services.Customers;
 using Worka.Services.Database;
+using Worka.Services.Interest;
 using Worka.Services.Jobs;
+using Worka.Services.Professionals;
 using Worka.Services.Quotes;
 
 namespace Worka.WebApp
@@ -20,65 +24,82 @@ namespace Worka.WebApp
 
         public IConfiguration Configuration { get; }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.Configure<ForwardedHeadersOptions>(options =>
+            {
+                options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+
+                // The API is only exposed on the private Docker network. Caddy is the public edge.
+                options.KnownNetworks.Clear();
+                options.KnownProxies.Clear();
+            });
+
             services.AddCors(options =>
             {
                 options.AddPolicy("AllowOrigin", builder =>
                 {
                     builder.AllowAnyOrigin()
-                           .AllowAnyHeader()
-                           .AllowAnyMethod();
+                        .AllowAnyHeader()
+                        .AllowAnyMethod();
                 });
             });
 
-            // Setup MongoDB connection
-            var connectionString = "mongodb+srv://root:toor@worka.bcgzcvw.mongodb.net/?retryWrites=true&w=majority";
-            var settings = MongoClientSettings.FromConnectionString(connectionString);
+            var connectionString =
+                Configuration.GetConnectionString("Postgres")
+                ?? Configuration["PostgresConnectionString"]
+                ?? "Host=localhost;Port=5432;Database=worka;Username=worka;Password=worka";
 
-            var client = new MongoClient(settings);
-            var database = client.GetDatabase("Worka");
+            services.AddDbContext<WorkaDbContext>(options =>
+                options.UseNpgsql(connectionString));
 
-            services.AddSingleton(provider =>
-            {
-                var mongoHelperContext = new MongoHelperContext(database);
-                return mongoHelperContext;
-            });
+            services.AddScoped<ICustomerService, CustomersService>();
+            services.AddScoped<IProfessionalsService, ProfessionalsService>();
+            services.AddScoped<IUsersService, UsersService>();
+            services.AddScoped<IQuoteService, QuoteService>();
+            services.AddScoped<IJobsService, JobsService>();
+            services.AddScoped<IInterestRegistrationService, InterestRegistrationService>();
 
-            services.AddSingleton<IUsersService, UsersService>();
-            services.AddSingleton<IQuoteService, QuoteService>();
-            services.AddSingleton<IJobsService, JobsService>();
+            services.AddAuthorization();
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "WebApp", Version = "v1" });
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Worka API", Version = "v1" });
             });
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            app.UseForwardedHeaders();
+            EnsureDatabase(app);
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
                 app.UseSwagger();
-                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "WebApp v1"));
+                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Worka API v1"));
             }
 
-
-            app.UseHttpsRedirection();
-
+            if (!env.IsDevelopment())
+            {
+                app.UseHttpsRedirection();
+            }
             app.UseRouting();
-
             app.UseCors("AllowOrigin");
-
+            app.UseWorkaJwt(Configuration);
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
             });
+        }
+
+        private static void EnsureDatabase(IApplicationBuilder app)
+        {
+            using var scope = app.ApplicationServices.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<WorkaDbContext>();
+            dbContext.Database.EnsureCreated();
         }
     }
 }

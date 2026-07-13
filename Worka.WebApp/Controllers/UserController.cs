@@ -1,4 +1,5 @@
-﻿using Worka.Services.DTOs.Users;
+using Worka.Services.Common;
+using Worka.Services.DTOs.Users;
 
 namespace Worka.WebApp.Controllers
 {
@@ -11,47 +12,45 @@ namespace Worka.WebApp.Controllers
         public UserController(ILogger<UserController> logger, IUsersService usersService)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _usersService = usersService;
+            _usersService = usersService ?? throw new ArgumentNullException(nameof(usersService));
         }
 
         [HttpPost]
         [Route("login")]
-        public async Task<IActionResult> Post(UserLoginDTO loginRequest)
+        public async Task<IActionResult> Login([FromBody] UserLoginDTO loginRequest)
         {
-            try
+            var result = await _usersService.AuthUserAsync(loginRequest);
+            if (!result.Success)
             {
-                var jwt = await _usersService.AuthUserAsync(loginRequest);
-                return Ok(new { token = jwt });
+                _logger.LogWarning("Failed login attempt for {Email}: {Message}", loginRequest.Email, result.Message);
+                return Unauthorized(result);
             }
-            catch (Exception ex)
-            {
-                // Check for specific messages related to authorization
-                if (ex.Message == "User not found." || ex.Message == "Invalid password.")
-                {
-                    return Unauthorized(new { message = ex.Message });
-                }
 
-                // Otherwise, return a generic bad request
-                return BadRequest(new { message = ex.Message });
-            }
+            return Ok(ToAuthResponse(result));
         }
-
 
         [HttpPost]
         [Route("signup")]
-        public async Task<IActionResult> Post(UserRegisterDTO userModel)
+        public async Task<IActionResult> Signup([FromBody] UserRegisterDTO userModel)
         {
-            try
+            var result = await _usersService.CreateUserAsync(userModel);
+            if (!result.Success)
             {
-                var jwt = await _usersService.CreateUserAsync(userModel);
-                return Ok(new { token = jwt });
+                return BadRequest(result);
             }
-            catch (Exception ex)
-            {
-                // Return the exception's message directly to the client.
-                return BadRequest(new { message = ex.Message });
-            }
+
+            return Ok(ToAuthResponse(result));
         }
 
+        private static object ToAuthResponse(WorkaResponse<UserResponseDTO> result)
+        {
+            return new
+            {
+                success = result.Success,
+                message = result.Message,
+                token = result.Token,
+                user = result.Data
+            };
+        }
     }
 }

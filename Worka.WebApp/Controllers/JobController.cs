@@ -1,52 +1,63 @@
-﻿using Worka.Services.DTOs.Jobs;
+using Worka.Services.DTOs.Jobs;
 using Worka.Services.Jobs;
+
 namespace Worka.WebApp.Controllers
 {
     [ApiController]
     public class JobController : ControllerBase
     {
-        private readonly ILogger<UserController> _logger;
-        private readonly IJobsService _JobService;
-        public JobController(ILogger<UserController> logger, IJobsService JobService)
+        private readonly ILogger<JobController> _logger;
+        private readonly IJobsService _jobService;
+
+        public JobController(ILogger<JobController> logger, IJobsService jobService)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _JobService = JobService ?? throw new ArgumentNullException(nameof(JobService));
+            _jobService = jobService ?? throw new ArgumentNullException(nameof(jobService));
+        }
+
+        public class AcceptQuoteRequest
+        {
+            public string QuoteId { get; set; } = string.Empty;
         }
 
         [HttpPost]
         [Route("createJob")]
-        public async Task<IActionResult> Post(CreateJobDTO JobRequest)
+        public async Task<IActionResult> Create([FromBody] CreateJobDTO jobRequest)
         {
-            var result = await _JobService.CreateJobAsync(JobRequest);
-            return Ok(result);
+            var result = await _jobService.CreateJobAsync(jobRequest);
+            return result.Success ? Ok(result) : BadRequest(result);
+        }
+
+        [HttpPost]
+        [Route("Jobs/{jobId}/acceptQuote")]
+        public async Task<IActionResult> AcceptQuote(string jobId, [FromBody] AcceptQuoteRequest request)
+        {
+            var result = await _jobService.AcceptQuoteAsync(jobId, request.QuoteId);
+            return result.Success ? Ok(result) : BadRequest(result);
         }
 
         [HttpGet]
         [Route("ProfessionalJobs")]
         public async Task<IActionResult> GetProfessionalJobs(string professionalId)
         {
-            var result = await _JobService.GetJobsByProfessionalIdAsync(professionalId);
-
-            return Ok(result);
+            var result = await _jobService.GetJobsByProfessionalIdAsync(professionalId);
+            return result.Success ? Ok(result) : BadRequest(result);
         }
 
         [HttpGet]
         [Route("CustomerJobs")]
         public async Task<IActionResult> GetCustomerJobs(string customerId)
         {
-            var result = await _JobService.GetJobsByCustomerIdAsync(customerId);
-
-            return Ok(result);
+            var result = await _jobService.GetJobsByCustomerIdAsync(customerId);
+            return result.Success ? Ok(result) : BadRequest(result);
         }
 
         [HttpGet]
         [Route("Jobs")]
         public async Task<IActionResult> GetAllJobs()
         {
-            var Jobs = await _JobService.GetAllJobsAsync();
-
-            return Ok(Jobs);
-
+            var result = await _jobService.GetAllJobsAsync();
+            return result.Success ? Ok(result) : BadRequest(result);
         }
     }
 }

@@ -1,16 +1,86 @@
 import React from 'react';
-import { View, Button, SafeAreaView } from 'react-native';
-import { DrawerItemList } from '@react-navigation/drawer';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { DrawerContentScrollView, DrawerItemList } from '@react-navigation/drawer';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-const SharedDrawerContent = (props) => {
+export default function SharedDrawerContent(props) {
+  const { logoutHandler, userType } = props;
+
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <DrawerItemList {...props} />
-      <View style={{ margin: 20 }}>
-        <Button title="Logout" onPress={props.logoutHandler} />
-      </View>
-    </SafeAreaView>
-  );
-};
+    <DrawerContentScrollView {...props} contentContainerStyle={styles.drawerScroll}>
+      <View style={styles.drawerContainer}>
+        <View style={styles.brandBlock}>
+          <Image source={require('../assets/logo.png')} style={styles.logo} resizeMode="contain" />
+          <Text style={styles.workspaceLabel}>{userType} workspace</Text>
+        </View>
 
-export default SharedDrawerContent;
+        <DrawerItemList
+          {...props}
+          labelStyle={styles.drawerLabel}
+          itemStyle={styles.drawerItem}
+          activeTintColor="#111"
+          activeBackgroundColor="#f1ede4"
+          inactiveTintColor="#4f524b"
+        />
+
+        <Pressable style={styles.logoutButton} onPress={logoutHandler}>
+          <MaterialCommunityIcons name="logout" size={20} color="#fff" />
+          <Text style={styles.logoutText}>Logout</Text>
+        </Pressable>
+      </View>
+    </DrawerContentScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  drawerScroll: {
+    flexGrow: 1,
+    paddingTop: 20,
+    backgroundColor: '#fff',
+  },
+  drawerContainer: {
+    flex: 1,
+    paddingHorizontal: 18,
+  },
+  brandBlock: {
+    paddingHorizontal: 6,
+    paddingBottom: 20,
+    marginBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ece7dc',
+  },
+  logo: {
+    width: 128,
+    height: 58,
+  },
+  workspaceLabel: {
+    color: '#62645c',
+    fontWeight: '800',
+    marginTop: 4,
+  },
+  drawerItem: {
+    borderRadius: 8,
+    marginVertical: 4,
+    overflow: 'hidden',
+  },
+  drawerLabel: {
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  logoutButton: {
+    marginTop: 'auto',
+    backgroundColor: '#111',
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 30,
+    flexDirection: 'row',
+    gap: 8,
+  },
+  logoutText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '900',
+  },
+});
