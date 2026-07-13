@@ -63,12 +63,12 @@ export type Quote = {
   createdAt: string;
 };
 
-const configuredApiUrl = (globalThis as any)?.process?.env?.EXPO_PUBLIC_API_URL;
+const configuredApiUrl = process.env.EXPO_PUBLIC_API_URL;
 
 const apiBaseUrl =
   configuredApiUrl ||
   (Platform.OS === 'web'
-    ? 'http://localhost:5000'
+    ? '/api'
     : 'https://api.worka-uk.online');
 
 export const api = axios.create({
