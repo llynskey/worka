@@ -1,6 +1,6 @@
 # Worka Postgres Deployment
 
-This deployment runs the Worka .NET API and PostgreSQL on the OVH VPS with Docker Compose.
+This deployment runs the Worka web app, .NET API, and PostgreSQL on the OVH VPS with Docker Compose.
 
 ## First Setup
 
@@ -33,10 +33,14 @@ Set `JwtSecret` to the generated `openssl rand -hex 32` value.
 ```bash
 docker compose --env-file .env.production up -d --build
 docker compose --env-file .env.production ps
-docker compose --env-file .env.production logs -f api postgres
+docker compose --env-file .env.production logs -f web api postgres
 ```
 
-The API is exposed on port `5000` of the VPS. Put Caddy/Nginx or your provider firewall in front of that for a public domain.
+The web app is exposed on port `80`, so `http://your-server-ip/` should load the landing page. The API is private inside Docker and is proxied through the web container at `/api`, so check it with:
+
+```bash
+curl http://localhost/api/health
+```
 
 ## Backups
 

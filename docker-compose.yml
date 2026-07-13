@@ -1,4 +1,16 @@
 services:
+  web:
+    build:
+      context: .
+      dockerfile: Worka.WebApp/client/Dockerfile
+      args:
+        EXPO_PUBLIC_API_URL: /api
+    depends_on:
+      - api
+    ports:
+      - "80:80"
+    restart: unless-stopped
+
   api:
     build:
       context: .
@@ -15,8 +27,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    ports:
-      - "5000:8080"
+    expose:
+      - "8080"
     restart: unless-stopped
 
   postgres:
