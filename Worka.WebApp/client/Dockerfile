@@ -15,3 +15,4 @@ RUN npx expo export --platform web
 FROM caddy:2-alpine AS final
 COPY deploy/Caddyfile /etc/caddy/Caddyfile
 COPY --from=build /app/dist /srv
+RUN test -f /srv/index.html
