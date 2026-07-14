@@ -69,6 +69,17 @@ const FormField: React.FC<FormFieldProps> = ({ label, children }) => (
   </View>
 );
 
+// Web-only: eases pressed-state changes (scale/opacity/color) instead of
+// snapping. Compiled to a CSS transition, so it runs on the compositor.
+const webPressTransition =
+  Platform.OS === "web"
+    ? ({
+        transitionProperty: "transform, opacity, background-color, border-color",
+        transitionDuration: "160ms",
+        transitionTimingFunction: "cubic-bezier(0.2, 0.8, 0.4, 1)",
+      } as any)
+    : {};
+
 const AuthScreen: React.FC = () => {
   const { signInWithToken } = useContext(AuthContext);
   const { t, language, languages, setLanguage } = useI18n();
@@ -1164,10 +1175,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 52,
+    marginBottom: 14,
   },
   navPhone: {
-    marginBottom: 30,
+    marginBottom: 10,
   },
   logo: {
     width: 150,
@@ -1178,6 +1189,7 @@ const styles = StyleSheet.create({
     height: 46,
   },
   navButton: {
+    ...webPressTransition,
     minHeight: 44,
     maxWidth: "55%",
     borderWidth: 1,
@@ -1204,10 +1216,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flexWrap: "wrap",
     gap: 8,
-    marginTop: -34,
-    marginBottom: 34,
+    marginTop: 0,
+    marginBottom: 40,
   },
   languageChip: {
+    ...webPressTransition,
     minHeight: 34,
     justifyContent: "center",
     borderWidth: 1,
@@ -1412,6 +1425,7 @@ const styles = StyleSheet.create({
     flexDirection: "column",
   },
   tabButton: {
+    ...webPressTransition,
     minWidth: 0,
     flex: 1,
     borderWidth: 1,
@@ -1487,6 +1501,7 @@ const styles = StyleSheet.create({
     flexDirection: "column",
   },
   accountTypeCard: {
+    ...webPressTransition,
     minWidth: 0,
     flex: 1,
     borderWidth: 1,
@@ -1545,6 +1560,7 @@ const styles = StyleSheet.create({
     marginBottom: 18,
   },
   choiceRow: {
+    ...webPressTransition,
     width: "100%",
     borderWidth: 1,
     borderColor: "#777",
@@ -1609,6 +1625,7 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   primaryButton: {
+    ...webPressTransition,
     width: "100%",
     minHeight: 54,
     borderRadius: 10,
@@ -1621,8 +1638,8 @@ const styles = StyleSheet.create({
     gap: 9,
   },
   primaryButtonPressed: {
-    opacity: 0.82,
-    transform: [{ translateY: 1 }],
+    opacity: 0.9,
+    transform: [{ scale: 0.98 }],
   },
   primaryButtonText: {
     minWidth: 0,
@@ -1633,6 +1650,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   secondaryButton: {
+    ...webPressTransition,
     width: "100%",
     minHeight: 52,
     borderWidth: 1,
@@ -1656,6 +1674,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   textButton: {
+    ...webPressTransition,
     alignSelf: "flex-start",
     marginTop: 16,
     paddingVertical: 8,
@@ -1670,7 +1689,8 @@ const styles = StyleSheet.create({
     opacity: 0.55,
   },
   pressed: {
-    opacity: 0.72,
+    opacity: 0.85,
+    transform: [{ scale: 0.98 }],
   },
   successPanel: {
     width: "100%",
