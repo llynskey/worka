@@ -20,6 +20,7 @@ using Worka.Services.Jobs;
 using Worka.Services.Payments;
 using Worka.Services.Professionals;
 using Worka.Services.Quotes;
+using Worka.Services.Reviews;
 
 namespace Worka.WebApp
 {
@@ -84,6 +85,7 @@ namespace Worka.WebApp
             services.AddScoped<IInterestRegistrationService, InterestRegistrationService>();
             services.AddScoped<IPaymentsService, PaymentsService>();
             services.AddSingleton<IEmailService, SmtpEmailService>();
+            services.AddScoped<IReviewsService, ReviewsService>();
 
             var jwtSecret = Configuration["JwtSecret"];
             if (string.IsNullOrWhiteSpace(jwtSecret) || jwtSecret.Length < 32)
@@ -238,6 +240,23 @@ namespace Worka.WebApp
                 );
                 CREATE INDEX IF NOT EXISTS "IX_password_reset_tokens_UserId"
                     ON password_reset_tokens("UserId");
+                ALTER TABLE customers ADD COLUMN IF NOT EXISTS "Phone" character varying(40) NOT NULL DEFAULT '';
+                ALTER TABLE customers ADD COLUMN IF NOT EXISTS "Address" character varying(500) NOT NULL DEFAULT '';
+                ALTER TABLE customers ADD COLUMN IF NOT EXISTS "Languages" character varying(200) NOT NULL DEFAULT '';
+                ALTER TABLE customers ADD COLUMN IF NOT EXISTS "PhotoUrl" character varying(1000) NOT NULL DEFAULT '';
+                ALTER TABLE professionals ADD COLUMN IF NOT EXISTS "Languages" character varying(200) NOT NULL DEFAULT '';
+                ALTER TABLE professionals ADD COLUMN IF NOT EXISTS "PhotoUrl" character varying(1000) NOT NULL DEFAULT '';
+                CREATE TABLE IF NOT EXISTS reviews (
+                    "ReviewId" uuid PRIMARY KEY,
+                    "JobId" uuid NOT NULL REFERENCES jobs("JobId") ON DELETE CASCADE,
+                    "CustomerId" uuid NOT NULL REFERENCES customers("CustomerId") ON DELETE CASCADE,
+                    "ProfessionalId" uuid NOT NULL REFERENCES professionals("ProfessionalId") ON DELETE CASCADE,
+                    "Rating" integer NOT NULL,
+                    "Comment" character varying(2000) NOT NULL DEFAULT '',
+                    "CreatedAt" timestamp with time zone NOT NULL
+                );
+                CREATE UNIQUE INDEX IF NOT EXISTS "IX_reviews_JobId" ON reviews("JobId");
+                CREATE INDEX IF NOT EXISTS "IX_reviews_ProfessionalId" ON reviews("ProfessionalId");
                 """);
         }
     }

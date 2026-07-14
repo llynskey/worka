@@ -27,6 +27,8 @@ namespace Worka.Services.Database
 
         public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
 
+        public DbSet<Review> Reviews => Set<Review>();
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<User>(entity =>
@@ -49,6 +51,10 @@ namespace Worka.Services.Database
                 entity.Property(customer => customer.FirstName).HasMaxLength(100).IsRequired();
                 entity.Property(customer => customer.LastName).HasMaxLength(100).IsRequired();
                 entity.Property(customer => customer.Email).HasMaxLength(320).IsRequired();
+                entity.Property(customer => customer.Phone).HasMaxLength(40).IsRequired();
+                entity.Property(customer => customer.Address).HasMaxLength(500).IsRequired();
+                entity.Property(customer => customer.Languages).HasMaxLength(200).IsRequired();
+                entity.Property(customer => customer.PhotoUrl).HasMaxLength(1000).IsRequired();
                 entity.HasOne<User>()
                     .WithMany()
                     .HasForeignKey(customer => customer.UserId)
@@ -66,6 +72,8 @@ namespace Worka.Services.Database
                 entity.Property(professional => professional.Specialty).HasMaxLength(160).IsRequired();
                 entity.Property(professional => professional.Bio).HasMaxLength(2000).IsRequired();
                 entity.Property(professional => professional.ServiceArea).HasMaxLength(240).IsRequired();
+                entity.Property(professional => professional.Languages).HasMaxLength(200).IsRequired();
+                entity.Property(professional => professional.PhotoUrl).HasMaxLength(1000).IsRequired();
                 entity.Property(professional => professional.StripeAccountId).HasMaxLength(200).IsRequired();
                 entity.HasOne<User>()
                     .WithMany()
@@ -134,6 +142,27 @@ namespace Worka.Services.Database
                 entity.HasOne<Professional>()
                     .WithMany()
                     .HasForeignKey(payment => payment.ProfessionalId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<Review>(entity =>
+            {
+                entity.ToTable("reviews");
+                entity.HasKey(review => review.ReviewId);
+                entity.HasIndex(review => review.JobId).IsUnique();
+                entity.HasIndex(review => review.ProfessionalId);
+                entity.Property(review => review.Comment).HasMaxLength(2000).IsRequired();
+                entity.HasOne<Job>()
+                    .WithMany()
+                    .HasForeignKey(review => review.JobId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne<Customer>()
+                    .WithMany()
+                    .HasForeignKey(review => review.CustomerId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne<Professional>()
+                    .WithMany()
+                    .HasForeignKey(review => review.ProfessionalId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
 

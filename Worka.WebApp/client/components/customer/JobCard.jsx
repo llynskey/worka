@@ -35,7 +35,7 @@ const statusLabel = (status) => {
   return 'Open';
 };
 
-const JobCard = ({ job, quotes = [], onAcceptQuote, onEditJob, onDeleteJob, onCompleteJob }) => {
+const JobCard = ({ job, quotes = [], onAcceptQuote, onEditJob, onDeleteJob, onCompleteJob, onReviewJob }) => {
   const [detailsVisible, setDetailsVisible] = useState(false);
   const status = statusLabel(job.jobStatus);
   const acceptedQuote = quotes.find((quote) => quote.quoteId === job.acceptedQuoteId);
@@ -83,7 +83,7 @@ const JobCard = ({ job, quotes = [], onAcceptQuote, onEditJob, onDeleteJob, onCo
             {bestQuote ? <Text style={styles.bestQuoteText}>Best quote {formatMoney(bestQuote.price)}</Text> : null}
           </View>
 
-          {(status === 'Open' || status === 'Booked') && (
+          {(status === 'Open' || status === 'Booked' || status === 'Done') && (
             <View style={styles.manageRow}>
               {status === 'Open' ? (
                 <>
@@ -96,10 +96,15 @@ const JobCard = ({ job, quotes = [], onAcceptQuote, onEditJob, onDeleteJob, onCo
                     <Text style={[styles.manageButtonText, styles.manageButtonDanger]}>Delete</Text>
                   </TouchableOpacity>
                 </>
-              ) : (
+              ) : status === 'Booked' ? (
                 <TouchableOpacity style={styles.manageButtonPrimary} onPress={() => onCompleteJob?.(job)}>
                   <MaterialCommunityIcons name="check-circle-outline" size={17} color="#fff" />
                   <Text style={styles.manageButtonPrimaryText}>Mark complete</Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity style={styles.manageButtonPrimary} onPress={() => onReviewJob?.(job)}>
+                  <MaterialCommunityIcons name="star-outline" size={17} color="#fff" />
+                  <Text style={styles.manageButtonPrimaryText}>Leave a review</Text>
                 </TouchableOpacity>
               )}
             </View>

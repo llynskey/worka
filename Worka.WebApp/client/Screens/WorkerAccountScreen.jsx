@@ -11,8 +11,43 @@ import {
   View,
 } from 'react-native';
 import notify from '../Utils/notify';
+import * as ImagePicker from 'expo-image-picker';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { api, getErrorMessage, unwrap } from '../api/workaApi';
+import Avatar from '../components/Avatar';
+import LanguagePicker from '../components/LanguagePicker';
+
+const getAssetName = (asset) => {
+  if (asset.fileName) return asset.fileName;
+
+  const extension = asset.mimeType?.split('/')[1] || 'jpg';
+  return `worka-profile-photo-${Date.now()}.${extension === 'jpeg' ? 'jpg' : extension}`;
+};
+
+const getAssetType = (asset) => asset.mimeType || asset.type || 'image/jpeg';
+
+const appendAssetToForm = async (upload, asset) => {
+  const fileName = getAssetName(asset);
+  const mimeType = getAssetType(asset);
+
+  if (Platform.OS === 'web') {
+    if (asset.file) {
+      upload.append('file', asset.file, fileName);
+      return;
+    }
+
+    const response = await fetch(asset.uri);
+    const blob = await response.blob();
+    upload.append('file', blob, fileName);
+    return;
+  }
+
+  upload.append('file', {
+    uri: asset.uri,
+    name: fileName,
+    type: mimeType,
+  });
+};
 
 const WorkerAccountScreen = () => {
   const [form, setForm] = useState({
@@ -22,9 +57,12 @@ const WorkerAccountScreen = () => {
     specialty: '',
     serviceArea: '',
     bio: '',
+    languages: '',
+    photoUrl: '',
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [stripeStatus, setStripeStatus] = useState(null);
   const [stripeLoading, setStripeLoading] = useState(false);
   const [stripeError, setStripeError] = useState('');
@@ -41,6 +79,8 @@ const WorkerAccountScreen = () => {
         specialty: account.specialty ?? '',
         serviceArea: account.serviceArea ?? '',
         bio: account.bio ?? '',
+        languages: account.languages ?? '',
+        photoUrl: account.photoUrl ?? '',
       });
       setStripeStatus({
         connected: !!account.stripeConnected,
@@ -109,6 +149,53 @@ const WorkerAccountScreen = () => {
     }
   };
 
+  const pickAndUploadProfilePhoto = async () => {
+    try {
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permission.granted) {
+        notify('Photo access needed', 'Allow photo library access to set a profile photo.');
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.86,
+      });
+
+      if (result.canceled) return;
+
+      const asset = result.assets?.[0];
+      if (!asset?.uri) {
+        notify('No photo selected', 'Choose an image and try again.');
+        return;
+      }
+
+      if (asset.fileSize && asset.fileSize > 8 * 1024 * 1024) {
+        notify('Image too large', 'Use an image that is 8MB or smaller.');
+        return;
+      }
+
+      const upload = new FormData();
+      await appendAssetToForm(upload, asset);
+
+      setUploadingPhoto(true);
+      const response = await api.post('/uploads/profile-photo', upload);
+      const uploaded = unwrap(response.data);
+      if (!uploaded?.url) {
+        notify('Upload failed', 'No image URL was returned.');
+        return;
+      }
+
+      setForm((current) => ({ ...current, photoUrl: uploaded.url }));
+    } catch (error) {
+      notify('Could not upload photo', getErrorMessage(error, 'Try another image.'));
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
   const save = async () => {
     if (!form.firstName.trim() || !form.lastName.trim() || !form.email.trim()) {
       notify('Missing details', 'Name and email are required.');
@@ -126,6 +213,8 @@ const WorkerAccountScreen = () => {
         specialty: account.specialty ?? '',
         serviceArea: account.serviceArea ?? '',
         bio: account.bio ?? '',
+        languages: account.languages ?? '',
+        photoUrl: account.photoUrl ?? '',
       });
       notify('Account saved', 'Your professional profile is up to date.');
     } catch (error) {
@@ -228,6 +317,24 @@ const WorkerAccountScreen = () => {
       </View>
 
       <View style={styles.formCard}>
+        <View style={styles.photoRow}>
+          <Avatar photoUrl={form.photoUrl} firstName={form.firstName} lastName={form.lastName} size={64} />
+          <TouchableOpacity
+            style={styles.photoButton}
+            onPress={pickAndUploadProfilePhoto}
+            disabled={uploadingPhoto}
+          >
+            {uploadingPhoto ? (
+              <ActivityIndicator color="#111" />
+            ) : (
+              <>
+                <MaterialCommunityIcons name="camera-outline" size={18} color="#111" />
+                <Text style={styles.photoButtonText}>Change photo</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        </View>
+
         <TextInput
           style={styles.input}
           value={form.firstName}
@@ -276,6 +383,12 @@ const WorkerAccountScreen = () => {
           placeholder="Bio"
           placeholderTextColor="#686b64"
           multiline
+        />
+
+        <LanguagePicker
+          value={form.languages}
+          onChange={(languages) => setForm((current) => ({ ...current, languages }))}
+          label="Languages you speak"
         />
 
         <TouchableOpacity style={styles.button} onPress={save} disabled={saving}>
@@ -369,6 +482,28 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#e3dfd2',
     padding: 14,
+  },
+  photoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    marginBottom: 14,
+  },
+  photoButton: {
+    minHeight: 44,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#111',
+    paddingHorizontal: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#fff',
+  },
+  photoButtonText: {
+    color: '#111',
+    fontWeight: '900',
   },
   payoutCard: {
     backgroundColor: '#fff',

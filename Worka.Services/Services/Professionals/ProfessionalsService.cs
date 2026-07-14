@@ -19,11 +19,18 @@ namespace Worka.Services.Professionals
             string search,
             string specialty,
             string area,
-            decimal? maxPrice)
+            decimal? maxPrice,
+            string language = null)
         {
             try
             {
                 var query = _dbContext.Professionals.AsQueryable();
+
+                if (!string.IsNullOrWhiteSpace(language))
+                {
+                    var code = language.Trim().ToLower();
+                    query = query.Where(p => ("," + p.Languages + ",").Contains("," + code + ","));
+                }
 
                 if (!string.IsNullOrWhiteSpace(specialty))
                 {
@@ -68,10 +75,23 @@ namespace Worka.Services.Professionals
                     .ToListAsync();
                 var statsById = quoteStats.ToDictionary(s => s.ProfessionalId);
 
+                var reviewStats = await _dbContext.Reviews
+                    .Where(review => professionalIds.Contains(review.ProfessionalId))
+                    .GroupBy(review => review.ProfessionalId)
+                    .Select(group => new
+                    {
+                        ProfessionalId = group.Key,
+                        Count = group.Count(),
+                        Average = group.Average(review => (double)review.Rating)
+                    })
+                    .ToListAsync();
+                var reviewsById = reviewStats.ToDictionary(s => s.ProfessionalId);
+
                 var items = professionals
                     .Select(p =>
                     {
                         statsById.TryGetValue(p.ProfessionalId, out var stats);
+                        reviewsById.TryGetValue(p.ProfessionalId, out var reviews);
                         return new ProfessionalDirectoryItemDTO
                         {
                             ProfessionalId = p.ProfessionalId.ToString(),
@@ -80,9 +100,13 @@ namespace Worka.Services.Professionals
                             Specialty = p.Specialty,
                             Bio = p.Bio,
                             ServiceArea = p.ServiceArea,
+                            Languages = p.Languages,
+                            PhotoUrl = p.PhotoUrl,
                             QuoteCount = stats?.Count ?? 0,
                             AverageQuotePrice = stats == null ? null : Math.Round(stats.Average, 2),
                             MinQuotePrice = stats?.Min,
+                            AverageRating = reviews == null ? null : Math.Round(reviews.Average, 1),
+                            ReviewCount = reviews?.Count ?? 0,
                             ReadyForPayments = p.StripeChargesEnabled && p.StripePayoutsEnabled
                         };
                     })
@@ -120,7 +144,9 @@ namespace Worka.Services.Professionals
             string email,
             string specialty,
             string bio,
-            string serviceArea)
+            string serviceArea,
+            string languages = null,
+            string photoUrl = null)
         {
             if (!Guid.TryParse(userId, out var userGuid))
             {
@@ -139,6 +165,8 @@ namespace Worka.Services.Professionals
             professional.Specialty = string.IsNullOrWhiteSpace(specialty) ? "General home services" : specialty.Trim();
             professional.Bio = bio.Trim();
             professional.ServiceArea = serviceArea.Trim();
+            if (languages != null) professional.Languages = Customers.CustomersService.NormalizeLanguages(languages);
+            if (photoUrl != null) professional.PhotoUrl = photoUrl.Trim();
             professional.UpdatedAt = DateTimeOffset.UtcNow;
 
             var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.UserId == userGuid);

@@ -17,6 +17,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { api, formatDate, formatMoney, unwrap, getErrorMessage } from '../../api/workaApi';
 import JobCard from './JobCard';
+import { StarInput } from '../Stars';
 
 const statusLabel = (status) => {
   if (status === 1 || String(status).toLowerCase() === 'accepted') return 'Booked';
@@ -37,6 +38,10 @@ const CustomerJobList = ({ navigation }) => {
   const [editJob, setEditJob] = useState(null);
   const [editForm, setEditForm] = useState({ jobName: '', jobDescription: '' });
   const [savingEdit, setSavingEdit] = useState(false);
+  const [jobFilter, setJobFilter] = useState('active');
+  const [reviewJob, setReviewJob] = useState(null);
+  const [reviewForm, setReviewForm] = useState({ rating: 5, comment: '' });
+  const [submittingReview, setSubmittingReview] = useState(false);
 
   useEffect(() => {
     if (Platform.OS !== 'web' || typeof window === 'undefined') return;
@@ -140,6 +145,16 @@ const CustomerJobList = ({ navigation }) => {
     ];
   }, [jobs, quotes]);
 
+  const activeJobs = useMemo(
+    () => jobs.filter((job) => ['Open', 'Booked'].includes(statusLabel(job.jobStatus))),
+    [jobs]
+  );
+  const pastJobs = useMemo(
+    () => jobs.filter((job) => ['Done', 'Closed'].includes(statusLabel(job.jobStatus))),
+    [jobs]
+  );
+  const visibleJobs = jobFilter === 'active' ? activeJobs : pastJobs;
+
   const acceptQuote = useCallback(
     async (job, quote) => {
       try {
@@ -170,6 +185,29 @@ const CustomerJobList = ({ navigation }) => {
     },
     []
   );
+
+  const openReview = useCallback((job) => {
+    setReviewForm({ rating: 5, comment: '' });
+    setReviewJob(job);
+  }, []);
+
+  const submitReview = useCallback(async () => {
+    if (!reviewJob) return;
+
+    try {
+      setSubmittingReview(true);
+      await api.post(`/Jobs/${reviewJob.jobId}/review`, {
+        rating: reviewForm.rating,
+        comment: reviewForm.comment.trim(),
+      });
+      setReviewJob(null);
+      notify('Thanks for the review', 'Your rating helps other customers pick the right pro.');
+    } catch (err) {
+      notify('Could not submit review', getErrorMessage(err, 'Try again in a moment.'));
+    } finally {
+      setSubmittingReview(false);
+    }
+  }, [reviewForm, reviewJob]);
 
   const openEditJob = useCallback((job) => {
     setEditForm({ jobName: job.jobName ?? '', jobDescription: job.jobDescription ?? '' });
@@ -270,7 +308,7 @@ const CustomerJobList = ({ navigation }) => {
   return (
     <>
     <FlatList
-      data={jobs}
+      data={visibleJobs}
       keyExtractor={(item) => String(item.jobId)}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} />}
       contentContainerStyle={styles.listContent}
@@ -338,18 +376,45 @@ const CustomerJobList = ({ navigation }) => {
             </View>
           ) : null}
 
+          <View style={styles.segmentRow}>
+            <TouchableOpacity
+              style={[styles.segment, jobFilter === 'active' && styles.segmentActive]}
+              onPress={() => setJobFilter('active')}
+            >
+              <Text style={[styles.segmentText, jobFilter === 'active' && styles.segmentTextActive]}>
+                Active ({activeJobs.length})
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.segment, jobFilter === 'past' && styles.segmentActive]}
+              onPress={() => setJobFilter('past')}
+            >
+              <Text style={[styles.segmentText, jobFilter === 'past' && styles.segmentTextActive]}>
+                Past ({pastJobs.length})
+              </Text>
+            </TouchableOpacity>
+          </View>
+
           <Text style={styles.sectionTitle}>Your jobs</Text>
         </View>
       }
       ListEmptyComponent={
-        <View style={styles.emptyState}>
-          <MaterialCommunityIcons name="clipboard-plus-outline" size={40} color="#111" />
-          <Text style={styles.emptyTitle}>No jobs posted yet</Text>
-          <Text style={styles.mutedText}>Create your first job to start receiving quotes.</Text>
-          <TouchableOpacity style={styles.primaryButton} onPress={() => navigation?.navigate('Post a Job')}>
-            <Text style={styles.primaryButtonText}>Post a job</Text>
-          </TouchableOpacity>
-        </View>
+        jobFilter === 'past' ? (
+          <View style={styles.emptyState}>
+            <MaterialCommunityIcons name="history" size={40} color="#111" />
+            <Text style={styles.emptyTitle}>No past jobs yet</Text>
+            <Text style={styles.mutedText}>Completed and closed jobs will appear here.</Text>
+          </View>
+        ) : (
+          <View style={styles.emptyState}>
+            <MaterialCommunityIcons name="clipboard-plus-outline" size={40} color="#111" />
+            <Text style={styles.emptyTitle}>No active jobs</Text>
+            <Text style={styles.mutedText}>Create your first job to start receiving quotes.</Text>
+            <TouchableOpacity style={styles.primaryButton} onPress={() => navigation?.navigate('Post a Job')}>
+              <Text style={styles.primaryButtonText}>Post a job</Text>
+            </TouchableOpacity>
+          </View>
+        )
       }
       renderItem={({ item }) => (
         <JobCard
@@ -359,6 +424,7 @@ const CustomerJobList = ({ navigation }) => {
           onEditJob={openEditJob}
           onDeleteJob={deleteJob}
           onCompleteJob={completeJob}
+          onReviewJob={openReview}
         />
       )}
     />
@@ -398,6 +464,49 @@ const CustomerJobList = ({ navigation }) => {
               <ActivityIndicator color="#fff" />
             ) : (
               <Text style={styles.editSaveText}>Save changes</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+
+    <Modal visible={!!reviewJob} transparent animationType="slide" onRequestClose={() => setReviewJob(null)}>
+      <View style={styles.editBackdrop}>
+        <View style={styles.editCard}>
+          <View style={styles.editHeader}>
+            <Text style={styles.editTitle}>Leave a review</Text>
+            <TouchableOpacity
+              style={styles.bannerClose}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              onPress={() => setReviewJob(null)}
+            >
+              <MaterialCommunityIcons name="close" size={18} color="#111" />
+            </TouchableOpacity>
+          </View>
+
+          <Text style={styles.reviewJobName}>{reviewJob?.jobName}</Text>
+
+          <View style={styles.reviewStars}>
+            <StarInput
+              value={reviewForm.rating}
+              onChange={(rating) => setReviewForm((current) => ({ ...current, rating }))}
+            />
+          </View>
+
+          <TextInput
+            style={[styles.editInput, styles.editTextArea]}
+            value={reviewForm.comment}
+            onChangeText={(comment) => setReviewForm((current) => ({ ...current, comment }))}
+            placeholder="How did the work go?"
+            placeholderTextColor="#686b64"
+            multiline
+          />
+
+          <TouchableOpacity style={styles.editSaveButton} onPress={submitReview} disabled={submittingReview}>
+            {submittingReview ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.editSaveText}>Submit review</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -537,6 +646,43 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     color: '#111',
     marginBottom: 8,
+  },
+  segmentRow: {
+    flexDirection: 'row',
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#e3dfd2',
+    borderRadius: 8,
+    padding: 4,
+    gap: 4,
+    marginBottom: 14,
+  },
+  segment: {
+    flex: 1,
+    minHeight: 44,
+    borderRadius: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  segmentActive: {
+    backgroundColor: '#111',
+  },
+  segmentText: {
+    color: '#111',
+    fontWeight: '900',
+    fontSize: 14,
+  },
+  segmentTextActive: {
+    color: '#fff',
+  },
+  reviewJobName: {
+    color: '#62645c',
+    fontWeight: '700',
+    marginBottom: 12,
+  },
+  reviewStars: {
+    marginBottom: 14,
+    alignItems: 'flex-start',
   },
   checkoutBanner: {
     borderWidth: 1,

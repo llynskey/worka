@@ -14,6 +14,14 @@ namespace Worka.Services.DTOs.Customers
 
         public string Email { get; set; }
 
+        public string Phone { get; set; }
+
+        public string Address { get; set; }
+
+        public string Languages { get; set; }
+
+        public string PhotoUrl { get; set; }
+
         public CustomerResponseDTO(Customer customer)
         {
             CustomerId = customer.CustomerId.ToString();
@@ -21,6 +29,10 @@ namespace Worka.Services.DTOs.Customers
             FirstName = customer.FirstName;
             LastName = customer.LastName;
             Email = customer.Email;
+            Phone = customer.Phone;
+            Address = customer.Address;
+            Languages = customer.Languages;
+            PhotoUrl = customer.PhotoUrl;
         }
     }
 }

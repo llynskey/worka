@@ -65,16 +65,66 @@ namespace Worka.WebApp.Controllers
             }));
         }
 
+        [HttpPost("profile-photo")]
+        [RequestSizeLimit(MaxJobPhotoBytes)]
+        public async Task<IActionResult> UploadProfilePhoto(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest(new WorkaResponse<JobPhotoUploadResponseDTO>("Choose an image to upload."));
+            }
+
+            if (file.Length > MaxJobPhotoBytes)
+            {
+                return BadRequest(new WorkaResponse<JobPhotoUploadResponseDTO>("Images must be 8MB or smaller."));
+            }
+
+            if (!AllowedImageTypes.TryGetValue(file.ContentType.ToLowerInvariant(), out var extension))
+            {
+                return BadRequest(new WorkaResponse<JobPhotoUploadResponseDTO>("Use a JPG, PNG, WebP, or GIF image."));
+            }
+
+            var uploadsRoot = Path.Combine(_environment.ContentRootPath, "wwwroot", "uploads", "profiles");
+            Directory.CreateDirectory(uploadsRoot);
+
+            var fileName = $"{Guid.NewGuid():N}{extension}";
+            var absolutePath = Path.Combine(uploadsRoot, fileName);
+
+            await using (var stream = System.IO.File.Create(absolutePath))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            var url = $"{Request.Scheme}://{Request.Host}/api/uploads/profiles/{fileName}";
+            return Ok(new WorkaResponse<JobPhotoUploadResponseDTO>(new JobPhotoUploadResponseDTO
+            {
+                Url = url,
+                FileName = fileName,
+            }));
+        }
+
+        [HttpGet("profiles/{fileName}")]
+        [AllowAnonymous]
+        public IActionResult GetProfilePhoto(string fileName)
+        {
+            return ServeUpload("profiles", fileName);
+        }
+
         [HttpGet("jobs/{fileName}")]
         [AllowAnonymous]
         public IActionResult GetJobPhoto(string fileName)
+        {
+            return ServeUpload("jobs", fileName);
+        }
+
+        private IActionResult ServeUpload(string folder, string fileName)
         {
             if (string.IsNullOrWhiteSpace(fileName) || fileName != Path.GetFileName(fileName))
             {
                 return BadRequest();
             }
 
-            var absolutePath = Path.Combine(_environment.ContentRootPath, "wwwroot", "uploads", "jobs", fileName);
+            var absolutePath = Path.Combine(_environment.ContentRootPath, "wwwroot", "uploads", folder, fileName);
             if (!System.IO.File.Exists(absolutePath))
             {
                 return NotFound();

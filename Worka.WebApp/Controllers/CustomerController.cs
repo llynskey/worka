@@ -22,6 +22,14 @@ namespace Worka.WebApp.Controllers
             public string LastName { get; set; } = string.Empty;
 
             public string Email { get; set; } = string.Empty;
+
+            public string Phone { get; set; }
+
+            public string Address { get; set; }
+
+            public string Languages { get; set; }
+
+            public string PhotoUrl { get; set; }
         }
 
         [HttpGet("account")]
@@ -50,7 +58,11 @@ namespace Worka.WebApp.Controllers
                 userId,
                 request.FirstName,
                 request.LastName,
-                request.Email);
+                request.Email,
+                request.Phone,
+                request.Address,
+                request.Languages,
+                request.PhotoUrl);
 
             return result.Success ? Ok(result) : BadRequest(result);
         }

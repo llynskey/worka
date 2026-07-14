@@ -19,6 +19,7 @@ import { api, getErrorMessage } from "../api/workaApi";
 import { useI18n } from "../i18n/I18nContext";
 import { translations } from "../i18n/translations";
 import LanguageCycler from "../components/LanguageCycler";
+import Reveal from "../components/Reveal";
 
 const audienceOptions = [
   "I need help in my language",
@@ -117,6 +118,7 @@ const AuthScreen: React.FC = () => {
   const [resetToken, setResetToken] = useState("");
   const [resetNewPassword, setResetNewPassword] = useState("");
   const [resetLoading, setResetLoading] = useState(false);
+  const [scrollTick, setScrollTick] = useState(0);
 
   useEffect(() => {
     if (Platform.OS !== "web" || typeof window === "undefined") return;
@@ -324,15 +326,17 @@ const AuthScreen: React.FC = () => {
   const renderBenefits = (stacked = false) => (
     <View style={[styles.benefitList, stacked && styles.benefitListStacked]}>
       {[1, 2, 3].map((n) => (
-        <View key={n} style={styles.benefitItem}>
-          <View style={styles.benefitIcon}>
-            <MaterialCommunityIcons name="check" size={17} color="#fff" />
+        <Reveal key={n} tick={scrollTick} delay={(n - 1) * 130}>
+          <View style={styles.benefitItem}>
+            <View style={styles.benefitIcon}>
+              <MaterialCommunityIcons name="check" size={17} color="#fff" />
+            </View>
+            <View style={styles.benefitCopy}>
+              <Text style={styles.benefitTitle}>{t(`landing.benefit${n}Title`)}</Text>
+              <Text style={styles.benefitText}>{t(`landing.benefit${n}Text`)}</Text>
+            </View>
           </View>
-          <View style={styles.benefitCopy}>
-            <Text style={styles.benefitTitle}>{t(`landing.benefit${n}Title`)}</Text>
-            <Text style={styles.benefitText}>{t(`landing.benefit${n}Text`)}</Text>
-          </View>
-        </View>
+        </Reveal>
       ))}
     </View>
   );
@@ -377,6 +381,11 @@ const AuthScreen: React.FC = () => {
     >
       <ScrollView
         style={[styles.scroll, webScrollStyle]}
+        scrollEventThrottle={80}
+        onScroll={(event) => {
+          const bucket = Math.round(event.nativeEvent.contentOffset.y / 48);
+          setScrollTick((current) => (current === bucket ? current : bucket));
+        }}
         contentContainerStyle={[
           styles.page,
           webPageStyle,

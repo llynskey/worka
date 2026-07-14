@@ -12,6 +12,15 @@ namespace Worka.Services.Database.DatabaseModels
 
         public string Email { get; set; } = string.Empty;
 
+        public string Phone { get; set; } = string.Empty;
+
+        public string Address { get; set; } = string.Empty;
+
+        /// <summary>Comma-separated ISO language codes, e.g. "en,es".</summary>
+        public string Languages { get; set; } = string.Empty;
+
+        public string PhotoUrl { get; set; } = string.Empty;
+
         public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 
         public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;

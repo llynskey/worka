@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   FlatList,
   RefreshControl,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -11,6 +12,15 @@ import {
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { api, formatMoney, getErrorMessage, unwrap } from '../../api/workaApi';
+import Avatar from '../Avatar';
+import Stars from '../Stars';
+import { SPOKEN_LANGUAGES, languageLabel } from '../../i18n/spokenLanguages';
+
+const parseLanguages = (value) =>
+  String(value ?? '')
+    .split(',')
+    .map((code) => code.trim().toLowerCase())
+    .filter(Boolean);
 
 const specialtyChips = ['Plumbing', 'Electrical', 'Painting', 'Cleaning', 'Garden', 'Repairs'];
 
@@ -22,6 +32,7 @@ const ProDirectory = () => {
   const [search, setSearch] = useState('');
   const [area, setArea] = useState('');
   const [specialty, setSpecialty] = useState('');
+  const [languageFilter, setLanguageFilter] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
 
   const loadPros = useCallback(async () => {
@@ -30,12 +41,13 @@ const ProDirectory = () => {
     if (search.trim()) params.search = search.trim();
     if (area.trim()) params.area = area.trim();
     if (specialty) params.specialty = specialty;
+    if (languageFilter) params.language = languageFilter;
     const price = Number(maxPrice);
     if (maxPrice.trim() && Number.isFinite(price) && price > 0) params.maxPrice = price;
 
     const response = await api.get('/api/Professionals/directory', { params });
     setPros(unwrap(response.data) ?? []);
-  }, [area, maxPrice, search, specialty]);
+  }, [area, languageFilter, maxPrice, search, specialty]);
 
   const refresh = useCallback(async () => {
     try {
@@ -52,7 +64,7 @@ const ProDirectory = () => {
   useEffect(() => {
     refresh();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [specialty]);
+  }, [specialty, languageFilter]);
 
   if (loading && !refreshing) {
     return (
@@ -139,6 +151,26 @@ const ProDirectory = () => {
               })}
             </View>
 
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.langFilterScroll}
+              contentContainerStyle={styles.langFilterRow}
+            >
+              {SPOKEN_LANGUAGES.map((language) => {
+                const active = languageFilter === language.code;
+                return (
+                  <TouchableOpacity
+                    key={language.code}
+                    style={[styles.chip, active && styles.chipActive]}
+                    onPress={() => setLanguageFilter(active ? '' : language.code)}
+                  >
+                    <Text style={[styles.chipText, active && styles.chipTextActive]}>{language.label}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+
             <TouchableOpacity style={styles.applyButton} onPress={refresh}>
               <MaterialCommunityIcons name="filter-check-outline" size={18} color="#fff" />
               <Text style={styles.applyButtonText}>Apply filters</Text>
@@ -165,17 +197,15 @@ const ProDirectory = () => {
       renderItem={({ item }) => (
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>
-                {(item.firstName?.[0] ?? '?').toUpperCase()}
-                {(item.lastName?.[0] ?? '').toUpperCase()}
-              </Text>
-            </View>
+            <Avatar photoUrl={item.photoUrl} firstName={item.firstName} lastName={item.lastName} size={46} />
             <View style={{ flex: 1 }}>
               <Text style={styles.cardName}>
                 {item.firstName} {item.lastName}
               </Text>
               <Text style={styles.cardSpecialty}>{item.specialty || 'General home services'}</Text>
+              <View style={styles.cardStars}>
+                <Stars value={item.averageRating} count={item.reviewCount} />
+              </View>
             </View>
             {item.readyForPayments ? (
               <View style={styles.verifiedPill}>
@@ -184,6 +214,16 @@ const ProDirectory = () => {
               </View>
             ) : null}
           </View>
+
+          {item.languages ? (
+            <View style={styles.langChipRow}>
+              {parseLanguages(item.languages).map((code) => (
+                <View key={code} style={styles.langChip}>
+                  <Text style={styles.langChipText}>{languageLabel(code)}</Text>
+                </View>
+              ))}
+            </View>
+          ) : null}
 
           {item.bio ? (
             <Text style={styles.cardBio} numberOfLines={3}>
@@ -359,18 +399,37 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
   },
-  avatar: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-    backgroundColor: '#111',
-    alignItems: 'center',
-    justifyContent: 'center',
+  cardStars: {
+    marginTop: 4,
   },
-  avatarText: {
-    color: '#fff',
-    fontWeight: '900',
-    fontSize: 15,
+  langFilterScroll: {
+    flexGrow: 0,
+    flexShrink: 0,
+    marginBottom: 12,
+  },
+  langFilterRow: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingRight: 8,
+  },
+  langChipRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: 10,
+  },
+  langChip: {
+    borderWidth: 1,
+    borderColor: '#e3dfd2',
+    borderRadius: 999,
+    paddingHorizontal: 9,
+    paddingVertical: 3,
+    backgroundColor: '#fbfaf6',
+  },
+  langChipText: {
+    color: '#62645c',
+    fontSize: 11,
+    fontWeight: '800',
   },
   cardName: {
     color: '#111',

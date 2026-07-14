@@ -21,5 +21,13 @@ namespace Worka.Services.DTOs.Professionals
         public decimal? MinQuotePrice { get; set; }
 
         public bool ReadyForPayments { get; set; }
+
+        public string Languages { get; set; } = string.Empty;
+
+        public string PhotoUrl { get; set; } = string.Empty;
+
+        public double? AverageRating { get; set; }
+
+        public int ReviewCount { get; set; }
     }
 }

@@ -28,6 +28,10 @@ namespace Worka.WebApp.Controllers
             public string Bio { get; set; } = string.Empty;
 
             public string ServiceArea { get; set; } = string.Empty;
+
+            public string Languages { get; set; }
+
+            public string PhotoUrl { get; set; }
         }
 
         [HttpGet("directory")]
@@ -35,9 +39,10 @@ namespace Worka.WebApp.Controllers
             string search = "",
             string specialty = "",
             string area = "",
-            decimal? maxPrice = null)
+            decimal? maxPrice = null,
+            string language = "")
         {
-            var result = await _professionalsService.GetDirectoryAsync(search, specialty, area, maxPrice);
+            var result = await _professionalsService.GetDirectoryAsync(search, specialty, area, maxPrice, language);
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
@@ -70,7 +75,9 @@ namespace Worka.WebApp.Controllers
                 request.Email,
                 request.Specialty,
                 request.Bio,
-                request.ServiceArea);
+                request.ServiceArea,
+                request.Languages,
+                request.PhotoUrl);
 
             return result.Success ? Ok(result) : BadRequest(result);
         }

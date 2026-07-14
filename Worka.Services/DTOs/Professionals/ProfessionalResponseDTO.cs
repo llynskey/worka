@@ -20,6 +20,10 @@ namespace Worka.Services.DTOs.Professionals
 
         public string ServiceArea { get; set; }
 
+        public string Languages { get; set; }
+
+        public string PhotoUrl { get; set; }
+
         public bool StripeConnected { get; set; }
 
         public bool StripeChargesEnabled { get; set; }
@@ -38,6 +42,8 @@ namespace Worka.Services.DTOs.Professionals
             Specialty = professional.Specialty;
             Bio = professional.Bio;
             ServiceArea = professional.ServiceArea;
+            Languages = professional.Languages;
+            PhotoUrl = professional.PhotoUrl;
             StripeConnected = !string.IsNullOrWhiteSpace(professional.StripeAccountId);
             StripeChargesEnabled = professional.StripeChargesEnabled;
             StripePayoutsEnabled = professional.StripePayoutsEnabled;

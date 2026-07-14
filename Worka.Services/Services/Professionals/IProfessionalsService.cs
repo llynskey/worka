@@ -14,7 +14,9 @@ namespace Worka.Services.Professionals
             string email,
             string specialty,
             string bio,
-            string serviceArea);
+            string serviceArea,
+            string languages = null,
+            string photoUrl = null);
 
         Task<WorkaResponse<ProfessionalResponseDTO>> EnsureExistsAsync(
             string userId,
@@ -26,6 +28,7 @@ namespace Worka.Services.Professionals
             string search,
             string specialty,
             string area,
-            decimal? maxPrice);
+            decimal? maxPrice,
+            string language = null);
     }
 }

@@ -8,6 +8,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  useWindowDimensions,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -18,9 +19,22 @@ const hasCoordinates = (job) => Number.isFinite(Number(job.latitude)) && Number.
 
 const getLocationLabel = (job) => job.locationLabel || job.address || 'Location not set';
 
+const MAPBOX_TOKEN = process.env.EXPO_PUBLIC_MAPBOX_TOKEN;
+
 const getMapUrl = (job) => {
   const latitude = Number(job.latitude);
   const longitude = Number(job.longitude);
+
+  if (MAPBOX_TOKEN) {
+    // Interactive Mapbox GL embed — crisp vector tiles that match the brand
+    // far better than the raster OSM fallback below.
+    return (
+      `https://api.mapbox.com/styles/v1/mapbox/streets-v12.html` +
+      `?title=false&zoomwheel=true&access_token=${encodeURIComponent(MAPBOX_TOKEN)}` +
+      `#13.2/${latitude}/${longitude}`
+    );
+  }
+
   const latPadding = 0.025;
   const lngPadding = 0.04;
   const bbox = [
@@ -42,10 +56,10 @@ const openExternalMap = (job, currentLocation) => {
   Linking.openURL(url);
 };
 
-const WebMapFrame = ({ job }) => {
+const WebMapFrame = ({ job, minHeight = 420 }) => {
   if (Platform.OS !== 'web' || !job || !hasCoordinates(job)) {
     return (
-      <View style={styles.mapPlaceholder}>
+      <View style={[styles.mapPlaceholder, { minHeight }]}>
         <MaterialCommunityIcons name="map-marker-off-outline" size={36} color="#111" />
         <Text style={styles.placeholderTitle}>Choose a located job</Text>
         <Text style={styles.placeholderText}>Jobs posted with address lookup will appear on the map.</Text>
@@ -60,7 +74,7 @@ const WebMapFrame = ({ job }) => {
       border: 0,
       width: '100%',
       height: '100%',
-      minHeight: 420,
+      minHeight,
       display: 'block',
     },
   });
@@ -75,6 +89,9 @@ const JobMap = () => {
   const [currentLocation, setCurrentLocation] = useState(null);
   const [locating, setLocating] = useState(false);
   const [locationError, setLocationError] = useState('');
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const isNarrow = windowWidth < 700;
+  const mapHeight = Math.min(300, Math.round(windowHeight * 0.45));
 
   const loadJobs = useCallback(async () => {
     setError(null);
@@ -158,46 +175,120 @@ const JobMap = () => {
     );
   }
 
+  const headerBlock = (
+    <View style={styles.header}>
+      <View style={styles.headerCopy}>
+        <Text style={styles.eyebrow}>Job map</Text>
+        <Text style={styles.title}>Browse work by location.</Text>
+        <Text style={styles.subtitle}>{locatedJobs.length} located jobs, {unlocatedJobs.length} awaiting location.</Text>
+      </View>
+      <TouchableOpacity style={styles.refreshButton} onPress={refresh} disabled={refreshing}>
+        {refreshing ? (
+          <ActivityIndicator color="#111" />
+        ) : (
+          <MaterialCommunityIcons name="refresh" size={20} color="#111" />
+        )}
+      </TouchableOpacity>
+    </View>
+  );
+
+  const locationBarBlock = (
+    <View style={styles.locationBar}>
+      <View style={{ flex: 1 }}>
+        <Text style={styles.locationBarTitle}>
+          {currentLocation ? 'Current location set' : 'Current location not set'}
+        </Text>
+        <Text style={styles.locationBarText}>
+          {currentLocation
+            ? 'Located jobs are sorted by distance. Open a job for directions.'
+            : 'Share location to show distance to each job.'}
+        </Text>
+        {locationError ? <Text style={styles.locationError}>{locationError}</Text> : null}
+      </View>
+      <TouchableOpacity style={styles.locationButton} onPress={useCurrentLocation} disabled={locating}>
+        {locating ? (
+          <ActivityIndicator color="#111" />
+        ) : (
+          <>
+            <MaterialCommunityIcons name="crosshairs-gps" size={18} color="#111" />
+            <Text style={styles.locationButtonText}>{currentLocation ? 'Update' : 'Use location'}</Text>
+          </>
+        )}
+      </TouchableOpacity>
+    </View>
+  );
+
+  const listBody = (
+    <>
+      {locatedJobs.length === 0 ? (
+        <View style={styles.emptyState}>
+          <MaterialCommunityIcons name="map-marker-plus-outline" size={36} color="#111" />
+          <Text style={styles.emptyTitle}>No located jobs yet</Text>
+          <Text style={styles.mutedText}>New jobs must now choose a lookup result before posting.</Text>
+        </View>
+      ) : (
+        locatedJobs.map((job) => {
+          const active = selectedJob?.jobId === job.jobId;
+          const distanceLabel = formatDistance(getDistanceKm(currentLocation, job));
+          return (
+            <TouchableOpacity
+              key={job.jobId}
+              style={[styles.jobItem, active && styles.jobItemActive]}
+              onPress={() => setSelectedJobId(job.jobId)}
+            >
+              <View style={styles.jobItemHeader}>
+                <Text style={[styles.jobTitle, active && styles.jobTitleActive]}>{job.jobName}</Text>
+                <Text style={[styles.jobMeta, active && styles.jobMetaActive]}>
+                  {distanceLabel || formatDate(job.createdAt)}
+                </Text>
+              </View>
+              <Text style={[styles.jobLocation, active && styles.jobLocationActive]}>{getLocationLabel(job)}</Text>
+              <View style={styles.jobFooter}>
+                <Text style={[styles.jobCategory, active && styles.jobCategoryActive]}>
+                  {job.category || 'Home services'}
+                </Text>
+                <TouchableOpacity style={styles.openMapButton} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} onPress={() => openExternalMap(job, currentLocation)}>
+                  <MaterialCommunityIcons name="open-in-new" size={15} color={active ? '#fff' : '#111'} />
+                  <Text style={[styles.openMapText, active && styles.openMapTextActive]}>
+                    {currentLocation ? 'Directions' : 'Open'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </TouchableOpacity>
+          );
+        })
+      )}
+
+      {unlocatedJobs.length > 0 ? (
+        <View style={styles.unlocatedBlock}>
+          <Text style={styles.unlocatedTitle}>Jobs missing coordinates</Text>
+          {unlocatedJobs.map((job) => (
+            <Text key={job.jobId} style={styles.unlocatedText}>
+              {job.jobName} - {job.address || 'No address'}
+            </Text>
+          ))}
+        </View>
+      ) : null}
+    </>
+  );
+
+  if (isNarrow) {
+    return (
+      <ScrollView style={styles.narrowShell} contentContainerStyle={styles.narrowContent}>
+        {headerBlock}
+        {locationBarBlock}
+        <View style={[styles.mapPaneNarrow, { height: mapHeight }]}>
+          <WebMapFrame job={selectedJob} minHeight={mapHeight} />
+        </View>
+        <View style={styles.narrowList}>{listBody}</View>
+      </ScrollView>
+    );
+  }
+
   return (
     <View style={styles.shell}>
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.eyebrow}>Job map</Text>
-          <Text style={styles.title}>Browse work by location.</Text>
-          <Text style={styles.subtitle}>{locatedJobs.length} located jobs, {unlocatedJobs.length} awaiting location.</Text>
-        </View>
-        <TouchableOpacity style={styles.refreshButton} onPress={refresh} disabled={refreshing}>
-          {refreshing ? (
-            <ActivityIndicator color="#111" />
-          ) : (
-            <MaterialCommunityIcons name="refresh" size={20} color="#111" />
-          )}
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.locationBar}>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.locationBarTitle}>
-            {currentLocation ? 'Current location set' : 'Current location not set'}
-          </Text>
-          <Text style={styles.locationBarText}>
-            {currentLocation
-              ? 'Located jobs are sorted by distance. Open a job for directions.'
-              : 'Share location to show distance to each job.'}
-          </Text>
-          {locationError ? <Text style={styles.locationError}>{locationError}</Text> : null}
-        </View>
-        <TouchableOpacity style={styles.locationButton} onPress={useCurrentLocation} disabled={locating}>
-          {locating ? (
-            <ActivityIndicator color="#111" />
-          ) : (
-            <>
-              <MaterialCommunityIcons name="crosshairs-gps" size={18} color="#111" />
-              <Text style={styles.locationButtonText}>{currentLocation ? 'Update' : 'Use location'}</Text>
-            </>
-          )}
-        </TouchableOpacity>
-      </View>
+      {headerBlock}
+      {locationBarBlock}
 
       <View style={styles.mapLayout}>
         <View style={styles.mapPane}>
@@ -205,55 +296,7 @@ const JobMap = () => {
         </View>
 
         <ScrollView style={styles.listPane} contentContainerStyle={styles.listContent}>
-          {locatedJobs.length === 0 ? (
-            <View style={styles.emptyState}>
-              <MaterialCommunityIcons name="map-marker-plus-outline" size={36} color="#111" />
-              <Text style={styles.emptyTitle}>No located jobs yet</Text>
-              <Text style={styles.mutedText}>New jobs must now choose a lookup result before posting.</Text>
-            </View>
-          ) : (
-            locatedJobs.map((job) => {
-              const active = selectedJob?.jobId === job.jobId;
-              const distanceLabel = formatDistance(getDistanceKm(currentLocation, job));
-              return (
-                <TouchableOpacity
-                  key={job.jobId}
-                  style={[styles.jobItem, active && styles.jobItemActive]}
-                  onPress={() => setSelectedJobId(job.jobId)}
-                >
-                  <View style={styles.jobItemHeader}>
-                    <Text style={[styles.jobTitle, active && styles.jobTitleActive]}>{job.jobName}</Text>
-                    <Text style={[styles.jobMeta, active && styles.jobMetaActive]}>
-                      {distanceLabel || formatDate(job.createdAt)}
-                    </Text>
-                  </View>
-                  <Text style={[styles.jobLocation, active && styles.jobLocationActive]}>{getLocationLabel(job)}</Text>
-                  <View style={styles.jobFooter}>
-                    <Text style={[styles.jobCategory, active && styles.jobCategoryActive]}>
-                      {job.category || 'Home services'}
-                    </Text>
-                    <TouchableOpacity style={styles.openMapButton} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} onPress={() => openExternalMap(job, currentLocation)}>
-                      <MaterialCommunityIcons name="open-in-new" size={15} color={active ? '#fff' : '#111'} />
-                      <Text style={[styles.openMapText, active && styles.openMapTextActive]}>
-                        {currentLocation ? 'Directions' : 'Open'}
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                </TouchableOpacity>
-              );
-            })
-          )}
-
-          {unlocatedJobs.length > 0 ? (
-            <View style={styles.unlocatedBlock}>
-              <Text style={styles.unlocatedTitle}>Jobs missing coordinates</Text>
-              {unlocatedJobs.map((job) => (
-                <Text key={job.jobId} style={styles.unlocatedText}>
-                  {job.jobName} - {job.address || 'No address'}
-                </Text>
-              ))}
-            </View>
-          ) : null}
+          {listBody}
         </ScrollView>
       </View>
     </View>
@@ -266,6 +309,33 @@ const styles = StyleSheet.create({
     minHeight: 0,
     backgroundColor: '#f7f5ef',
     padding: 16,
+  },
+  narrowShell: {
+    flex: 1,
+    minHeight: 0,
+    backgroundColor: '#f7f5ef',
+  },
+  narrowContent: {
+    padding: 16,
+    paddingBottom: 96,
+    width: '100%',
+  },
+  headerCopy: {
+    flex: 1,
+    minWidth: 0,
+  },
+  mapPaneNarrow: {
+    width: '100%',
+    borderRadius: 8,
+    overflow: 'hidden',
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#111',
+    marginBottom: 14,
+  },
+  narrowList: {
+    width: '100%',
+    gap: 10,
   },
   header: {
     backgroundColor: '#fff',

@@ -18,6 +18,11 @@ namespace Worka.Services.Database.DatabaseModels
 
         public string ServiceArea { get; set; } = string.Empty;
 
+        /// <summary>Comma-separated ISO language codes, e.g. "en,pl,ro".</summary>
+        public string Languages { get; set; } = string.Empty;
+
+        public string PhotoUrl { get; set; } = string.Empty;
+
         public string StripeAccountId { get; set; } = string.Empty;
 
         public bool StripeChargesEnabled { get; set; }
