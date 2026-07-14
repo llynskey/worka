@@ -52,3 +52,26 @@ jobs:
         run: npx expo export --platform web
         env:
           EXPO_PUBLIC_API_URL: /api
+
+  deploy:
+    name: Deploy to VPS
+    needs: [backend, web]
+    # Deploys only when a push to master passes both build jobs, and only
+    # once the three VPS_* secrets are configured in the repo settings.
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pull latest and rebuild containers over SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script_stop: true
+          script: |
+            cd /opt/worka
+            git fetch origin master
+            git reset --hard origin/master
+            docker compose --env-file .env.production up -d --build
+            docker image prune -f
+            curl -fsS http://localhost/api/health || echo "WARNING: health check failed"

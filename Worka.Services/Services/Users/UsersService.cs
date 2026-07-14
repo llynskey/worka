@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -25,6 +26,7 @@ namespace Worka.Services.Users
         private readonly ICustomerService _customerService;
         private readonly IProfessionalsService _professionalsService;
         private readonly IEmailService _emailService;
+        private readonly ILogger<UsersService> _logger;
         private readonly string _publicUrl;
         private readonly string JwtSecret;
 
@@ -33,12 +35,14 @@ namespace Worka.Services.Users
             IConfiguration configuration,
             ICustomerService customerService,
             IProfessionalsService professionalsService,
-            IEmailService emailService)
+            IEmailService emailService,
+            ILogger<UsersService> logger = null)
         {
             _dbContext = dbContext;
             _customerService = customerService;
             _professionalsService = professionalsService;
             _emailService = emailService;
+            _logger = logger;
             _publicUrl = (configuration["Worka:PublicUrl"] ?? "https://worka-uk.online").TrimEnd('/');
             JwtSecret = configuration.GetRequiredSection("JwtSecret").Value
                 ?? throw new ArgumentNullException("JwtSecret", "JWT Secret is not configured.");
@@ -188,6 +192,12 @@ namespace Worka.Services.Users
                 var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == email);
                 if (user == null || !_emailService.IsConfigured)
                 {
+                    if (!_emailService.IsConfigured)
+                    {
+                        _logger?.LogWarning(
+                            "Password reset requested but SMTP is not configured (Smtp__Host is empty); no email sent.");
+                    }
+
                     // Same response either way to avoid account enumeration.
                     return new WorkaResponse<bool>(true, message: neutralMessage);
                 }
@@ -222,6 +232,7 @@ namespace Worka.Services.Users
             }
             catch (Exception ex)
             {
+                _logger?.LogError(ex, "Failed to send the password reset email.");
                 return WorkaResponse<bool>.Fail(ex, "Error processing the reset request.");
             }
         }

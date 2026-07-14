@@ -15,7 +15,7 @@ import {
 import notify, { confirmAction } from '../../Utils/notify';
 import { useFocusEffect } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { api, formatMoney, unwrap, getErrorMessage } from '../../api/workaApi';
+import { api, formatDate, formatMoney, unwrap, getErrorMessage } from '../../api/workaApi';
 import JobCard from './JobCard';
 
 const statusLabel = (status) => {
@@ -94,6 +94,26 @@ const CustomerJobList = ({ navigation }) => {
       refresh();
     }, [refresh])
   );
+
+  const jobsById = useMemo(() => {
+    return jobs.reduce((acc, job) => {
+      acc[job.jobId] = job;
+      return acc;
+    }, {});
+  }, [jobs]);
+
+  const recentActivity = useMemo(() => {
+    return [...quotes]
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .slice(0, 4)
+      .map((quote) => ({
+        id: quote.quoteId,
+        booked: jobsById[quote.jobId]?.acceptedQuoteId === quote.quoteId,
+        price: quote.price,
+        jobName: jobsById[quote.jobId]?.jobName ?? 'a job',
+        when: formatDate(quote.createdAt),
+      }));
+  }, [jobsById, quotes]);
 
   const quotesByJob = useMemo(() => {
     return quotes.reduce((acc, quote) => {
@@ -294,6 +314,30 @@ const CustomerJobList = ({ navigation }) => {
             ))}
           </View>
 
+          {recentActivity.length > 0 ? (
+            <View style={styles.activityCard}>
+              <Text style={styles.activityTitle}>Recent activity</Text>
+              {recentActivity.map((entry) => (
+                <View key={entry.id} style={styles.activityRow}>
+                  <View style={[styles.activityDot, entry.booked && styles.activityDotBooked]}>
+                    <MaterialCommunityIcons
+                      name={entry.booked ? 'check' : 'file-document-outline'}
+                      size={14}
+                      color={entry.booked ? '#24513b' : '#111'}
+                    />
+                  </View>
+                  <Text style={styles.activityText}>
+                    {entry.booked ? 'Booked ' : 'New quote '}
+                    <Text style={styles.activityStrong}>{formatMoney(entry.price)}</Text>
+                    {' on '}
+                    <Text style={styles.activityStrong}>{entry.jobName}</Text>
+                  </Text>
+                  <Text style={styles.activityWhen}>{entry.when}</Text>
+                </View>
+              ))}
+            </View>
+          ) : null}
+
           <Text style={styles.sectionTitle}>Your jobs</Text>
         </View>
       }
@@ -438,6 +482,54 @@ const styles = StyleSheet.create({
   statLabel: {
     marginTop: 4,
     color: '#62645c',
+    fontWeight: '700',
+  },
+  activityCard: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e3dfd2',
+    padding: 14,
+    marginBottom: 18,
+  },
+  activityTitle: {
+    color: '#111',
+    fontWeight: '900',
+    fontSize: 15,
+    marginBottom: 10,
+  },
+  activityRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 7,
+    borderTopWidth: 1,
+    borderTopColor: '#f1ede4',
+  },
+  activityDot: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#f1ede4',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  activityDotBooked: {
+    backgroundColor: '#dff4e8',
+  },
+  activityText: {
+    flex: 1,
+    minWidth: 0,
+    color: '#4d504b',
+    lineHeight: 19,
+  },
+  activityStrong: {
+    color: '#111',
+    fontWeight: '800',
+  },
+  activityWhen: {
+    color: '#8a8d84',
+    fontSize: 12,
     fontWeight: '700',
   },
   sectionTitle: {

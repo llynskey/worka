@@ -52,6 +52,30 @@ https://your-domain.example/api/payments/stripe/webhook
 
 Apple Pay, Google Pay, browser location, and the cleanest checkout return flow all need a real HTTPS domain, not just the raw server IP over HTTP.
 
+## Email (password resets)
+
+Create a free account with an SMTP provider (Brevo: 300 emails/day free, or SMTP2GO: 1,000/month free), verify your sending domain with the DNS records they give you (SPF + DKIM), then set in `.env.production`:
+
+```bash
+Smtp__Host=smtp-relay.brevo.com    # or your provider's host
+Smtp__Port=587
+Smtp__Username=<from provider>
+Smtp__Password=<from provider>
+Smtp__From=no-reply@worka-uk.online
+```
+
+Restart the api container and confirm `https://worka-uk.online/api/health` reports `"email": "configured"`. Do NOT run your own mail server on the VPS — OVH blocks port 25 by default and a fresh IP has no sending reputation, so resets would land in spam.
+
+## Automatic deployment (GitHub Actions)
+
+Every green build on `master` deploys itself once these repo secrets are set (GitHub → Settings → Secrets and variables → Actions):
+
+- `VPS_HOST` — the VPS IP or hostname
+- `VPS_USER` — the SSH user that owns /opt/worka
+- `VPS_SSH_KEY` — a private key whose public half is in that user's `~/.ssh/authorized_keys` (generate a dedicated one: `ssh-keygen -t ed25519 -f worka-deploy -N ""`)
+
+The deploy job pulls master into /opt/worka, rebuilds the containers against `.env.production`, and hits the health endpoint. Manual deploys still work the same way by SSHing in and running the Run commands below.
+
 ## Run
 
 ```bash

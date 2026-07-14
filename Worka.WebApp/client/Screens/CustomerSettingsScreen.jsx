@@ -1,6 +1,7 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AuthContext } from '../auth/AuthContext';
 import { api, getErrorMessage } from '../api/workaApi';
 import notify, { confirmAction } from '../Utils/notify';
@@ -17,6 +18,23 @@ const CustomerSettingsScreen = ({ navigation }) => {
   const [deletePassword, setDeletePassword] = useState('');
   const [deleting, setDeleting] = useState(false);
   const { signOut } = useContext(AuthContext);
+
+  // Persist notification preferences locally so choices survive restarts.
+  useEffect(() => {
+    AsyncStorage.getItem('worka.settings.customer')
+      .then((raw) => {
+        if (!raw) return;
+        const saved = JSON.parse(raw);
+        if (typeof saved.quoteAlerts === 'boolean') setQuoteAlerts(saved.quoteAlerts);
+        if (typeof saved.bookingAlerts === 'boolean') setBookingAlerts(saved.bookingAlerts);
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    AsyncStorage.setItem('worka.settings.customer', JSON.stringify({ quoteAlerts, bookingAlerts })).catch(() => {});
+  }, [quoteAlerts, bookingAlerts]);
+
   const { t, language, languages, setLanguage } = useI18n();
 
   const changePassword = async () => {
@@ -177,11 +195,42 @@ const CustomerSettingsScreen = ({ navigation }) => {
         <Text style={styles.settingText}>support@worka-uk.online</Text>
         <Text style={styles.settingText}>Typical response time: one business day.</Text>
       </View>
+
+      <TouchableOpacity style={styles.signOutButton} onPress={signOut}>
+        <MaterialCommunityIcons name="logout" size={19} color="#111" />
+        <Text style={styles.signOutText}>Sign out</Text>
+      </TouchableOpacity>
+
+      <Text style={styles.versionText}>Worka v1.0.0</Text>
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
+  signOutButton: {
+    minHeight: 48,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderWidth: 1,
+    borderColor: '#111',
+    borderRadius: 8,
+    backgroundColor: '#fff',
+    marginBottom: 14,
+  },
+  signOutText: {
+    color: '#111',
+    fontWeight: '900',
+    fontSize: 15,
+  },
+  versionText: {
+    textAlign: 'center',
+    color: '#8a8d84',
+    fontSize: 12,
+    fontWeight: '700',
+    marginBottom: 8,
+  },
   languageRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',

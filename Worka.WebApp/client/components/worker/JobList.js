@@ -82,6 +82,16 @@ const WorkerJobList = () => {
     }, {});
   }, [quotes]);
 
+  const bookedValue = useMemo(() => {
+    const byId = jobs.reduce((acc, job) => {
+      acc[job.jobId] = job;
+      return acc;
+    }, {});
+    return quotes
+      .filter((quote) => byId[quote.jobId]?.acceptedQuoteId === quote.quoteId)
+      .reduce((sum, quote) => sum + Number(quote.price || 0), 0);
+  }, [jobs, quotes]);
+
   const openJobs = useMemo(() => {
     const nextJobs = jobs.filter((job) => !job.acceptedQuoteId);
     if (!currentLocation) return nextJobs;
@@ -189,6 +199,10 @@ const WorkerJobList = () => {
               <View style={styles.statChip}>
                 <Text style={styles.statValue}>{quotes.length}</Text>
                 <Text style={styles.statLabel}>Your bids</Text>
+              </View>
+              <View style={styles.statChip}>
+                <Text style={styles.statValue}>{formatMoney(bookedValue)}</Text>
+                <Text style={styles.statLabel}>Booked value</Text>
               </View>
             </View>
             <TouchableOpacity style={styles.locationButton} onPress={useCurrentLocation} disabled={locating}>

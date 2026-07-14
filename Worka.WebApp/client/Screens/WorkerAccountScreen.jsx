@@ -135,6 +135,28 @@ const WorkerAccountScreen = () => {
     }
   };
 
+  const profileStrength = (() => {
+    const checks = [
+      !!form.firstName.trim(),
+      !!form.lastName.trim(),
+      !!form.email.trim(),
+      !!form.specialty.trim(),
+      !!form.serviceArea.trim(),
+      form.bio.trim().length >= 40,
+      !!stripeStatus?.readyForPayments,
+    ];
+    const done = checks.filter(Boolean).length;
+    return { done, total: checks.length, percent: Math.round((done / checks.length) * 100) };
+  })();
+
+  const strengthHint = !stripeStatus?.readyForPayments
+    ? 'Set up payouts to appear as "Payout ready" in the customer directory.'
+    : form.bio.trim().length < 40
+      ? 'Add a longer bio — customers pick pros who explain their work.'
+      : !form.serviceArea.trim()
+        ? 'Add your service area so nearby customers can find you.'
+        : 'Great profile — you show up strong in the directory.';
+
   if (loading) {
     return (
       <View style={styles.centerState}>
@@ -152,6 +174,17 @@ const WorkerAccountScreen = () => {
           <Text style={styles.title}>Professional account</Text>
           <Text style={styles.subtitle}>Help customers understand your trade, coverage, and approach.</Text>
         </View>
+      </View>
+
+      <View style={styles.strengthCard}>
+        <View style={styles.strengthHeader}>
+          <Text style={styles.strengthTitle}>Profile strength</Text>
+          <Text style={styles.strengthPercent}>{profileStrength.percent}%</Text>
+        </View>
+        <View style={styles.strengthTrack}>
+          <View style={[styles.strengthFill, { width: `${profileStrength.percent}%` }]} />
+        </View>
+        <Text style={styles.strengthHint}>{strengthHint}</Text>
       </View>
 
       <View style={styles.payoutCard}>
@@ -261,6 +294,46 @@ const WorkerAccountScreen = () => {
 };
 
 const styles = StyleSheet.create({
+  strengthCard: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e3dfd2',
+    padding: 14,
+    marginBottom: 14,
+  },
+  strengthHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  strengthTitle: {
+    color: '#111',
+    fontWeight: '900',
+    fontSize: 15,
+  },
+  strengthPercent: {
+    color: '#111',
+    fontWeight: '900',
+    fontSize: 15,
+  },
+  strengthTrack: {
+    height: 8,
+    borderRadius: 999,
+    backgroundColor: '#f1ede4',
+    overflow: 'hidden',
+  },
+  strengthFill: {
+    height: 8,
+    borderRadius: 999,
+    backgroundColor: '#111',
+  },
+  strengthHint: {
+    marginTop: 10,
+    color: '#62645c',
+    lineHeight: 19,
+  },
   content: {
     padding: 16,
     paddingBottom: 96,
