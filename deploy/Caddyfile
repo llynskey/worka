@@ -1,4 +1,4 @@
-{$SITE_ADDRESS} {
+worka-uk.online {
 	encode zstd gzip
 
 	header {
@@ -13,7 +13,11 @@
 
 	handle {
 		root * /srv
-		try_files {path} {path}/ /index.html
+		try_files {path} /index.html
 		file_server
 	}
+}
+
+www.worka-uk.online {
+	redir https://worka-uk.online{uri} permanent
 }
