@@ -128,10 +128,10 @@ namespace Worka.Tests
                 },
                 out _);
 
-            var userId = principal.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             Assert.False(string.IsNullOrWhiteSpace(userId));
             Assert.True(Guid.TryParse(userId, out _));
-            Assert.Equal("professional", principal.FindFirstValue(ClaimTypes.Role));
+            Assert.Equal("professional", principal.FindFirst(ClaimTypes.Role)?.Value);
         }
 
         [Fact]

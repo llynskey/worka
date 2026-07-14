@@ -103,19 +103,23 @@ const LanguageCycler = ({ items, textStyle, containerStyle, interval = 4200 }) =
 
   return (
     <View style={[containerStyle, maxHeight > 0 ? { minHeight: maxHeight } : null]}>
-      {/* Invisible sizers: reserve the height of the tallest variant. */}
-      {safeItems.map((item, ghostIndex) => (
-        <Text
-          key={`ghost-${ghostIndex}`}
-          style={[textStyle, styles.ghost]}
-          onLayout={onGhostLayout(ghostIndex)}
-          accessibilityElementsHidden
-          importantForAccessibility="no-hide-descendants"
-          aria-hidden
-        >
-          {item}
-        </Text>
-      ))}
+      {/* Sizers: measured for the height lock, but clipped inside a
+          zero-height box so they can never paint, whatever the platform
+          does with opacity. */}
+      <View style={styles.sizerClip} pointerEvents="none">
+        {safeItems.map((item, ghostIndex) => (
+          <Text
+            key={`ghost-${ghostIndex}`}
+            style={textStyle}
+            onLayout={onGhostLayout(ghostIndex)}
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+            aria-hidden
+          >
+            {item}
+          </Text>
+        ))}
+      </View>
 
       <Animated.Text style={[textStyle, styles.visible, { opacity, transform: [{ translateY }] }]}>
         {safeItems[index]}
@@ -128,15 +132,14 @@ const styles = StyleSheet.create({
   visible: {
     zIndex: 1,
   },
-  ghost: {
+  sizerClip: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
+    height: 0,
+    overflow: 'hidden',
     opacity: 0,
-    color: 'transparent',
-    zIndex: -1,
-    pointerEvents: 'none',
   },
 });
 
