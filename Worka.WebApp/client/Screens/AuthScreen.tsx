@@ -1515,7 +1515,11 @@ const styles = StyleSheet.create({
   },
   accountTypeCardPhone: {
     width: "100%",
-    flex: 0,
+    // Not `flex: 0` — react-native-web compiles that to flex-basis: 0%,
+    // which collapses the card's HEIGHT inside the stacked (column) list.
+    flexGrow: 0,
+    flexShrink: 0,
+    flexBasis: "auto",
   },
   accountTypeCardActive: {
     backgroundColor: "#111",
