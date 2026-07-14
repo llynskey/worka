@@ -55,6 +55,14 @@ const LanguageCycler = ({ items, textStyle, containerStyle, interval = 4200 }) =
     if (safeItems.length < 2) return undefined;
 
     const id = setInterval(() => {
+      if (typeof document !== 'undefined' && document.hidden) {
+        // Browser tab is backgrounded; skip this cycle so we never leave
+        // the headline stranded mid-fade.
+        opacity.setValue(1);
+        translateY.setValue(0);
+        return;
+      }
+
       Animated.parallel([
         Animated.timing(opacity, {
           toValue: 0,
@@ -109,7 +117,7 @@ const LanguageCycler = ({ items, textStyle, containerStyle, interval = 4200 }) =
         </Text>
       ))}
 
-      <Animated.Text style={[textStyle, { opacity, transform: [{ translateY }] }]}>
+      <Animated.Text style={[textStyle, styles.visible, { opacity, transform: [{ translateY }] }]}>
         {safeItems[index]}
       </Animated.Text>
     </View>
@@ -117,12 +125,17 @@ const LanguageCycler = ({ items, textStyle, containerStyle, interval = 4200 }) =
 };
 
 const styles = StyleSheet.create({
+  visible: {
+    zIndex: 1,
+  },
   ghost: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     opacity: 0,
+    color: 'transparent',
+    zIndex: -1,
     pointerEvents: 'none',
   },
 });
