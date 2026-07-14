@@ -32,6 +32,32 @@ namespace Worka.WebApp.Controllers
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
+        [HttpPut("Quotes/{quoteId}")]
+        public async Task<IActionResult> Update(string quoteId, [FromBody] UpdateQuoteDTO quoteRequest)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Unauthorized();
+            }
+
+            var result = await _quoteService.UpdateQuoteAsync(userId, quoteId, quoteRequest);
+            return result.Success ? Ok(result) : BadRequest(result);
+        }
+
+        [HttpDelete("Quotes/{quoteId}")]
+        public async Task<IActionResult> Withdraw(string quoteId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Unauthorized();
+            }
+
+            var result = await _quoteService.WithdrawQuoteAsync(userId, quoteId);
+            return result.Success ? Ok(result) : BadRequest(result);
+        }
+
         [HttpGet("ProfessionalQuotes")]
         [HttpGet("~/ProfessionalQuotes")]
         public async Task<IActionResult> GetProfessionalQuotes()

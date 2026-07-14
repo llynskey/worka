@@ -13,13 +13,16 @@ namespace Worka.Tests
 {
     public class UsersServiceTests
     {
-        private static UsersService CreateService(Services.Database.WorkaDbContext dbContext)
+        private static UsersService CreateService(
+            Services.Database.WorkaDbContext dbContext,
+            FakeEmailService emailService = null)
         {
             return new UsersService(
                 dbContext,
                 TestHelpers.CreateConfiguration(),
                 new CustomersService(dbContext),
-                new ProfessionalsService(dbContext));
+                new ProfessionalsService(dbContext),
+                emailService ?? new FakeEmailService());
         }
 
         [Fact]

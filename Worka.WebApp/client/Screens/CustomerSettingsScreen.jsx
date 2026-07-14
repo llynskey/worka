@@ -1,10 +1,67 @@
-import React, { useState } from 'react';
-import { ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
+import React, { useContext, useState } from 'react';
+import { ActivityIndicator, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { AuthContext } from '../auth/AuthContext';
+import { api, getErrorMessage } from '../api/workaApi';
+import notify, { confirmAction } from '../Utils/notify';
+import { useI18n } from '../i18n/I18nContext';
 
 const CustomerSettingsScreen = ({ navigation }) => {
   const [quoteAlerts, setQuoteAlerts] = useState(true);
   const [bookingAlerts, setBookingAlerts] = useState(true);
+
+
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleting, setDeleting] = useState(false);
+  const { signOut } = useContext(AuthContext);
+  const { t, language, languages, setLanguage } = useI18n();
+
+  const changePassword = async () => {
+    if (newPassword.length < 6) {
+      notify('Password too short', 'Use at least 6 characters.');
+      return;
+    }
+
+    try {
+      setChangingPassword(true);
+      await api.post('/account/changePassword', { currentPassword, newPassword });
+      setCurrentPassword('');
+      setNewPassword('');
+      notify('Password updated', 'Use your new password next time you log in.');
+    } catch (error) {
+      notify('Could not change password', getErrorMessage(error));
+    } finally {
+      setChangingPassword(false);
+    }
+  };
+
+  const deleteAccount = async () => {
+    if (!deletePassword) {
+      notify('Password needed', 'Enter your password to confirm deletion.');
+      return;
+    }
+
+    const confirmed = await confirmAction(
+      'Delete your account?',
+      'Your profile, jobs, and quotes will be permanently removed. This cannot be undone.',
+      'Delete forever'
+    );
+    if (!confirmed) return;
+
+    try {
+      setDeleting(true);
+      await api.delete('/account', { data: { password: deletePassword } });
+      notify('Account deleted', 'Sorry to see you go.');
+      await signOut();
+    } catch (error) {
+      notify('Could not delete account', getErrorMessage(error));
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   return (
     <ScrollView contentContainerStyle={styles.content}>
@@ -40,6 +97,81 @@ const CustomerSettingsScreen = ({ navigation }) => {
         <MaterialCommunityIcons name="chevron-right" size={24} color="#111" />
       </TouchableOpacity>
 
+
+
+      <View style={styles.card}>
+        <Text style={styles.settingTitle}>{t('settings.language')}</Text>
+        <Text style={styles.settingText}>{t('settings.languageHint')}</Text>
+        <View style={styles.languageRow}>
+          {languages.map((lang) => {
+            const active = lang.code === language;
+            return (
+              <TouchableOpacity
+                key={lang.code}
+                style={[styles.languageChip, active && styles.languageChipActive]}
+                onPress={() => setLanguage(lang.code)}
+              >
+                <Text style={[styles.languageChipText, active && styles.languageChipTextActive]}>
+                  {lang.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </View>
+
+      <View style={styles.card}>
+        <Text style={styles.settingTitle}>Change password</Text>
+        <TextInput
+          style={styles.securityInput}
+          value={currentPassword}
+          onChangeText={setCurrentPassword}
+          placeholder="Current password"
+          placeholderTextColor="#686b64"
+          secureTextEntry
+          autoCapitalize="none"
+        />
+        <TextInput
+          style={styles.securityInput}
+          value={newPassword}
+          onChangeText={setNewPassword}
+          placeholder="New password (min 6 characters)"
+          placeholderTextColor="#686b64"
+          secureTextEntry
+          autoCapitalize="none"
+        />
+        <TouchableOpacity style={styles.securityButton} onPress={changePassword} disabled={changingPassword}>
+          {changingPassword ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.securityButtonText}>Update password</Text>
+          )}
+        </TouchableOpacity>
+      </View>
+
+      <View style={[styles.card, styles.dangerCard]}>
+        <Text style={styles.settingTitle}>Delete account</Text>
+        <Text style={styles.settingText}>
+          Permanently removes your account and all associated data. This cannot be undone.
+        </Text>
+        <TextInput
+          style={styles.securityInput}
+          value={deletePassword}
+          onChangeText={setDeletePassword}
+          placeholder="Confirm with your password"
+          placeholderTextColor="#686b64"
+          secureTextEntry
+          autoCapitalize="none"
+        />
+        <TouchableOpacity style={styles.dangerButton} onPress={deleteAccount} disabled={deleting}>
+          {deleting ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.securityButtonText}>Delete my account</Text>
+          )}
+        </TouchableOpacity>
+      </View>
+
       <View style={styles.card}>
         <Text style={styles.settingTitle}>Support</Text>
         <Text style={styles.settingText}>support@worka-uk.online</Text>
@@ -50,6 +182,68 @@ const CustomerSettingsScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
+  languageRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 12,
+  },
+  languageChip: {
+    minHeight: 40,
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#e3dfd2',
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    backgroundColor: '#fbfaf6',
+  },
+  languageChipActive: {
+    backgroundColor: '#111',
+    borderColor: '#111',
+  },
+  languageChipText: {
+    color: '#111',
+    fontWeight: '800',
+    fontSize: 13,
+  },
+  languageChipTextActive: {
+    color: '#fff',
+  },
+  securityInput: {
+    minHeight: 50,
+    borderWidth: 1,
+    borderColor: '#d9d5ca',
+    borderRadius: 8,
+    paddingHorizontal: 13,
+    paddingVertical: 12,
+    marginTop: 12,
+    backgroundColor: '#fbfaf6',
+    fontSize: 16,
+  },
+  securityButton: {
+    minHeight: 48,
+    marginTop: 12,
+    backgroundColor: '#111',
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  securityButtonText: {
+    color: '#fff',
+    fontWeight: '900',
+    fontSize: 15,
+  },
+  dangerCard: {
+    borderColor: '#d9b8b8',
+  },
+  dangerButton: {
+    minHeight: 48,
+    marginTop: 12,
+    backgroundColor: '#8c2f2f',
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   content: {
     padding: 16,
     paddingBottom: 96,

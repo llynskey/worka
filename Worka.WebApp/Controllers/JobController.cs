@@ -32,6 +32,45 @@ namespace Worka.WebApp.Controllers
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
+        [HttpPut("Jobs/{jobId}")]
+        public async Task<IActionResult> Update(string jobId, [FromBody] UpdateJobDTO jobRequest)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Unauthorized();
+            }
+
+            var result = await _jobService.UpdateJobAsync(userId, jobId, jobRequest);
+            return result.Success ? Ok(result) : BadRequest(result);
+        }
+
+        [HttpDelete("Jobs/{jobId}")]
+        public async Task<IActionResult> Delete(string jobId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Unauthorized();
+            }
+
+            var result = await _jobService.DeleteJobAsync(userId, jobId);
+            return result.Success ? Ok(result) : BadRequest(result);
+        }
+
+        [HttpPost("Jobs/{jobId}/complete")]
+        public async Task<IActionResult> Complete(string jobId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Unauthorized();
+            }
+
+            var result = await _jobService.CompleteJobAsync(userId, jobId);
+            return result.Success ? Ok(result) : BadRequest(result);
+        }
+
         [HttpGet("ProfessionalJobs")]
         [HttpGet("~/ProfessionalJobs")]
         public async Task<IActionResult> GetProfessionalJobs()

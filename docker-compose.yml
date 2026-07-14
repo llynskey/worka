@@ -35,6 +35,12 @@ services:
       Stripe__DefaultCountry: ${Stripe__DefaultCountry:-GB}
       Worka__ServiceFeePercent: ${Worka__ServiceFeePercent:-10}
       Worka__ServiceFeeMinimum: ${Worka__ServiceFeeMinimum:-2}
+      Worka__PublicUrl: ${Worka__PublicUrl:-https://worka-uk.online}
+      Smtp__Host: ${Smtp__Host:-}
+      Smtp__Port: ${Smtp__Port:-587}
+      Smtp__Username: ${Smtp__Username:-}
+      Smtp__Password: ${Smtp__Password:-}
+      Smtp__From: ${Smtp__From:-no-reply@worka-uk.online}
     depends_on:
       postgres:
         condition: service_healthy

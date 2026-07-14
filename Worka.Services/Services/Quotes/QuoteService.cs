@@ -67,6 +67,90 @@ namespace Worka.Services.Quotes
             }
         }
 
+        public async Task<WorkaResponse<QuoteResponseDTO>> UpdateQuoteAsync(string userId, string quoteId, UpdateQuoteDTO quoteDto)
+        {
+            try
+            {
+                var (quote, error) = await GetOwnedOpenQuoteAsync(userId, quoteId);
+                if (error != null)
+                {
+                    return new WorkaResponse<QuoteResponseDTO>(error);
+                }
+
+                if (quoteDto.Price <= 0)
+                {
+                    return new WorkaResponse<QuoteResponseDTO>("Quote price must be greater than zero.");
+                }
+
+                quote.Price = quoteDto.Price;
+                quote.Description = (quoteDto.Description ?? string.Empty).Trim();
+                await _dbContext.SaveChangesAsync();
+
+                return new WorkaResponse<QuoteResponseDTO>(new QuoteResponseDTO(quote));
+            }
+            catch (Exception ex)
+            {
+                return WorkaResponse<QuoteResponseDTO>.Fail(ex, "An error occurred while updating the quote.");
+            }
+        }
+
+        public async Task<WorkaResponse<QuoteResponseDTO>> WithdrawQuoteAsync(string userId, string quoteId)
+        {
+            try
+            {
+                var (quote, error) = await GetOwnedOpenQuoteAsync(userId, quoteId);
+                if (error != null)
+                {
+                    return new WorkaResponse<QuoteResponseDTO>(error);
+                }
+
+                _dbContext.Quotes.Remove(quote);
+                await _dbContext.SaveChangesAsync();
+
+                return new WorkaResponse<QuoteResponseDTO>(new QuoteResponseDTO(quote));
+            }
+            catch (Exception ex)
+            {
+                return WorkaResponse<QuoteResponseDTO>.Fail(ex, "An error occurred while withdrawing the quote.");
+            }
+        }
+
+        private async Task<(Quote Quote, string Error)> GetOwnedOpenQuoteAsync(string userId, string quoteId)
+        {
+            if (!Guid.TryParse(userId, out var userGuid))
+            {
+                return (null, "Invalid user identity.");
+            }
+
+            if (!Guid.TryParse(quoteId, out var quoteGuid))
+            {
+                return (null, "Invalid quote ID format.");
+            }
+
+            var professional = await _dbContext.Professionals
+                .FirstOrDefaultAsync(p => p.UserId == userGuid);
+            if (professional == null)
+            {
+                return (null, "Professional profile not found.");
+            }
+
+            var quote = await _dbContext.Quotes
+                .FirstOrDefaultAsync(q => q.QuoteId == quoteGuid && q.ProfessionalId == professional.ProfessionalId);
+            if (quote == null)
+            {
+                return (null, "Quote not found.");
+            }
+
+            var jobBookedWithQuote = await _dbContext.Jobs
+                .AnyAsync(job => job.JobId == quote.JobId && job.AcceptedQuoteId == quote.QuoteId);
+            if (jobBookedWithQuote)
+            {
+                return (null, "This quote has been booked and paid, so it can no longer be changed.");
+            }
+
+            return (quote, null);
+        }
+
         public async Task<WorkaResponse<List<QuoteResponseDTO>>> GetQuotesForCustomerUserAsync(string userId)
         {
             try

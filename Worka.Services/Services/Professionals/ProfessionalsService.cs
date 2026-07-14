@@ -15,6 +15,90 @@ namespace Worka.Services.Professionals
             _dbContext = dbContext;
         }
 
+        public async Task<WorkaResponse<List<ProfessionalDirectoryItemDTO>>> GetDirectoryAsync(
+            string search,
+            string specialty,
+            string area,
+            decimal? maxPrice)
+        {
+            try
+            {
+                var query = _dbContext.Professionals.AsQueryable();
+
+                if (!string.IsNullOrWhiteSpace(specialty))
+                {
+                    var term = specialty.Trim().ToLower();
+                    query = query.Where(p => p.Specialty.ToLower().Contains(term));
+                }
+
+                if (!string.IsNullOrWhiteSpace(area))
+                {
+                    var term = area.Trim().ToLower();
+                    query = query.Where(p => p.ServiceArea.ToLower().Contains(term));
+                }
+
+                if (!string.IsNullOrWhiteSpace(search))
+                {
+                    var term = search.Trim().ToLower();
+                    query = query.Where(p =>
+                        p.FirstName.ToLower().Contains(term) ||
+                        p.LastName.ToLower().Contains(term) ||
+                        p.Specialty.ToLower().Contains(term) ||
+                        p.Bio.ToLower().Contains(term) ||
+                        p.ServiceArea.ToLower().Contains(term));
+                }
+
+                var professionals = await query
+                    .OrderByDescending(p => p.StripeChargesEnabled && p.StripePayoutsEnabled)
+                    .ThenBy(p => p.FirstName)
+                    .Take(200)
+                    .ToListAsync();
+
+                var professionalIds = professionals.Select(p => p.ProfessionalId).ToList();
+                var quoteStats = await _dbContext.Quotes
+                    .Where(quote => professionalIds.Contains(quote.ProfessionalId))
+                    .GroupBy(quote => quote.ProfessionalId)
+                    .Select(group => new
+                    {
+                        ProfessionalId = group.Key,
+                        Count = group.Count(),
+                        Average = group.Average(quote => quote.Price),
+                        Min = group.Min(quote => quote.Price)
+                    })
+                    .ToListAsync();
+                var statsById = quoteStats.ToDictionary(s => s.ProfessionalId);
+
+                var items = professionals
+                    .Select(p =>
+                    {
+                        statsById.TryGetValue(p.ProfessionalId, out var stats);
+                        return new ProfessionalDirectoryItemDTO
+                        {
+                            ProfessionalId = p.ProfessionalId.ToString(),
+                            FirstName = p.FirstName,
+                            LastName = p.LastName,
+                            Specialty = p.Specialty,
+                            Bio = p.Bio,
+                            ServiceArea = p.ServiceArea,
+                            QuoteCount = stats?.Count ?? 0,
+                            AverageQuotePrice = stats == null ? null : Math.Round(stats.Average, 2),
+                            MinQuotePrice = stats?.Min,
+                            ReadyForPayments = p.StripeChargesEnabled && p.StripePayoutsEnabled
+                        };
+                    })
+                    .Where(item => !maxPrice.HasValue
+                        || (item.AverageQuotePrice.HasValue && item.AverageQuotePrice.Value <= maxPrice.Value))
+                    .ToList();
+
+                return new WorkaResponse<List<ProfessionalDirectoryItemDTO>>(items);
+            }
+            catch (Exception ex)
+            {
+                return WorkaResponse<List<ProfessionalDirectoryItemDTO>>.Fail(
+                    ex, "An error occurred while loading professionals.");
+            }
+        }
+
         public async Task<WorkaResponse<ProfessionalResponseDTO>> GetByUserIdAsync(string userId)
         {
             if (!Guid.TryParse(userId, out var userGuid))

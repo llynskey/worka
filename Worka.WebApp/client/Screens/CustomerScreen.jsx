@@ -3,6 +3,7 @@ import { Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import JobList from '../components/customer/JobList';
+import ProDirectory from '../components/customer/ProDirectory';
 import JobTypeScreen from './JobTypeScreen';
 import WorkspaceShell from '../components/WorkspaceShell';
 
@@ -20,6 +21,12 @@ const webTabs = [
     label: 'Post a job',
     icon: 'plus-circle-outline',
     description: 'Create a new request',
+  },
+  {
+    key: 'pros',
+    label: 'Find pros',
+    icon: 'account-search-outline',
+    description: 'Browse and filter professionals',
   },
 ];
 
@@ -48,8 +55,10 @@ const CustomerWebWorkspace = () => {
     >
       {activeTab === 'jobs' ? (
         <JobList navigation={navigation} />
-      ) : (
+      ) : activeTab === 'post' ? (
         <JobTypeScreen navigation={navigation} />
+      ) : (
+        <ProDirectory />
       )}
     </WorkspaceShell>
   );
@@ -65,7 +74,12 @@ const CustomerScreen = () => {
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarIcon: ({ color, size }) => {
-          const iconName = route.name === 'Job List' ? 'clipboard-list-outline' : 'plus-circle-outline';
+          const iconName =
+            route.name === 'Job List'
+              ? 'clipboard-list-outline'
+              : route.name === 'Find Pros'
+                ? 'account-search-outline'
+                : 'plus-circle-outline';
           return <MaterialCommunityIcons name={iconName} size={size ?? 22} color={color} />;
         },
         tabBarActiveTintColor: '#111',
@@ -87,6 +101,7 @@ const CustomerScreen = () => {
     >
       <Tab.Screen name="Job List" component={JobList} />
       <Tab.Screen name="Post a Job" component={JobTypeScreen} />
+      <Tab.Screen name="Find Pros" component={ProDirectory} />
     </Tab.Navigator>
   );
 };

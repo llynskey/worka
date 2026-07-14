@@ -17,6 +17,7 @@ import LoadingScreen from './Screens/LoadingScreen';
 
 import SharedDrawerContent from './components/SharedDrawerContent';
 import { AuthContext, AuthProvider } from './auth/AuthContext';
+import { I18nProvider } from './i18n/I18nContext';
 
 export type RootStackParamList = {
   Login: undefined;
@@ -164,9 +165,11 @@ const AppInner: React.FC = () => {
 };
 
 const App: React.FC = () => (
-  <AuthProvider>
-    <AppInner />
-  </AuthProvider>
+  <I18nProvider>
+    <AuthProvider>
+      <AppInner />
+    </AuthProvider>
+  </I18nProvider>
 );
 
 export default App;

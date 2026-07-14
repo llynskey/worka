@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.RateLimiting;
+using System.Security.Claims;
 using Worka.Services.Common;
 using Worka.Services.DTOs.Users;
 
@@ -43,6 +44,48 @@ namespace Worka.WebApp.Controllers
             }
 
             return Ok(ToAuthResponse(result));
+        }
+
+        [Authorize]
+        [HttpPost("account/changePassword")]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDTO request)
+        {
+            var userId = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Unauthorized();
+            }
+
+            var result = await _usersService.ChangePasswordAsync(userId, request);
+            return result.Success ? Ok(result) : BadRequest(result);
+        }
+
+        [Authorize]
+        [HttpDelete("account")]
+        public async Task<IActionResult> DeleteAccount([FromBody] DeleteAccountDTO request)
+        {
+            var userId = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Unauthorized();
+            }
+
+            var result = await _usersService.DeleteAccountAsync(userId, request);
+            return result.Success ? Ok(result) : BadRequest(result);
+        }
+
+        [HttpPost("forgotPassword")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDTO request)
+        {
+            var result = await _usersService.ForgotPasswordAsync(request);
+            return result.Success ? Ok(result) : BadRequest(result);
+        }
+
+        [HttpPost("resetPassword")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDTO request)
+        {
+            var result = await _usersService.ResetPasswordAsync(request);
+            return result.Success ? Ok(result) : BadRequest(result);
         }
 
         private static object ToAuthResponse(WorkaResponse<UserResponseDTO> result)

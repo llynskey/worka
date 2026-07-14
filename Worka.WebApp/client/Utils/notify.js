@@ -16,4 +16,25 @@ export const notify = (title, message) => {
   Alert.alert(title, message);
 };
 
+/**
+ * Cross-platform confirmation dialog. Resolves true when the user confirms.
+ * Web uses window.confirm; native uses a two-button Alert.
+ */
+export const confirmAction = (title, message, confirmLabel = 'Confirm') =>
+  new Promise((resolve) => {
+    if (Platform.OS === 'web') {
+      const ok =
+        typeof window !== 'undefined' && typeof window.confirm === 'function'
+          ? window.confirm(message ? `${title}\n\n${message}` : title)
+          : false;
+      resolve(ok);
+      return;
+    }
+
+    Alert.alert(title, message, [
+      { text: 'Cancel', style: 'cancel', onPress: () => resolve(false) },
+      { text: confirmLabel, style: 'destructive', onPress: () => resolve(true) },
+    ]);
+  });
+
 export default notify;

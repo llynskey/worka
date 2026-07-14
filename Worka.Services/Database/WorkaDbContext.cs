@@ -25,6 +25,8 @@ namespace Worka.Services.Database
 
         public DbSet<InterestRegistration> InterestRegistrations => Set<InterestRegistration>();
 
+        public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<User>(entity =>
@@ -132,6 +134,18 @@ namespace Worka.Services.Database
                 entity.HasOne<Professional>()
                     .WithMany()
                     .HasForeignKey(payment => payment.ProfessionalId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<PasswordResetToken>(entity =>
+            {
+                entity.ToTable("password_reset_tokens");
+                entity.HasKey(token => token.TokenId);
+                entity.HasIndex(token => token.UserId);
+                entity.Property(token => token.TokenHash).HasMaxLength(128).IsRequired();
+                entity.HasOne<User>()
+                    .WithMany()
+                    .HasForeignKey(token => token.UserId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
 

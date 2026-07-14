@@ -30,10 +30,12 @@ const getServiceFee = (price) => {
 const statusLabel = (status) => {
   if (status === 1 || String(status).toLowerCase() === 'accepted') return 'Booked';
   if (status === 2 || String(status).toLowerCase() === 'rejected') return 'Closed';
+  if (status === 3 || String(status).toLowerCase() === 'completed') return 'Done';
+  if (status === 4 || String(status).toLowerCase() === 'cancelled') return 'Closed';
   return 'Open';
 };
 
-const JobCard = ({ job, quotes = [], onAcceptQuote }) => {
+const JobCard = ({ job, quotes = [], onAcceptQuote, onEditJob, onDeleteJob, onCompleteJob }) => {
   const [detailsVisible, setDetailsVisible] = useState(false);
   const status = statusLabel(job.jobStatus);
   const acceptedQuote = quotes.find((quote) => quote.quoteId === job.acceptedQuoteId);
@@ -80,6 +82,28 @@ const JobCard = ({ job, quotes = [], onAcceptQuote }) => {
             </TouchableOpacity>
             {bestQuote ? <Text style={styles.bestQuoteText}>Best quote {formatMoney(bestQuote.price)}</Text> : null}
           </View>
+
+          {(status === 'Open' || status === 'Booked') && (
+            <View style={styles.manageRow}>
+              {status === 'Open' ? (
+                <>
+                  <TouchableOpacity style={styles.manageButton} onPress={() => onEditJob?.(job)}>
+                    <MaterialCommunityIcons name="pencil-outline" size={17} color="#111" />
+                    <Text style={styles.manageButtonText}>Edit</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.manageButton} onPress={() => onDeleteJob?.(job)}>
+                    <MaterialCommunityIcons name="trash-can-outline" size={17} color="#8c2f2f" />
+                    <Text style={[styles.manageButtonText, styles.manageButtonDanger]}>Delete</Text>
+                  </TouchableOpacity>
+                </>
+              ) : (
+                <TouchableOpacity style={styles.manageButtonPrimary} onPress={() => onCompleteJob?.(job)}>
+                  <MaterialCommunityIcons name="check-circle-outline" size={17} color="#fff" />
+                  <Text style={styles.manageButtonPrimaryText}>Mark complete</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
 
           <View style={styles.quoteBlock}>
             <View style={styles.quoteHeader}>
@@ -338,6 +362,42 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: 'right',
     color: '#111',
+    fontWeight: '900',
+  },
+  manageRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 10,
+  },
+  manageButton: {
+    minHeight: 44,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    borderWidth: 1,
+    borderColor: '#e3dfd2',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    backgroundColor: '#fbfaf6',
+  },
+  manageButtonText: {
+    color: '#111',
+    fontWeight: '800',
+  },
+  manageButtonDanger: {
+    color: '#8c2f2f',
+  },
+  manageButtonPrimary: {
+    minHeight: 44,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    backgroundColor: '#111',
+  },
+  manageButtonPrimaryText: {
+    color: '#fff',
     fontWeight: '900',
   },
   quoteBlock: {

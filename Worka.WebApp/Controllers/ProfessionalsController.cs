@@ -30,6 +30,17 @@ namespace Worka.WebApp.Controllers
             public string ServiceArea { get; set; } = string.Empty;
         }
 
+        [HttpGet("directory")]
+        public async Task<IActionResult> GetDirectory(
+            string search = "",
+            string specialty = "",
+            string area = "",
+            decimal? maxPrice = null)
+        {
+            var result = await _professionalsService.GetDirectoryAsync(search, specialty, area, maxPrice);
+            return result.Success ? Ok(result) : BadRequest(result);
+        }
+
         [HttpGet("account")]
         public async Task<IActionResult> GetAccount()
         {

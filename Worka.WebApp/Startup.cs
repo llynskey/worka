@@ -14,6 +14,7 @@ using System.Text.Json;
 using System.Threading.RateLimiting;
 using Worka.Services.Customers;
 using Worka.Services.Database;
+using Worka.Services.Email;
 using Worka.Services.Interest;
 using Worka.Services.Jobs;
 using Worka.Services.Payments;
@@ -82,6 +83,7 @@ namespace Worka.WebApp
             services.AddScoped<IJobsService, JobsService>();
             services.AddScoped<IInterestRegistrationService, InterestRegistrationService>();
             services.AddScoped<IPaymentsService, PaymentsService>();
+            services.AddSingleton<IEmailService, SmtpEmailService>();
 
             var jwtSecret = Configuration["JwtSecret"];
             if (string.IsNullOrWhiteSpace(jwtSecret) || jwtSecret.Length < 32)
@@ -226,6 +228,16 @@ namespace Worka.WebApp
                 CREATE UNIQUE INDEX IF NOT EXISTS "IX_worka_payments_StripeCheckoutSessionId"
                     ON worka_payments("StripeCheckoutSessionId")
                     WHERE "StripeCheckoutSessionId" <> '';
+                CREATE TABLE IF NOT EXISTS password_reset_tokens (
+                    "TokenId" uuid PRIMARY KEY,
+                    "UserId" uuid NOT NULL REFERENCES users("UserId") ON DELETE CASCADE,
+                    "TokenHash" character varying(128) NOT NULL,
+                    "ExpiresAt" timestamp with time zone NOT NULL,
+                    "UsedAt" timestamp with time zone NULL,
+                    "CreatedAt" timestamp with time zone NOT NULL
+                );
+                CREATE INDEX IF NOT EXISTS "IX_password_reset_tokens_UserId"
+                    ON password_reset_tokens("UserId");
                 """);
         }
     }

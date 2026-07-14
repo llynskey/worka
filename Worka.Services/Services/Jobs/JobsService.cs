@@ -82,6 +82,147 @@ namespace Worka.Services.Jobs
             }
         }
 
+        public async Task<WorkaResponse<JobResponseDTO>> UpdateJobAsync(string userId, string jobId, UpdateJobDTO jobDto)
+        {
+            try
+            {
+                var (job, error) = await GetOwnedJobAsync(userId, jobId);
+                if (error != null)
+                {
+                    return new WorkaResponse<JobResponseDTO>(error);
+                }
+
+                if (job.Status != JobStatusEnum.Pending)
+                {
+                    return new WorkaResponse<JobResponseDTO>("Only open jobs can be edited.");
+                }
+
+                if (string.IsNullOrWhiteSpace(jobDto.JobName))
+                {
+                    return new WorkaResponse<JobResponseDTO>("Give the job a name.");
+                }
+
+                var address = (jobDto.Address ?? string.Empty).Trim();
+                if (string.IsNullOrWhiteSpace(address))
+                {
+                    return new WorkaResponse<JobResponseDTO>("Choose a job location.");
+                }
+
+                if (!IsValidLatitude(jobDto.Latitude) || !IsValidLongitude(jobDto.Longitude))
+                {
+                    return new WorkaResponse<JobResponseDTO>("Choose a location from the address lookup.");
+                }
+
+                job.Name = jobDto.JobName.Trim();
+                job.Description = (jobDto.JobDescription ?? string.Empty).Trim();
+                job.Category = (jobDto.Category ?? string.Empty).Trim();
+                job.Address = address;
+                job.LocationLabel = string.IsNullOrWhiteSpace(jobDto.LocationLabel)
+                    ? address
+                    : jobDto.LocationLabel.Trim();
+                job.PhotoUrl = string.IsNullOrWhiteSpace(jobDto.PhotoUrl)
+                    ? string.Empty
+                    : jobDto.PhotoUrl.Trim();
+                job.Latitude = jobDto.Latitude;
+                job.Longitude = jobDto.Longitude;
+                job.UpdatedAt = DateTimeOffset.UtcNow;
+
+                await _dbContext.SaveChangesAsync();
+                return new WorkaResponse<JobResponseDTO>(new JobResponseDTO(job));
+            }
+            catch (Exception ex)
+            {
+                return WorkaResponse<JobResponseDTO>.Fail(ex, "An error occurred while updating the job.");
+            }
+        }
+
+        public async Task<WorkaResponse<JobResponseDTO>> DeleteJobAsync(string userId, string jobId)
+        {
+            try
+            {
+                var (job, error) = await GetOwnedJobAsync(userId, jobId);
+                if (error != null)
+                {
+                    return new WorkaResponse<JobResponseDTO>(error);
+                }
+
+                if (job.Status == JobStatusEnum.Accepted)
+                {
+                    return new WorkaResponse<JobResponseDTO>(
+                        "This job is booked and paid. Contact support to cancel a booked job.");
+                }
+
+                var quotes = await _dbContext.Quotes
+                    .Where(quote => quote.JobId == job.JobId)
+                    .ToListAsync();
+                _dbContext.Quotes.RemoveRange(quotes);
+                _dbContext.Jobs.Remove(job);
+                await _dbContext.SaveChangesAsync();
+
+                return new WorkaResponse<JobResponseDTO>(new JobResponseDTO(job));
+            }
+            catch (Exception ex)
+            {
+                return WorkaResponse<JobResponseDTO>.Fail(ex, "An error occurred while deleting the job.");
+            }
+        }
+
+        public async Task<WorkaResponse<JobResponseDTO>> CompleteJobAsync(string userId, string jobId)
+        {
+            try
+            {
+                var (job, error) = await GetOwnedJobAsync(userId, jobId);
+                if (error != null)
+                {
+                    return new WorkaResponse<JobResponseDTO>(error);
+                }
+
+                if (job.Status != JobStatusEnum.Accepted)
+                {
+                    return new WorkaResponse<JobResponseDTO>("Only booked jobs can be marked complete.");
+                }
+
+                job.Status = JobStatusEnum.Completed;
+                job.UpdatedAt = DateTimeOffset.UtcNow;
+                await _dbContext.SaveChangesAsync();
+
+                return new WorkaResponse<JobResponseDTO>(new JobResponseDTO(job));
+            }
+            catch (Exception ex)
+            {
+                return WorkaResponse<JobResponseDTO>.Fail(ex, "An error occurred while completing the job.");
+            }
+        }
+
+        private async Task<(Job Job, string Error)> GetOwnedJobAsync(string userId, string jobId)
+        {
+            if (!Guid.TryParse(userId, out var userGuid))
+            {
+                return (null, "Invalid user identity.");
+            }
+
+            if (!Guid.TryParse(jobId, out var jobGuid))
+            {
+                return (null, "Invalid job ID format.");
+            }
+
+            var customer = await _dbContext.Customers
+                .FirstOrDefaultAsync(c => c.UserId == userGuid);
+            if (customer == null)
+            {
+                return (null, "Customer profile not found.");
+            }
+
+            var job = await _dbContext.Jobs
+                .FirstOrDefaultAsync(j => j.JobId == jobGuid && j.CustomerId == customer.CustomerId);
+            if (job == null)
+            {
+                return (null, "Job not found.");
+            }
+
+            return (job, null);
+        }
+
         public async Task<WorkaResponse<List<JobResponseDTO>>> GetJobsForCustomerUserAsync(string userId)
         {
             try

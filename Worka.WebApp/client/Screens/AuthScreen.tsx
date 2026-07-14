@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -16,26 +16,14 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 import { AuthContext } from "../auth/AuthContext";
 import { api, getErrorMessage } from "../api/workaApi";
+import { useI18n } from "../i18n/I18nContext";
+import { translations } from "../i18n/translations";
+import LanguageCycler from "../components/LanguageCycler";
 
 const audienceOptions = [
   "I need help in my language",
   "I can work for expats",
   "I want updates",
-];
-
-const launchSignals = [
-  {
-    value: "Language matched",
-    label: "Find people who can explain the work clearly.",
-  },
-  {
-    value: "Local practical help",
-    label: "Repairs, cleaning, moving, paperwork, installs, and odd jobs.",
-  },
-  {
-    value: "Built for expats",
-    label: "Designed for the moments when local systems feel unfamiliar.",
-  },
 ];
 
 const accountTypes = [
@@ -83,7 +71,15 @@ const FormField: React.FC<FormFieldProps> = ({ label, children }) => (
 
 const AuthScreen: React.FC = () => {
   const { signInWithToken } = useContext(AuthContext);
+  const { t, language, languages, setLanguage } = useI18n();
   const { width } = useWindowDimensions();
+
+  // Hero headline cycles through every supported language, starting with the
+  // visitor's own — a quiet demo of what Worka does.
+  const heroTitles = React.useMemo(() => {
+    const codes = [language, ...languages.map((l) => l.code).filter((c) => c !== language)];
+    return codes.map((code) => translations[code]?.["landing.heroTitle"]).filter(Boolean);
+  }, [language, languages]);
 
   const isPhone = width < 640;
   const isSmallPhone = width < 390;
@@ -96,7 +92,7 @@ const AuthScreen: React.FC = () => {
   const [registered, setRegistered] = useState(false);
 
   const [showLogin, setShowLogin] = useState(false);
-  const [authMode, setAuthMode] = useState<"login" | "signup">("login");
+  const [authMode, setAuthMode] = useState<"login" | "signup" | "forgot" | "reset">("login");
   const [loginEmail, setLoginEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loginLoading, setLoginLoading] = useState(false);
@@ -104,6 +100,25 @@ const AuthScreen: React.FC = () => {
   const [signupForm, setSignupForm] = useState(emptySignupForm);
   const [accountType, setAccountType] = useState<0 | 1>(0);
   const [signupLoading, setSignupLoading] = useState(false);
+  const [authInfo, setAuthInfo] = useState("");
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [resetToken, setResetToken] = useState("");
+  const [resetNewPassword, setResetNewPassword] = useState("");
+  const [resetLoading, setResetLoading] = useState(false);
+
+  useEffect(() => {
+    if (Platform.OS !== "web" || typeof window === "undefined") return;
+
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("reset");
+    if (token) {
+      setResetToken(token);
+      setShowLogin(true);
+      setAuthMode("reset");
+      window.history.replaceState(null, "", window.location.pathname);
+    }
+  }, []);
 
   const updateInterestField = (
     name: keyof typeof interestForm,
@@ -241,22 +256,70 @@ const AuthScreen: React.FC = () => {
     setAuthError("");
   };
 
-  const openAuth = (mode: "login" | "signup") => {
+  const openAuth = (mode: "login" | "signup" | "forgot" | "reset") => {
     setShowLogin(true);
     setAuthMode(mode);
     setAuthError("");
+    setAuthInfo("");
+  };
+
+  const onForgotPassword = async () => {
+    setAuthError("");
+    setAuthInfo("");
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(forgotEmail.trim())) {
+      setAuthError("Enter a valid email address.");
+      return;
+    }
+
+    try {
+      setForgotLoading(true);
+      const response = await api.post("/forgotPassword", { email: forgotEmail.trim() });
+      setAuthInfo(
+        response?.data?.message ?? "If that email is registered, a reset link is on its way."
+      );
+    } catch (error) {
+      setAuthError(getErrorMessage(error, "Could not send the reset email right now."));
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
+  const onResetPassword = async () => {
+    setAuthError("");
+    setAuthInfo("");
+
+    if (resetNewPassword.length < 6) {
+      setAuthError("Password must be at least 6 characters.");
+      return;
+    }
+
+    try {
+      setResetLoading(true);
+      const response = await api.post("/resetPassword", {
+        token: resetToken,
+        newPassword: resetNewPassword,
+      });
+      setResetNewPassword("");
+      setAuthMode("login");
+      setAuthInfo(response?.data?.message ?? "Password reset. You can now log in.");
+    } catch (error) {
+      setAuthError(getErrorMessage(error, "Could not reset the password."));
+    } finally {
+      setResetLoading(false);
+    }
   };
 
   const renderBenefits = (stacked = false) => (
     <View style={[styles.benefitList, stacked && styles.benefitListStacked]}>
-      {launchSignals.map((signal) => (
-        <View key={signal.value} style={styles.benefitItem}>
+      {[1, 2, 3].map((n) => (
+        <View key={n} style={styles.benefitItem}>
           <View style={styles.benefitIcon}>
             <MaterialCommunityIcons name="check" size={17} color="#fff" />
           </View>
           <View style={styles.benefitCopy}>
-            <Text style={styles.benefitTitle}>{signal.value}</Text>
-            <Text style={styles.benefitText}>{signal.label}</Text>
+            <Text style={styles.benefitTitle}>{t(`landing.benefit${n}Title`)}</Text>
+            <Text style={styles.benefitText}>{t(`landing.benefit${n}Text`)}</Text>
           </View>
         </View>
       ))}
@@ -343,9 +406,38 @@ const AuthScreen: React.FC = () => {
                 color="#111"
               />
               <Text style={styles.navButtonText}>
-                {showLogin ? "Join waitlist" : "Sign in"}
+                {showLogin ? t("landing.joinWaitlist") : t("landing.signIn")}
               </Text>
             </Pressable>
+          </View>
+
+          <View style={styles.languageRow}>
+            <MaterialCommunityIcons name="web" size={16} color="#555" />
+            {languages.map((lang) => {
+              const active = lang.code === language;
+              return (
+                <Pressable
+                  key={lang.code}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Switch language to ${lang.label}`}
+                  onPress={() => setLanguage(lang.code)}
+                  style={({ pressed }) => [
+                    styles.languageChip,
+                    active && styles.languageChipActive,
+                    pressed && styles.pressed,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.languageChipText,
+                      active && styles.languageChipTextActive,
+                    ]}
+                  >
+                    {lang.code.toUpperCase()}
+                  </Text>
+                </Pressable>
+              );
+            })}
           </View>
 
           <View
@@ -357,11 +449,13 @@ const AuthScreen: React.FC = () => {
             <View style={[styles.hero, !isStacked && styles.heroDesktop]}>
               <View style={styles.eyebrowRow}>
                 <View style={styles.eyebrowDot} />
-                <Text style={styles.eyebrow}>Worka for expats</Text>
+                <Text style={styles.eyebrow}>{t("landing.eyebrow")}</Text>
               </View>
 
-              <Text
-                style={[
+              <LanguageCycler
+                items={heroTitles}
+                containerStyle={{ minHeight: isPhone ? 130 : isStacked ? 165 : 230 }}
+                textStyle={[
                   styles.heroTitle,
                   isPhone
                     ? styles.heroTitlePhone
@@ -369,14 +463,10 @@ const AuthScreen: React.FC = () => {
                       ? styles.heroTitleTablet
                       : styles.heroTitleDesktop,
                 ]}
-              >
-                Get things done by someone who speaks your language.
-              </Text>
+              />
 
               <Text style={[styles.heroText, isPhone && styles.heroTextPhone]}>
-                Find trusted local people for repairs, moving, cleaning,
-                paperwork, installs, and everyday jobs—with language fit built
-                in from the start.
+                {t("landing.heroText")}
               </Text>
 
               {!isStacked && renderBenefits()}
@@ -402,15 +492,24 @@ const AuthScreen: React.FC = () => {
                     >
                       {authMode === "login"
                         ? "Welcome back."
-                        : "Create your account."}
+                        : authMode === "signup"
+                          ? "Create your account."
+                          : authMode === "forgot"
+                            ? "Reset your password."
+                            : "Choose a new password."}
                     </Text>
                     <Text style={styles.panelText}>
                       {authMode === "login"
                         ? "Sign in to continue to Worka."
-                        : "Choose how you will use Worka, then add your details."}
+                        : authMode === "signup"
+                          ? "Choose how you will use Worka, then add your details."
+                          : authMode === "forgot"
+                            ? "Enter your email and we will send you a reset link."
+                            : "Enter the new password for your account."}
                     </Text>
                   </View>
 
+                  {(authMode === "login" || authMode === "signup") && (
                   <View
                     style={[
                       styles.tabList,
@@ -463,10 +562,111 @@ const AuthScreen: React.FC = () => {
                       </Text>
                     </Pressable>
                   </View>
+                  )}
 
                   {renderError(authError)}
+                  {authInfo ? (
+                    <View style={styles.errorBox}>
+                      <MaterialCommunityIcons
+                        name="information-outline"
+                        size={20}
+                        color="#111"
+                      />
+                      <Text style={styles.errorText}>{authInfo}</Text>
+                    </View>
+                  ) : null}
 
-                  {authMode === "login" ? (
+                  {authMode === "forgot" ? (
+                    <View>
+                      <FormField label="Email">
+                        <TextInput
+                          accessibilityLabel="Email for password reset"
+                          style={styles.input}
+                          placeholder="you@example.com"
+                          placeholderTextColor="#777"
+                          value={forgotEmail}
+                          onChangeText={(value) => {
+                            setAuthError("");
+                            setForgotEmail(value);
+                          }}
+                          autoCapitalize="none"
+                          keyboardType="email-address"
+                          autoCorrect={false}
+                          onSubmitEditing={onForgotPassword}
+                        />
+                      </FormField>
+
+                      <Pressable
+                        accessibilityRole="button"
+                        onPress={onForgotPassword}
+                        disabled={forgotLoading}
+                        style={({ pressed }) => [
+                          styles.primaryButton,
+                          forgotLoading && styles.disabledButton,
+                          pressed && !forgotLoading && styles.primaryButtonPressed,
+                        ]}
+                      >
+                        {forgotLoading ? (
+                          <ActivityIndicator color="#fff" />
+                        ) : (
+                          <Text style={styles.primaryButtonText}>Send reset link</Text>
+                        )}
+                      </Pressable>
+
+                      <Pressable
+                        accessibilityRole="button"
+                        onPress={() => openAuth("login")}
+                        style={({ pressed }) => [styles.textButton, pressed && styles.pressed]}
+                      >
+                        <Text style={styles.textButtonText}>Back to log in</Text>
+                      </Pressable>
+                    </View>
+                  ) : authMode === "reset" ? (
+                    <View>
+                      <FormField label="New password">
+                        <TextInput
+                          accessibilityLabel="New password"
+                          style={styles.input}
+                          placeholder="At least 6 characters"
+                          placeholderTextColor="#777"
+                          value={resetNewPassword}
+                          onChangeText={(value) => {
+                            setAuthError("");
+                            setResetNewPassword(value);
+                          }}
+                          secureTextEntry
+                          autoCapitalize="none"
+                          autoCorrect={false}
+                          onSubmitEditing={onResetPassword}
+                        />
+                      </FormField>
+
+                      <Pressable
+                        accessibilityRole="button"
+                        onPress={onResetPassword}
+                        disabled={resetLoading}
+                        style={({ pressed }) => [
+                          styles.primaryButton,
+                          resetLoading && styles.disabledButton,
+                          pressed && !resetLoading && styles.primaryButtonPressed,
+                        ]}
+                      >
+                        {resetLoading ? (
+                          <ActivityIndicator color="#fff" />
+                        ) : (
+                          <Text style={styles.primaryButtonText}>Set new password</Text>
+                        )}
+                      </Pressable>
+
+                      <Pressable
+                        accessibilityRole="button"
+                        onPress={() => openAuth("login")}
+                        style={({ pressed }) => [styles.textButton, pressed && styles.pressed]}
+                      >
+                        <Text style={styles.textButtonText}>Back to log in</Text>
+                      </Pressable>
+                    </View>
+                  ) : authMode === "login" ? (
                     <View>
                       <FormField label="Email">
                         <TextInput
@@ -527,6 +727,14 @@ const AuthScreen: React.FC = () => {
                             <Text style={styles.primaryButtonText}>Log in</Text>
                           </>
                         )}
+                      </Pressable>
+
+                      <Pressable
+                        accessibilityRole="button"
+                        onPress={() => openAuth("forgot")}
+                        style={({ pressed }) => [styles.textButton, pressed && styles.pressed]}
+                      >
+                        <Text style={styles.textButtonText}>Forgot password?</Text>
                       </Pressable>
                     </View>
                   ) : (
@@ -736,18 +944,17 @@ const AuthScreen: React.FC = () => {
               ) : (
                 <View>
                   <View style={styles.panelHeader}>
-                    <Text style={styles.panelKicker}>Register interest</Text>
+                    <Text style={styles.panelKicker}>{t("waitlist.kicker")}</Text>
                     <Text
                       style={[
                         styles.panelTitle,
                         isPhone && styles.panelTitlePhone,
                       ]}
                     >
-                      Join the expat waitlist.
+                      {t("waitlist.title")}
                     </Text>
                     <Text style={styles.panelText}>
-                      Tell us where you are, which language matters, and whether
-                      you need help or can offer it.
+                      {t("waitlist.text")}
                     </Text>
                   </View>
 
@@ -885,7 +1092,7 @@ const AuthScreen: React.FC = () => {
                           color="#fff"
                         />
                         <Text style={styles.primaryButtonText}>
-                          Join the list
+                          {t("waitlist.join")}
                         </Text>
                       </>
                     )}
@@ -991,6 +1198,36 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "800",
     textAlign: "center",
+  },
+  languageRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
+    gap: 8,
+    marginTop: -34,
+    marginBottom: 34,
+  },
+  languageChip: {
+    minHeight: 34,
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    backgroundColor: "#fff",
+  },
+  languageChipActive: {
+    backgroundColor: "#111",
+    borderColor: "#111",
+  },
+  languageChipText: {
+    color: "#111",
+    fontSize: 12,
+    fontWeight: "900",
+    letterSpacing: 0.4,
+  },
+  languageChipTextActive: {
+    color: "#fff",
   },
   main: {
     width: "100%",

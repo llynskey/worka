@@ -21,5 +21,11 @@ namespace Worka.Services.Professionals
             string email,
             string firstName,
             string lastName);
+
+        Task<WorkaResponse<List<ProfessionalDirectoryItemDTO>>> GetDirectoryAsync(
+            string search,
+            string specialty,
+            string area,
+            decimal? maxPrice);
     }
 }

@@ -2,15 +2,18 @@ import React, { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  Modal,
   RefreshControl,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { api, formatDate, formatMoney, getErrorMessage, unwrap } from '../../api/workaApi';
+import notify, { confirmAction } from '../../Utils/notify';
 
 const BidList = () => {
   const [account, setAccount] = useState(null);
@@ -19,6 +22,9 @@ const BidList = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
+  const [editQuote, setEditQuote] = useState(null);
+  const [editForm, setEditForm] = useState({ price: '', description: '' });
+  const [savingEdit, setSavingEdit] = useState(false);
 
   const loadBids = useCallback(async () => {
     setError(null);
@@ -64,6 +70,55 @@ const BidList = () => {
     return quotes.filter((quote) => jobsById[quote.jobId]?.acceptedQuoteId === quote.quoteId).length;
   }, [jobsById, quotes]);
 
+  const openEditQuote = useCallback((quote) => {
+    setEditForm({ price: String(quote.price ?? ''), description: quote.description ?? '' });
+    setEditQuote(quote);
+  }, []);
+
+  const saveQuoteEdit = useCallback(async () => {
+    if (!editQuote) return;
+    const amount = Number(editForm.price);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      notify('Add a price', 'Enter a valid quote amount.');
+      return;
+    }
+
+    try {
+      setSavingEdit(true);
+      await api.put(`/Quotes/${editQuote.quoteId}`, {
+        price: amount,
+        description: editForm.description.trim(),
+      });
+      setEditQuote(null);
+      await refresh();
+      notify('Quote updated', 'The customer will see your new price.');
+    } catch (err) {
+      notify('Could not update quote', getErrorMessage(err, 'Try again in a moment.'));
+    } finally {
+      setSavingEdit(false);
+    }
+  }, [editForm, editQuote, refresh]);
+
+  const withdrawQuote = useCallback(
+    async (quote) => {
+      const confirmed = await confirmAction(
+        'Withdraw this quote?',
+        `Your ${formatMoney(quote.price)} quote will be removed from the job.`,
+        'Withdraw'
+      );
+      if (!confirmed) return;
+
+      try {
+        await api.delete(`/Quotes/${quote.quoteId}`);
+        await refresh();
+        notify('Quote withdrawn', 'You can send a new quote any time.');
+      } catch (err) {
+        notify('Could not withdraw quote', getErrorMessage(err, 'Try again in a moment.'));
+      }
+    },
+    [refresh]
+  );
+
   if (loading && !refreshing) {
     return (
       <View style={styles.centerState}>
@@ -87,6 +142,7 @@ const BidList = () => {
   }
 
   return (
+    <>
     <FlatList
       data={quotes}
       keyExtractor={(item) => String(item.quoteId)}
@@ -145,15 +201,68 @@ const BidList = () => {
                 </Text>
               </View>
             ) : (
-              <View style={styles.pendingBox}>
-                <MaterialCommunityIcons name="clock-outline" size={18} color="#111" />
-                <Text style={styles.pendingText}>The customer can review this quote and pay securely through Worka.</Text>
-              </View>
+              <>
+                <View style={styles.pendingBox}>
+                  <MaterialCommunityIcons name="clock-outline" size={18} color="#111" />
+                  <Text style={styles.pendingText}>The customer can review this quote and pay securely through Worka.</Text>
+                </View>
+                {!bookedElsewhere && (
+                  <View style={styles.quoteActions}>
+                    <TouchableOpacity style={styles.quoteActionButton} onPress={() => openEditQuote(item)}>
+                      <MaterialCommunityIcons name="pencil-outline" size={17} color="#111" />
+                      <Text style={styles.quoteActionText}>Edit</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.quoteActionButton} onPress={() => withdrawQuote(item)}>
+                      <MaterialCommunityIcons name="trash-can-outline" size={17} color="#8c2f2f" />
+                      <Text style={[styles.quoteActionText, styles.quoteActionDanger]}>Withdraw</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </>
             )}
           </View>
         );
       }}
     />
+
+    <Modal visible={!!editQuote} transparent animationType="slide" onRequestClose={() => setEditQuote(null)}>
+      <View style={styles.editBackdrop}>
+        <View style={styles.editCard}>
+          <View style={styles.editHeader}>
+            <Text style={styles.editTitle}>Edit quote</Text>
+            <TouchableOpacity
+              style={styles.editClose}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              onPress={() => setEditQuote(null)}
+            >
+              <MaterialCommunityIcons name="close" size={18} color="#111" />
+            </TouchableOpacity>
+          </View>
+
+          <TextInput
+            style={styles.editInput}
+            value={editForm.price}
+            onChangeText={(price) => setEditForm((current) => ({ ...current, price }))}
+            placeholder="Price (GBP)"
+            placeholderTextColor="#686b64"
+            keyboardType="decimal-pad"
+          />
+          <TextInput
+            style={[styles.editInput, styles.editTextArea]}
+            value={editForm.description}
+            onChangeText={(description) => setEditForm((current) => ({ ...current, description }))}
+            placeholder="What's included"
+            placeholderTextColor="#686b64"
+            multiline
+          />
+
+          <TouchableOpacity style={styles.editSaveButton} onPress={saveQuoteEdit} disabled={savingEdit}>
+            {savingEdit ? <ActivityIndicator color="#fff" /> : <Text style={styles.editSaveText}>Save changes</Text>}
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+    </>
   );
 };
 
@@ -295,6 +404,91 @@ const styles = StyleSheet.create({
   },
   statusTextAccepted: {
     color: '#24513b',
+  },
+  quoteActions: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 12,
+  },
+  quoteActionButton: {
+    minHeight: 44,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    borderWidth: 1,
+    borderColor: '#e3dfd2',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    backgroundColor: '#fbfaf6',
+  },
+  quoteActionText: {
+    color: '#111',
+    fontWeight: '800',
+  },
+  quoteActionDanger: {
+    color: '#8c2f2f',
+  },
+  editBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.42)',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  editCard: {
+    width: '100%',
+    maxWidth: 520,
+    alignSelf: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 18,
+  },
+  editHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 14,
+  },
+  editTitle: {
+    color: '#111',
+    fontSize: 20,
+    fontWeight: '900',
+  },
+  editClose: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#111',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+  },
+  editInput: {
+    minHeight: 50,
+    borderWidth: 1,
+    borderColor: '#d9d5ca',
+    borderRadius: 8,
+    paddingHorizontal: 13,
+    paddingVertical: 12,
+    marginBottom: 12,
+    backgroundColor: '#fbfaf6',
+    fontSize: 16,
+  },
+  editTextArea: {
+    minHeight: 110,
+    textAlignVertical: 'top',
+  },
+  editSaveButton: {
+    minHeight: 48,
+    backgroundColor: '#111',
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  editSaveText: {
+    color: '#fff',
+    fontWeight: '900',
+    fontSize: 15,
   },
   centerState: {
     flex: 1,

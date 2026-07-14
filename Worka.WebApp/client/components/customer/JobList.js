@@ -3,14 +3,16 @@ import {
   ActivityIndicator,
   FlatList,
   Linking,
+  Modal,
   Platform,
   RefreshControl,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
-import notify from '../../Utils/notify';
+import notify, { confirmAction } from '../../Utils/notify';
 import { useFocusEffect } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { api, formatMoney, unwrap, getErrorMessage } from '../../api/workaApi';
@@ -19,6 +21,8 @@ import JobCard from './JobCard';
 const statusLabel = (status) => {
   if (status === 1 || String(status).toLowerCase() === 'accepted') return 'Booked';
   if (status === 2 || String(status).toLowerCase() === 'rejected') return 'Closed';
+  if (status === 3 || String(status).toLowerCase() === 'completed') return 'Done';
+  if (status === 4 || String(status).toLowerCase() === 'cancelled') return 'Closed';
   return 'Open';
 };
 
@@ -30,6 +34,9 @@ const CustomerJobList = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
   const [checkoutMessage, setCheckoutMessage] = useState(null);
+  const [editJob, setEditJob] = useState(null);
+  const [editForm, setEditForm] = useState({ jobName: '', jobDescription: '' });
+  const [savingEdit, setSavingEdit] = useState(false);
 
   useEffect(() => {
     if (Platform.OS !== 'web' || typeof window === 'undefined') return;
@@ -144,6 +151,80 @@ const CustomerJobList = ({ navigation }) => {
     []
   );
 
+  const openEditJob = useCallback((job) => {
+    setEditForm({ jobName: job.jobName ?? '', jobDescription: job.jobDescription ?? '' });
+    setEditJob(job);
+  }, []);
+
+  const saveJobEdit = useCallback(async () => {
+    if (!editJob) return;
+    if (!editForm.jobName.trim()) {
+      notify('Add a title', 'The job needs a short title.');
+      return;
+    }
+
+    try {
+      setSavingEdit(true);
+      await api.put(`/Jobs/${editJob.jobId}`, {
+        jobName: editForm.jobName.trim(),
+        jobDescription: editForm.jobDescription.trim(),
+        category: editJob.category ?? '',
+        address: editJob.address ?? '',
+        locationLabel: editJob.locationLabel ?? '',
+        photoUrl: editJob.photoUrl ?? '',
+        latitude: editJob.latitude,
+        longitude: editJob.longitude,
+      });
+      setEditJob(null);
+      await refresh();
+      notify('Job updated', 'Professionals will see the new details.');
+    } catch (err) {
+      notify('Could not update job', getErrorMessage(err, 'Try again in a moment.'));
+    } finally {
+      setSavingEdit(false);
+    }
+  }, [editForm, editJob, refresh]);
+
+  const deleteJob = useCallback(
+    async (job) => {
+      const confirmed = await confirmAction(
+        'Delete this job?',
+        `"${job.jobName}" and any quotes on it will be removed. This cannot be undone.`,
+        'Delete'
+      );
+      if (!confirmed) return;
+
+      try {
+        await api.delete(`/Jobs/${job.jobId}`);
+        await refresh();
+        notify('Job deleted', 'The job and its quotes were removed.');
+      } catch (err) {
+        notify('Could not delete job', getErrorMessage(err, 'Try again in a moment.'));
+      }
+    },
+    [refresh]
+  );
+
+  const completeJob = useCallback(
+    async (job) => {
+      const confirmed = await confirmAction(
+        'Mark job complete?',
+        'Confirm the work is finished to close this job.',
+        'Mark complete'
+      );
+      if (!confirmed) return;
+
+      try {
+        await api.post(`/Jobs/${job.jobId}/complete`);
+        await refresh();
+        notify('Job completed', 'Nice one — the job is now closed.');
+      } catch (err) {
+        notify('Could not complete job', getErrorMessage(err, 'Try again in a moment.'));
+      }
+    },
+    [refresh]
+  );
+
   if (loading && !refreshing) {
     return (
       <View style={styles.centerState}>
@@ -167,6 +248,7 @@ const CustomerJobList = ({ navigation }) => {
   }
 
   return (
+    <>
     <FlatList
       data={jobs}
       keyExtractor={(item) => String(item.jobId)}
@@ -230,9 +312,54 @@ const CustomerJobList = ({ navigation }) => {
           job={item}
           quotes={quotesByJob[item.jobId] ?? []}
           onAcceptQuote={(quote) => acceptQuote(item, quote)}
+          onEditJob={openEditJob}
+          onDeleteJob={deleteJob}
+          onCompleteJob={completeJob}
         />
       )}
     />
+
+    <Modal visible={!!editJob} transparent animationType="slide" onRequestClose={() => setEditJob(null)}>
+      <View style={styles.editBackdrop}>
+        <View style={styles.editCard}>
+          <View style={styles.editHeader}>
+            <Text style={styles.editTitle}>Edit job</Text>
+            <TouchableOpacity
+              style={styles.bannerClose}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              onPress={() => setEditJob(null)}
+            >
+              <MaterialCommunityIcons name="close" size={18} color="#111" />
+            </TouchableOpacity>
+          </View>
+
+          <TextInput
+            style={styles.editInput}
+            value={editForm.jobName}
+            onChangeText={(jobName) => setEditForm((current) => ({ ...current, jobName }))}
+            placeholder="Job title"
+            placeholderTextColor="#686b64"
+          />
+          <TextInput
+            style={[styles.editInput, styles.editTextArea]}
+            value={editForm.jobDescription}
+            onChangeText={(jobDescription) => setEditForm((current) => ({ ...current, jobDescription }))}
+            placeholder="Describe the work"
+            placeholderTextColor="#686b64"
+            multiline
+          />
+
+          <TouchableOpacity style={styles.editSaveButton} onPress={saveJobEdit} disabled={savingEdit}>
+            {savingEdit ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.editSaveText}>Save changes</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+    </>
   );
 };
 
@@ -378,6 +505,58 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '900',
     color: '#111',
+  },
+  editBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.42)',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  editCard: {
+    width: '100%',
+    maxWidth: 520,
+    alignSelf: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 18,
+  },
+  editHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 14,
+  },
+  editTitle: {
+    color: '#111',
+    fontSize: 20,
+    fontWeight: '900',
+  },
+  editInput: {
+    minHeight: 50,
+    borderWidth: 1,
+    borderColor: '#d9d5ca',
+    borderRadius: 8,
+    paddingHorizontal: 13,
+    paddingVertical: 12,
+    marginBottom: 12,
+    backgroundColor: '#fbfaf6',
+    fontSize: 16,
+  },
+  editTextArea: {
+    minHeight: 110,
+    textAlignVertical: 'top',
+  },
+  editSaveButton: {
+    minHeight: 48,
+    backgroundColor: '#111',
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  editSaveText: {
+    color: '#fff',
+    fontWeight: '900',
+    fontSize: 15,
   },
   mutedText: {
     color: '#63665f',
