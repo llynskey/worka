@@ -57,7 +57,8 @@ namespace Worka.WebApp.Controllers
                 await file.CopyToAsync(stream);
             }
 
-            var url = $"{Request.Scheme}://{Request.Host}/api/uploads/jobs/{fileName}";
+            // Relative URL: survives domain changes; clients resolve per-platform.
+            var url = $"/api/uploads/jobs/{fileName}";
             return Ok(new WorkaResponse<JobPhotoUploadResponseDTO>(new JobPhotoUploadResponseDTO
             {
                 Url = url,
@@ -95,7 +96,8 @@ namespace Worka.WebApp.Controllers
                 await file.CopyToAsync(stream);
             }
 
-            var url = $"{Request.Scheme}://{Request.Host}/api/uploads/profiles/{fileName}";
+            // Relative URL: survives domain changes; clients resolve per-platform.
+            var url = $"/api/uploads/profiles/{fileName}";
             return Ok(new WorkaResponse<JobPhotoUploadResponseDTO>(new JobPhotoUploadResponseDTO
             {
                 Url = url,

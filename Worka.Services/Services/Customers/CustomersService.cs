@@ -56,7 +56,7 @@ namespace Worka.Services.Customers
             if (phone != null) customer.Phone = phone.Trim();
             if (address != null) customer.Address = address.Trim();
             if (languages != null) customer.Languages = NormalizeLanguages(languages);
-            if (photoUrl != null) customer.PhotoUrl = photoUrl.Trim();
+            if (photoUrl != null) customer.PhotoUrl = UploadPaths.SanitizeProfilePhoto(photoUrl);
             customer.UpdatedAt = DateTimeOffset.UtcNow;
 
             var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.UserId == userGuid);

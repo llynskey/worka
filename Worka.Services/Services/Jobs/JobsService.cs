@@ -36,9 +36,7 @@ namespace Worka.Services.Jobs
                 var locationLabel = string.IsNullOrWhiteSpace(jobDto.LocationLabel)
                     ? address
                     : jobDto.LocationLabel.Trim();
-                var photoUrl = string.IsNullOrWhiteSpace(jobDto.PhotoUrl)
-                    ? string.Empty
-                    : jobDto.PhotoUrl.Trim();
+                var photoUrl = UploadPaths.SanitizeJobPhoto(jobDto.PhotoUrl);
 
                 if (string.IsNullOrWhiteSpace(jobDto.JobName))
                 {
@@ -120,9 +118,7 @@ namespace Worka.Services.Jobs
                 job.LocationLabel = string.IsNullOrWhiteSpace(jobDto.LocationLabel)
                     ? address
                     : jobDto.LocationLabel.Trim();
-                job.PhotoUrl = string.IsNullOrWhiteSpace(jobDto.PhotoUrl)
-                    ? string.Empty
-                    : jobDto.PhotoUrl.Trim();
+                job.PhotoUrl = UploadPaths.SanitizeJobPhoto(jobDto.PhotoUrl);
                 job.Latitude = jobDto.Latitude;
                 job.Longitude = jobDto.Longitude;
                 job.UpdatedAt = DateTimeOffset.UtcNow;

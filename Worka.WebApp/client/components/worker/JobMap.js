@@ -14,6 +14,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { api, formatDate, getErrorMessage, unwrap } from '../../api/workaApi';
 import { formatDistance, getDistanceKm, requestCurrentLocation } from '../../Utils/locationUtils';
+import MapPreview from '../MapPreview';
 
 const hasCoordinates = (job) => Number.isFinite(Number(job.latitude)) && Number.isFinite(Number(job.longitude));
 
@@ -56,8 +57,8 @@ const openExternalMap = (job, currentLocation) => {
   Linking.openURL(url);
 };
 
-const WebMapFrame = ({ job, minHeight = 420 }) => {
-  if (Platform.OS !== 'web' || !job || !hasCoordinates(job)) {
+const WebMapFrame = ({ job, minHeight = 420, userLocation = null }) => {
+  if (!job || !hasCoordinates(job)) {
     return (
       <View style={[styles.mapPlaceholder, { minHeight }]}>
         <MaterialCommunityIcons name="map-marker-off-outline" size={36} color="#111" />
@@ -67,17 +68,19 @@ const WebMapFrame = ({ job, minHeight = 420 }) => {
     );
   }
 
-  return React.createElement('iframe', {
-    src: getMapUrl(job),
-    title: `Map for ${job.jobName}`,
-    style: {
-      border: 0,
-      width: '100%',
-      height: '100%',
-      minHeight,
-      display: 'block',
-    },
-  });
+  // MapPreview renders the branded static map with a pin on the job and,
+  // when set, a second pin on the worker's current location plus distance.
+  // (The interactive Mapbox embed cannot draw markers, which made the map
+  // ambiguous — pins beat panning here.)
+  return (
+    <MapPreview
+      latitude={job.latitude}
+      longitude={job.longitude}
+      userLocation={userLocation}
+      locationLabel={getLocationLabel(job)}
+      height={Math.max(minHeight - 56, 180)}
+    />
+  );
 };
 
 const JobMap = () => {
@@ -278,7 +281,7 @@ const JobMap = () => {
         {headerBlock}
         {locationBarBlock}
         <View style={[styles.mapPaneNarrow, { height: mapHeight }]}>
-          <WebMapFrame job={selectedJob} minHeight={mapHeight} />
+          <WebMapFrame job={selectedJob} minHeight={mapHeight} userLocation={currentLocation} />
         </View>
         <View style={styles.narrowList}>{listBody}</View>
       </ScrollView>
@@ -292,7 +295,7 @@ const JobMap = () => {
 
       <View style={styles.mapLayout}>
         <View style={styles.mapPane}>
-          <WebMapFrame job={selectedJob} />
+          <WebMapFrame job={selectedJob} userLocation={currentLocation} />
         </View>
 
         <ScrollView style={styles.listPane} contentContainerStyle={styles.listContent}>

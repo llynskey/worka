@@ -1,11 +1,13 @@
 import React from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
+import { resolveUploadUrl } from '../api/workaApi';
 
 const Avatar = ({ photoUrl, firstName, lastName, size = 46 }) => {
   const circle = { width: size, height: size, borderRadius: size / 2 };
+  const resolvedUrl = resolveUploadUrl(photoUrl);
 
-  if (photoUrl) {
-    return <Image source={{ uri: photoUrl }} style={[styles.image, circle]} resizeMode="cover" />;
+  if (resolvedUrl) {
+    return <Image source={{ uri: resolvedUrl }} style={[styles.image, circle]} resizeMode="cover" />;
   }
 
   const initials = `${(firstName?.[0] ?? '?').toUpperCase()}${(lastName?.[0] ?? '').toUpperCase()}`;

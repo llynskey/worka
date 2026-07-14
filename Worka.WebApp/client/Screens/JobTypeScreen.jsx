@@ -14,7 +14,7 @@ import {
 import notify from '../Utils/notify';
 import * as ImagePicker from 'expo-image-picker';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { api, getErrorMessage, unwrap } from '../api/workaApi';
+import { api, getErrorMessage, resolveUploadUrl, unwrap } from '../api/workaApi';
 import { lookupLocations } from '../api/locationLookup';
 
 const jobTypes = [
@@ -342,7 +342,7 @@ const JobTypeScreen = ({ navigation }) => {
             </View>
 
             {form.photoUrl ? (
-              <ImageBackground source={{ uri: form.photoUrl }} style={styles.photoPreview} imageStyle={styles.photoPreviewImage}>
+              <ImageBackground source={{ uri: resolveUploadUrl(form.photoUrl) }} style={styles.photoPreview} imageStyle={styles.photoPreviewImage}>
                 <View style={styles.photoPreviewOverlay}>
                   <MaterialCommunityIcons name="image-check-outline" size={18} color="#fff" />
                   <Text style={styles.photoPreviewText}>Photo attached</Text>

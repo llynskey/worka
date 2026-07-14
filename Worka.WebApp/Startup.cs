@@ -257,6 +257,15 @@ namespace Worka.WebApp
                 );
                 CREATE UNIQUE INDEX IF NOT EXISTS "IX_reviews_JobId" ON reviews("JobId");
                 CREATE INDEX IF NOT EXISTS "IX_reviews_ProfessionalId" ON reviews("ProfessionalId");
+                -- Uploaded photo URLs were historically stored as absolute URLs,
+                -- which broke when the domain changed. Convert to relative paths
+                -- (idempotent: only touches rows still carrying an origin).
+                UPDATE jobs SET "PhotoUrl" = regexp_replace("PhotoUrl", '^https?://[^/]+', '')
+                    WHERE "PhotoUrl" LIKE 'http%' AND "PhotoUrl" LIKE '%/api/uploads/%';
+                UPDATE customers SET "PhotoUrl" = regexp_replace("PhotoUrl", '^https?://[^/]+', '')
+                    WHERE "PhotoUrl" LIKE 'http%' AND "PhotoUrl" LIKE '%/api/uploads/%';
+                UPDATE professionals SET "PhotoUrl" = regexp_replace("PhotoUrl", '^https?://[^/]+', '')
+                    WHERE "PhotoUrl" LIKE 'http%' AND "PhotoUrl" LIKE '%/api/uploads/%';
                 """);
         }
     }

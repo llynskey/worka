@@ -166,7 +166,7 @@ namespace Worka.Services.Professionals
             professional.Bio = bio.Trim();
             professional.ServiceArea = serviceArea.Trim();
             if (languages != null) professional.Languages = Customers.CustomersService.NormalizeLanguages(languages);
-            if (photoUrl != null) professional.PhotoUrl = photoUrl.Trim();
+            if (photoUrl != null) professional.PhotoUrl = UploadPaths.SanitizeProfilePhoto(photoUrl);
             professional.UpdatedAt = DateTimeOffset.UtcNow;
 
             var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.UserId == userGuid);

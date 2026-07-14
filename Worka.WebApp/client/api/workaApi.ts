@@ -126,6 +126,19 @@ api.interceptors.request.use(async (config) => {
   return config;
 });
 
+/**
+ * Uploaded photos are stored as relative paths (/api/uploads/...) so they
+ * survive domain changes. Web is same-origin; native prefixes the API host.
+ */
+export function resolveUploadUrl(url?: string | null): string {
+  if (!url) return '';
+  if (/^https?:\/\//i.test(url)) return url;
+  if (!url.startsWith('/')) return url;
+
+  const base = apiBaseUrl.replace(/\/api\/?$/, '');
+  return `${base}${url}`;
+}
+
 export function unwrap<T>(payload: WorkaResponse<T> | T): T {
   if (payload && typeof payload === 'object' && 'data' in payload) {
     return (payload as WorkaResponse<T>).data as T;

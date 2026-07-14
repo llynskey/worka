@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ImageBackground, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { formatDate, formatMoney } from '../../api/workaApi';
+import { formatDate, formatMoney, resolveUploadUrl } from '../../api/workaApi';
 import { requestCurrentLocation } from '../../Utils/locationUtils';
 import MapPreview from '../MapPreview';
 
@@ -51,7 +51,7 @@ const JobCard = ({ job, quotes = [], onAcceptQuote, onEditJob, onDeleteJob, onCo
 
   const status = statusLabel(job.jobStatus);
   const acceptedQuote = quotes.find((quote) => quote.quoteId === job.acceptedQuoteId);
-  const image = job.photoUrl || categoryImages[job.category] || categoryImages.Repairs;
+  const image = resolveUploadUrl(job.photoUrl) || categoryImages[job.category] || categoryImages.Repairs;
   const acceptedTotal = acceptedQuote
     ? Number(acceptedQuote.price) + getServiceFee(acceptedQuote.price)
     : 0;

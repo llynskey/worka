@@ -16,7 +16,7 @@ import {
 import notify from '../../Utils/notify';
 import { useFocusEffect } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { api, formatDate, formatMoney, getErrorMessage, unwrap } from '../../api/workaApi';
+import { api, formatDate, formatMoney, getErrorMessage, resolveUploadUrl, unwrap } from '../../api/workaApi';
 import { formatDistance, getDistanceKm, requestCurrentLocation } from '../../Utils/locationUtils';
 import JobDetailsModal from './JobDetailsModal';
 
@@ -238,7 +238,7 @@ const WorkerJobList = () => {
           const existingQuote = quoteByJob[item.jobId];
           const distance = getDistanceKm(currentLocation, item);
           const distanceLabel = formatDistance(distance);
-          const image = item.photoUrl || categoryImages[item.category] || categoryImages.Repairs;
+          const image = resolveUploadUrl(item.photoUrl) || categoryImages[item.category] || categoryImages.Repairs;
           return (
             <View style={styles.card}>
               <ImageBackground source={{ uri: image }} style={styles.cardImage} imageStyle={styles.cardImageRadius}>
@@ -334,7 +334,7 @@ const WorkerJobList = () => {
               <Text style={styles.modalJobTitle}>{selectedJob?.jobName}</Text>
               {selectedJob ? (
                 <ImageBackground
-                  source={{ uri: selectedJob.photoUrl || categoryImages[selectedJob.category] || categoryImages.Repairs }}
+                  source={{ uri: resolveUploadUrl(selectedJob.photoUrl) || categoryImages[selectedJob.category] || categoryImages.Repairs }}
                   style={styles.modalJobImage}
                   imageStyle={styles.modalJobImageRadius}
                 >
