@@ -49,7 +49,13 @@ const emptyInterestForm = {
   message: '',
 };
 
-const AuthScreen: React.FC = () => {
+type Props = {
+  navigation: {
+    navigate: (screen: string) => void;
+  };
+};
+
+const AuthScreen: React.FC<Props> = ({ navigation }) => {
   const { signInWithToken } = useContext(AuthContext);
   const { width, height } = useWindowDimensions();
   const isNarrow = width < 780;
@@ -71,6 +77,10 @@ const AuthScreen: React.FC = () => {
 
   const updateInterestField = (name: keyof typeof interestForm, value: string) => {
     setInterestForm((current) => ({ ...current, [name]: value }));
+  };
+
+  const createAccount = () => {
+    navigation.navigate('Signup');
   };
 
   const registerInterest = async () => {
@@ -238,6 +248,13 @@ const AuthScreen: React.FC = () => {
                     </>
                   )}
                 </TouchableOpacity>
+                <TouchableOpacity onPress={createAccount} style={styles.secondaryButton}>
+                  <MaterialCommunityIcons name="account-plus-outline" size={19} color="#111" />
+                  <Text style={styles.secondaryButtonText}>Create account</Text>
+                </TouchableOpacity>
+                <Text style={styles.panelHint}>
+                  Make a customer account to post work, or a professional account to send quotes.
+                </Text>
               </>
             ) : registered ? (
               <View style={styles.successPanel}>
@@ -256,6 +273,9 @@ const AuthScreen: React.FC = () => {
                   }}
                 >
                   <Text style={styles.secondaryButtonText}>Add another person</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.linkButton} onPress={createAccount}>
+                  <Text style={styles.linkButtonText}>Create a Worka account</Text>
                 </TouchableOpacity>
               </View>
             ) : (
@@ -334,6 +354,10 @@ const AuthScreen: React.FC = () => {
                       <Text style={styles.primaryButtonText}>Join the list</Text>
                     </>
                   )}
+                </TouchableOpacity>
+                <TouchableOpacity onPress={createAccount} style={styles.secondaryButton}>
+                  <MaterialCommunityIcons name="account-plus-outline" size={19} color="#111" />
+                  <Text style={styles.secondaryButtonText}>Create account now</Text>
                 </TouchableOpacity>
               </>
             )}
@@ -556,11 +580,30 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 8,
     paddingHorizontal: 14,
+    marginTop: 12,
   },
   secondaryButtonText: {
     color: '#111',
     fontWeight: '900',
+  },
+  linkButton: {
+    alignSelf: 'flex-start',
+    marginTop: 16,
+    paddingVertical: 6,
+  },
+  linkButtonText: {
+    color: '#000',
+    fontWeight: '900',
+    textDecorationLine: 'underline',
+  },
+  panelHint: {
+    color: '#333',
+    lineHeight: 20,
+    marginTop: 12,
+    fontSize: 13,
   },
   successPanel: {
     minHeight: 330,
