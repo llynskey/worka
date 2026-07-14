@@ -1,7 +1,6 @@
 import React, { useContext, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -10,7 +9,6 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  TouchableOpacity,
   useWindowDimensions,
   View,
 } from "react-native";
@@ -71,29 +69,30 @@ const emptySignupForm = {
   password: "",
 };
 
+type FormFieldProps = {
+  label: string;
+  children: React.ReactNode;
+};
+
+const FormField: React.FC<FormFieldProps> = ({ label, children }) => (
+  <View style={styles.field}>
+    <Text style={styles.fieldLabel}>{label}</Text>
+    {children}
+  </View>
+);
+
 const AuthScreen: React.FC = () => {
   const { signInWithToken } = useContext(AuthContext);
-  const { width, height } = useWindowDimensions();
-  const isNarrow = width < 780;
-  const isDesktopWeb = Platform.OS === "web" && !isNarrow;
-  const isShortDesktop = isDesktopWeb && height < 860;
-  const isVeryNarrow = width < 480;
-  const horizontalGutter = isNarrow ? 16 : 24;
-  const contentWidth = Math.max(width - horizontalGutter * 2, 0);
-  const contentShell = {
-    width: "100%",
-    maxWidth: 1180,
-    alignSelf: "center",
-  } as const;
-  const inputStyle = styles.input;
-  const primaryButtonStyle = styles.primaryButton;
-  const secondaryButtonStyle = styles.secondaryButton;
-  const panelTitleStyle = [
-    styles.panelTitle,
-    isShortDesktop && styles.panelTitleCompact,
-  ];
+  const { width } = useWindowDimensions();
+
+  const isPhone = width < 640;
+  const isSmallPhone = width < 390;
+  const isStacked = width < 1180;
+  const horizontalGutter = isPhone ? 16 : width < 1280 ? 24 : 32;
+
   const [interestForm, setInterestForm] = useState(emptyInterestForm);
   const [interestLoading, setInterestLoading] = useState(false);
+  const [interestError, setInterestError] = useState("");
   const [registered, setRegistered] = useState(false);
 
   const [showLogin, setShowLogin] = useState(false);
@@ -110,29 +109,30 @@ const AuthScreen: React.FC = () => {
     name: keyof typeof interestForm,
     value: string,
   ) => {
+    setInterestError("");
     setInterestForm((current) => ({ ...current, [name]: value }));
   };
 
   const updateSignupField = (name: keyof typeof signupForm, value: string) => {
+    setAuthError("");
     setSignupForm((current) => ({ ...current, [name]: value }));
   };
 
   const registerInterest = async () => {
+    setInterestError("");
+
     if (!interestForm.name.trim()) {
-      Alert.alert("Add your name", "Tell us who to contact.");
+      setInterestError("Add your name so we know who to contact.");
       return;
     }
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(interestForm.email.trim())) {
-      Alert.alert("Add a valid email", "We need an email to send your invite.");
+      setInterestError("Enter a valid email address.");
       return;
     }
 
     if (!interestForm.language.trim()) {
-      Alert.alert(
-        "Add a language",
-        "Tell us which language you need or can offer.",
-      );
+      setInterestError("Tell us which language you need or can offer.");
       return;
     }
 
@@ -148,9 +148,11 @@ const AuthScreen: React.FC = () => {
       });
       setRegistered(true);
     } catch (error) {
-      Alert.alert(
-        "Could not register interest",
-        getErrorMessage(error, "Please try again in a moment."),
+      setInterestError(
+        getErrorMessage(
+          error,
+          "Could not register your interest. Please try again.",
+        ),
       );
     } finally {
       setInterestLoading(false);
@@ -159,8 +161,9 @@ const AuthScreen: React.FC = () => {
 
   const onLogin = async () => {
     setAuthError("");
+
     if (!loginEmail.trim() || !password) {
-      setAuthError("Enter email and password.");
+      setAuthError("Enter your email and password.");
       return;
     }
 
@@ -188,16 +191,19 @@ const AuthScreen: React.FC = () => {
   const validateSignup = () => {
     if (!signupForm.firstName.trim()) return "First name is required.";
     if (!signupForm.lastName.trim()) return "Last name is required.";
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(signupForm.email.trim()))
-      return "Enter a valid email.";
-    if (signupForm.password.length < 6)
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(signupForm.email.trim())) {
+      return "Enter a valid email address.";
+    }
+    if (signupForm.password.length < 6) {
       return "Password must be at least 6 characters.";
+    }
     return "";
   };
 
   const onSignup = async () => {
     setAuthError("");
     const validationError = validateSignup();
+
     if (validationError) {
       setAuthError(validationError);
       return;
@@ -229,173 +235,220 @@ const AuthScreen: React.FC = () => {
     }
   };
 
+  const openWaitlist = () => {
+    setShowLogin(false);
+    setAuthMode("login");
+    setAuthError("");
+  };
+
+  const openAuth = (mode: "login" | "signup") => {
+    setShowLogin(true);
+    setAuthMode(mode);
+    setAuthError("");
+  };
+
+  const renderBenefits = (stacked = false) => (
+    <View style={[styles.benefitList, stacked && styles.benefitListStacked]}>
+      {launchSignals.map((signal) => (
+        <View key={signal.value} style={styles.benefitItem}>
+          <View style={styles.benefitIcon}>
+            <MaterialCommunityIcons name="check" size={17} color="#fff" />
+          </View>
+          <View style={styles.benefitCopy}>
+            <Text style={styles.benefitTitle}>{signal.value}</Text>
+            <Text style={styles.benefitText}>{signal.label}</Text>
+          </View>
+        </View>
+      ))}
+    </View>
+  );
+
+  const renderError = (message: string) => {
+    if (!message) return null;
+
+    return (
+      <View style={styles.errorBox} accessibilityRole="alert">
+        <MaterialCommunityIcons
+          name="alert-circle-outline"
+          size={20}
+          color="#111"
+        />
+        <Text style={styles.errorText}>{message}</Text>
+      </View>
+    );
+  };
+
+  const panelShadowStyle =
+    Platform.OS === "web"
+      ? ({
+          boxShadow: isPhone ? "none" : "0 18px 45px rgba(0, 0, 0, 0.10)",
+        } as any)
+      : null;
+
+  const webPageStyle =
+    Platform.OS === "web" ? ({ minHeight: "100vh" } as any) : null;
+
   return (
     <KeyboardAvoidingView
-      style={styles.keyboard}
+      style={styles.screen}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={[
           styles.page,
+          webPageStyle,
           {
-            minHeight: height,
             paddingHorizontal: horizontalGutter,
-            paddingTop: isNarrow ? 20 : 24,
-            paddingBottom: isNarrow ? 40 : 28,
+            paddingTop: isPhone ? 18 : 24,
+            paddingBottom: isPhone ? 36 : 28,
           },
         ]}
         keyboardShouldPersistTaps="handled"
-        scrollEnabled
+        keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
+        contentInsetAdjustmentBehavior="automatic"
         showsVerticalScrollIndicator
-        nestedScrollEnabled
       >
-        <View
-          style={[
-            styles.nav,
-            contentShell,
-            { marginBottom: isNarrow ? 34 : isShortDesktop ? 6 : 26 },
-          ]}
-        >
-          <Image
-            source={require("../assets/logo.png")}
-            style={[
-              styles.logo,
-              isNarrow && styles.logoMobile,
-              isShortDesktop && styles.logoCompact,
-            ]}
-            resizeMode="contain"
-          />
-          <Pressable
-            style={styles.navAction}
-            onPress={() => {
-              setShowLogin((value) => !value);
-              setAuthMode("login");
-              setAuthError("");
-            }}
-          >
-            <MaterialCommunityIcons
-              name="lock-outline"
-              size={16}
-              color="#111"
+        <View style={styles.shell}>
+          <View style={[styles.nav, isPhone && styles.navPhone]}>
+            <Image
+              source={require("../assets/logo.png")}
+              style={[styles.logo, isPhone && styles.logoPhone]}
+              resizeMode="contain"
+              accessibilityLabel="Worka"
             />
-            <Text style={styles.navActionText}>
-              {showLogin ? "Waitlist" : "Early access"}
-            </Text>
-          </Pressable>
-        </View>
 
-        <View
-          style={[
-            styles.heroGrid,
-            contentShell,
-            {
-              flexDirection: isNarrow ? "column" : "row",
-              minHeight: 0,
-            },
-          ]}
-        >
-          <View style={styles.heroCopy}>
-            <Text
-              style={[styles.eyebrow, isShortDesktop && styles.eyebrowCompact]}
-            >
-              Worka for expats
-            </Text>
-            <Text
-              style={[
-                styles.heroTitle,
-                {
-                  fontSize: isNarrow ? 35 : 58,
-                  lineHeight: isNarrow ? 41 : 64,
-                  maxWidth: contentWidth,
-                },
-                isShortDesktop && styles.heroTitleCompact,
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={
+                showLogin ? "Open waitlist form" : "Open sign in form"
+              }
+              onPress={showLogin ? openWaitlist : () => openAuth("login")}
+              style={({ pressed }) => [
+                styles.navButton,
+                pressed && styles.pressed,
               ]}
             >
-              Get things done by someone who speaks your language.
-            </Text>
-            <Text
-              style={[
-                styles.heroText,
-                isShortDesktop && styles.heroTextCompact,
-              ]}
-            >
-              Worka helps expats find trusted local people for repairs, moving,
-              cleaning, forms, installs, and everyday jobs, with language fit
-              built in from the start.
-            </Text>
-
-            {!isNarrow && !isShortDesktop && (
-              <View style={[styles.signalRow, { flexDirection: "row" }]}>
-                {launchSignals.map((signal) => (
-                  <View key={signal.value} style={styles.signal}>
-                    <Text style={styles.signalValue}>{signal.value}</Text>
-                    <Text style={styles.signalLabel}>{signal.label}</Text>
-                  </View>
-                ))}
-              </View>
-            )}
+              <MaterialCommunityIcons
+                name={showLogin ? "arrow-left" : "lock-outline"}
+                size={17}
+                color="#111"
+              />
+              <Text style={styles.navButtonText}>
+                {showLogin ? "Join waitlist" : "Sign in"}
+              </Text>
+            </Pressable>
           </View>
 
           <View
             style={[
-              styles.formPanel,
-              isNarrow && styles.formPanelMobile,
-              !isNarrow && styles.formPanelDesktop,
-              isShortDesktop && styles.formPanelCompact,
+              styles.main,
+              isStacked ? styles.mainStacked : styles.mainDesktop,
             ]}
           >
-            <View style={styles.formPanelBody}>
+            <View style={[styles.hero, !isStacked && styles.heroDesktop]}>
+              <View style={styles.eyebrowRow}>
+                <View style={styles.eyebrowDot} />
+                <Text style={styles.eyebrow}>Worka for expats</Text>
+              </View>
+
+              <Text
+                style={[
+                  styles.heroTitle,
+                  isPhone
+                    ? styles.heroTitlePhone
+                    : isStacked
+                      ? styles.heroTitleTablet
+                      : styles.heroTitleDesktop,
+                ]}
+              >
+                Get things done by someone who speaks your language.
+              </Text>
+
+              <Text style={[styles.heroText, isPhone && styles.heroTextPhone]}>
+                Find trusted local people for repairs, moving, cleaning,
+                paperwork, installs, and everyday jobs—with language fit built
+                in from the start.
+              </Text>
+
+              {!isStacked && renderBenefits()}
+            </View>
+
+            <View
+              style={[
+                styles.panel,
+                isStacked ? styles.panelStacked : styles.panelDesktop,
+                isPhone && styles.panelPhone,
+                panelShadowStyle,
+              ]}
+            >
               {showLogin ? (
-                <>
-                  <Text
+                <View>
+                  <View style={styles.panelHeader}>
+                    <Text style={styles.panelKicker}>Worka account</Text>
+                    <Text
+                      style={[
+                        styles.panelTitle,
+                        isPhone && styles.panelTitlePhone,
+                      ]}
+                    >
+                      {authMode === "login"
+                        ? "Welcome back."
+                        : "Create your account."}
+                    </Text>
+                    <Text style={styles.panelText}>
+                      {authMode === "login"
+                        ? "Sign in to continue to Worka."
+                        : "Choose how you will use Worka, then add your details."}
+                    </Text>
+                  </View>
+
+                  <View
                     style={[
-                      styles.panelKicker,
-                      isShortDesktop && styles.panelKickerCompact,
+                      styles.tabList,
+                      isSmallPhone && styles.tabListStacked,
                     ]}
                   >
-                    Builder access
-                  </Text>
-                  <Text style={panelTitleStyle}>
-                    {authMode === "login"
-                      ? "Sign in to Worka."
-                      : "Create your Worka account."}
-                  </Text>
-
-                  <View style={styles.authSwitch}>
                     <Pressable
-                      style={[
-                        styles.authSwitchOption,
-                        authMode === "login" && styles.authSwitchOptionActive,
-                      ]}
+                      accessibilityRole="tab"
+                      accessibilityState={{ selected: authMode === "login" }}
                       onPress={() => {
                         setAuthMode("login");
                         setAuthError("");
                       }}
+                      style={({ pressed }) => [
+                        styles.tabButton,
+                        authMode === "login" && styles.tabButtonActive,
+                        pressed && styles.pressed,
+                      ]}
                     >
                       <Text
                         style={[
-                          styles.authSwitchText,
-                          authMode === "login" && styles.authSwitchTextActive,
+                          styles.tabButtonText,
+                          authMode === "login" && styles.tabButtonTextActive,
                         ]}
                       >
                         Log in
                       </Text>
                     </Pressable>
+
                     <Pressable
-                      style={[
-                        styles.authSwitchOption,
-                        authMode === "signup" && styles.authSwitchOptionActive,
-                      ]}
+                      accessibilityRole="tab"
+                      accessibilityState={{ selected: authMode === "signup" }}
                       onPress={() => {
                         setAuthMode("signup");
                         setAuthError("");
                       }}
+                      style={({ pressed }) => [
+                        styles.tabButton,
+                        authMode === "signup" && styles.tabButtonActive,
+                        pressed && styles.pressed,
+                      ]}
                     >
                       <Text
                         style={[
-                          styles.authSwitchText,
-                          authMode === "signup" && styles.authSwitchTextActive,
+                          styles.tabButtonText,
+                          authMode === "signup" && styles.tabButtonTextActive,
                         ]}
                       >
                         Create account
@@ -403,44 +456,55 @@ const AuthScreen: React.FC = () => {
                     </Pressable>
                   </View>
 
-                  {authError ? (
-                    <View style={styles.errorBox}>
-                      <MaterialCommunityIcons
-                        name="alert-circle-outline"
-                        size={18}
-                        color="#111"
-                      />
-                      <Text style={styles.errorText}>{authError}</Text>
-                    </View>
-                  ) : null}
+                  {renderError(authError)}
 
                   {authMode === "login" ? (
-                    <>
-                      <TextInput
-                        style={inputStyle}
-                        placeholder="Email"
-                        placeholderTextColor="#6b6b6b"
-                        value={loginEmail}
-                        onChangeText={setLoginEmail}
-                        autoCapitalize="none"
-                        keyboardType="email-address"
-                      />
-                      <TextInput
-                        style={inputStyle}
-                        placeholder="Password"
-                        placeholderTextColor="#6b6b6b"
-                        value={password}
-                        onChangeText={setPassword}
-                        secureTextEntry
-                        onSubmitEditing={onLogin}
-                      />
+                    <View>
+                      <FormField label="Email">
+                        <TextInput
+                          accessibilityLabel="Email"
+                          style={styles.input}
+                          placeholder="you@example.com"
+                          placeholderTextColor="#777"
+                          value={loginEmail}
+                          onChangeText={(value) => {
+                            setAuthError("");
+                            setLoginEmail(value);
+                          }}
+                          autoCapitalize="none"
+                          keyboardType="email-address"
+                          autoCorrect={false}
+                        />
+                      </FormField>
+
+                      <FormField label="Password">
+                        <TextInput
+                          accessibilityLabel="Password"
+                          style={styles.input}
+                          placeholder="Your password"
+                          placeholderTextColor="#777"
+                          value={password}
+                          onChangeText={(value) => {
+                            setAuthError("");
+                            setPassword(value);
+                          }}
+                          secureTextEntry
+                          autoCapitalize="none"
+                          autoCorrect={false}
+                          onSubmitEditing={onLogin}
+                        />
+                      </FormField>
+
                       <Pressable
+                        accessibilityRole="button"
                         onPress={onLogin}
                         disabled={loginLoading}
-                        style={[
+                        style={({ pressed }) => [
                           styles.primaryButton,
-                          isShortDesktop && styles.buttonCompact,
                           loginLoading && styles.disabledButton,
+                          pressed &&
+                            !loginLoading &&
+                            styles.primaryButtonPressed,
                         ]}
                       >
                         {loginLoading ? (
@@ -449,126 +513,145 @@ const AuthScreen: React.FC = () => {
                           <>
                             <MaterialCommunityIcons
                               name="login"
-                              size={19}
+                              size={20}
                               color="#fff"
                             />
                             <Text style={styles.primaryButtonText}>Log in</Text>
                           </>
                         )}
                       </Pressable>
-                      <Pressable
-                        onPress={() => {
-                          setAuthMode("signup");
-                          setAuthError("");
-                        }}
-                        style={secondaryButtonStyle}
-                      >
-                        <MaterialCommunityIcons
-                          name="account-plus-outline"
-                          size={19}
-                          color="#111"
-                        />
-                        <Text style={styles.secondaryButtonText}>
-                          Create account instead
-                        </Text>
-                      </Pressable>
-                    </>
+                    </View>
                   ) : (
-                    <>
+                    <View>
+                      <Text style={styles.sectionLabel}>I am joining as</Text>
                       <View
                         style={[
-                          styles.accountTypeGrid,
-                          isVeryNarrow && styles.accountTypeGridStacked,
+                          styles.accountTypeList,
+                          isPhone && styles.accountTypeListPhone,
                         ]}
                       >
                         {accountTypes.map((type) => {
                           const selected = accountType === type.value;
+
                           return (
                             <Pressable
                               key={type.value}
-                              style={[
-                                styles.accountTypeCard,
-                                isVeryNarrow && styles.accountTypeCardStacked,
-                                selected && styles.accountTypeCardActive,
-                              ]}
+                              accessibilityRole="radio"
+                              accessibilityState={{ selected }}
                               onPress={() => setAccountType(type.value)}
+                              style={({ pressed }) => [
+                                styles.accountTypeCard,
+                                isPhone && styles.accountTypeCardPhone,
+                                selected && styles.accountTypeCardActive,
+                                pressed && styles.pressed,
+                              ]}
                             >
-                              <MaterialCommunityIcons
-                                name={type.icon}
-                                size={isShortDesktop ? 20 : 24}
-                                color={selected ? "#fff" : "#111"}
-                              />
-                              <Text
+                              <View
                                 style={[
-                                  styles.accountTypeTitle,
-                                  selected && styles.accountTypeTitleActive,
+                                  styles.accountTypeIcon,
+                                  selected && styles.accountTypeIconActive,
                                 ]}
                               >
-                                {type.label}
-                              </Text>
-                              <Text
-                                style={[
-                                  styles.accountTypeText,
-                                  selected && styles.accountTypeTextActive,
-                                ]}
-                              >
-                                {type.description}
-                              </Text>
+                                <MaterialCommunityIcons
+                                  name={type.icon}
+                                  size={21}
+                                  color={selected ? "#111" : "#fff"}
+                                />
+                              </View>
+                              <View style={styles.accountTypeCopy}>
+                                <Text
+                                  style={[
+                                    styles.accountTypeTitle,
+                                    selected && styles.accountTypeTitleActive,
+                                  ]}
+                                >
+                                  {type.label}
+                                </Text>
+                                <Text
+                                  style={[
+                                    styles.accountTypeText,
+                                    selected && styles.accountTypeTextActive,
+                                  ]}
+                                >
+                                  {type.description}
+                                </Text>
+                              </View>
                             </Pressable>
                           );
                         })}
                       </View>
 
-                      <TextInput
-                        style={inputStyle}
-                        placeholder="First name"
-                        placeholderTextColor="#6b6b6b"
-                        value={signupForm.firstName}
-                        onChangeText={(value) =>
-                          updateSignupField("firstName", value)
-                        }
-                        autoCapitalize="words"
-                      />
-                      <TextInput
-                        style={inputStyle}
-                        placeholder="Last name"
-                        placeholderTextColor="#6b6b6b"
-                        value={signupForm.lastName}
-                        onChangeText={(value) =>
-                          updateSignupField("lastName", value)
-                        }
-                        autoCapitalize="words"
-                      />
-                      <TextInput
-                        style={inputStyle}
-                        placeholder="Email"
-                        placeholderTextColor="#6b6b6b"
-                        value={signupForm.email}
-                        onChangeText={(value) =>
-                          updateSignupField("email", value)
-                        }
-                        autoCapitalize="none"
-                        keyboardType="email-address"
-                      />
-                      <TextInput
-                        style={inputStyle}
-                        placeholder="Password"
-                        placeholderTextColor="#6b6b6b"
-                        value={signupForm.password}
-                        onChangeText={(value) =>
-                          updateSignupField("password", value)
-                        }
-                        secureTextEntry
-                        onSubmitEditing={onSignup}
-                      />
+                      <FormField label="First name">
+                        <TextInput
+                          accessibilityLabel="First name"
+                          style={styles.input}
+                          placeholder="First name"
+                          placeholderTextColor="#777"
+                          value={signupForm.firstName}
+                          onChangeText={(value) =>
+                            updateSignupField("firstName", value)
+                          }
+                          autoCapitalize="words"
+                        />
+                      </FormField>
+
+                      <FormField label="Last name">
+                        <TextInput
+                          accessibilityLabel="Last name"
+                          style={styles.input}
+                          placeholder="Last name"
+                          placeholderTextColor="#777"
+                          value={signupForm.lastName}
+                          onChangeText={(value) =>
+                            updateSignupField("lastName", value)
+                          }
+                          autoCapitalize="words"
+                        />
+                      </FormField>
+
+                      <FormField label="Email">
+                        <TextInput
+                          accessibilityLabel="Email"
+                          style={styles.input}
+                          placeholder="you@example.com"
+                          placeholderTextColor="#777"
+                          value={signupForm.email}
+                          onChangeText={(value) =>
+                            updateSignupField("email", value)
+                          }
+                          autoCapitalize="none"
+                          keyboardType="email-address"
+                          autoCorrect={false}
+                        />
+                      </FormField>
+
+                      <FormField label="Password">
+                        <TextInput
+                          accessibilityLabel="Password"
+                          style={styles.input}
+                          placeholder="At least 6 characters"
+                          placeholderTextColor="#777"
+                          value={signupForm.password}
+                          onChangeText={(value) =>
+                            updateSignupField("password", value)
+                          }
+                          secureTextEntry
+                          autoCapitalize="none"
+                          autoCorrect={false}
+                          onSubmitEditing={onSignup}
+                        />
+                      </FormField>
 
                       <Pressable
+                        accessibilityRole="button"
                         onPress={onSignup}
                         disabled={signupLoading}
-                        style={[
+                        style={({ pressed }) => [
                           styles.primaryButton,
-                          isShortDesktop && styles.buttonCompact,
                           signupLoading && styles.disabledButton,
+                          pressed &&
+                            !signupLoading &&
+                            styles.primaryButtonPressed,
                         ]}
                       >
                         {signupLoading ? (
@@ -577,7 +660,7 @@ const AuthScreen: React.FC = () => {
                           <>
                             <MaterialCommunityIcons
                               name="account-plus-outline"
-                              size={19}
+                              size={20}
                               color="#fff"
                             />
                             <Text style={styles.primaryButtonText}>
@@ -586,25 +669,9 @@ const AuthScreen: React.FC = () => {
                           </>
                         )}
                       </Pressable>
-                      <Pressable
-                        onPress={() => {
-                          setAuthMode("login");
-                          setAuthError("");
-                        }}
-                        style={secondaryButtonStyle}
-                      >
-                        <MaterialCommunityIcons
-                          name="login"
-                          size={19}
-                          color="#111"
-                        />
-                        <Text style={styles.secondaryButtonText}>
-                          I already have an account
-                        </Text>
-                      </Pressable>
-                    </>
+                    </View>
                   )}
-                </>
+                </View>
               ) : registered ? (
                 <View style={styles.successPanel}>
                   <View style={styles.successIcon}>
@@ -614,109 +681,157 @@ const AuthScreen: React.FC = () => {
                       color="#fff"
                     />
                   </View>
-                  <Text style={panelTitleStyle}>You are on the list.</Text>
+                  <Text style={styles.panelKicker}>Registration complete</Text>
+                  <Text
+                    style={[
+                      styles.panelTitle,
+                      isPhone && styles.panelTitlePhone,
+                    ]}
+                  >
+                    You are on the list.
+                  </Text>
                   <Text style={styles.panelText}>
-                    Thanks. I will use your language and location to shape the
+                    Thanks. We will use your language and location to shape the
                     first Worka launch areas.
                   </Text>
-                  <TouchableOpacity
-                    style={secondaryButtonStyle}
+
+                  <Pressable
+                    accessibilityRole="button"
                     onPress={() => {
                       setRegistered(false);
+                      setInterestError("");
                       setInterestForm(emptyInterestForm);
                     }}
+                    style={({ pressed }) => [
+                      styles.secondaryButton,
+                      pressed && styles.pressed,
+                    ]}
                   >
                     <Text style={styles.secondaryButtonText}>
                       Add another person
                     </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.linkButton}
-                    onPress={() => {
-                      setShowLogin(true);
-                      setAuthMode("signup");
-                      setAuthError("");
-                    }}
+                  </Pressable>
+
+                  <Pressable
+                    accessibilityRole="button"
+                    onPress={() => openAuth("signup")}
+                    style={({ pressed }) => [
+                      styles.textButton,
+                      pressed && styles.pressed,
+                    ]}
                   >
-                    <Text style={styles.linkButtonText}>
+                    <Text style={styles.textButtonText}>
                       Create a Worka account
                     </Text>
-                  </TouchableOpacity>
+                  </Pressable>
                 </View>
               ) : (
-                <>
-                  <Text
-                    style={[
-                      styles.panelKicker,
-                      isShortDesktop && styles.panelKickerCompact,
-                    ]}
-                  >
-                    Register interest
-                  </Text>
-                  <Text style={panelTitleStyle}>Join the expat waitlist.</Text>
-                  <Text
-                    style={[
-                      styles.panelText,
-                      isShortDesktop && styles.panelTextCompact,
-                    ]}
-                  >
-                    Tell us where you are, which language matters, and whether
-                    you need help or can offer it.
-                  </Text>
+                <View>
+                  <View style={styles.panelHeader}>
+                    <Text style={styles.panelKicker}>Register interest</Text>
+                    <Text
+                      style={[
+                        styles.panelTitle,
+                        isPhone && styles.panelTitlePhone,
+                      ]}
+                    >
+                      Join the expat waitlist.
+                    </Text>
+                    <Text style={styles.panelText}>
+                      Tell us where you are, which language matters, and whether
+                      you need help or can offer it.
+                    </Text>
+                  </View>
 
-                  <TextInput
-                    style={inputStyle}
-                    placeholder="Name"
-                    placeholderTextColor="#6b6b6b"
-                    value={interestForm.name}
-                    onChangeText={(value) => updateInterestField("name", value)}
-                  />
-                  <TextInput
-                    style={inputStyle}
-                    placeholder="Email"
-                    placeholderTextColor="#6b6b6b"
-                    value={interestForm.email}
-                    onChangeText={(value) =>
-                      updateInterestField("email", value)
-                    }
-                    autoCapitalize="none"
-                    keyboardType="email-address"
-                  />
-                  <TextInput
-                    style={inputStyle}
-                    placeholder="Language needed or offered"
-                    placeholderTextColor="#6b6b6b"
-                    value={interestForm.language}
-                    onChangeText={(value) =>
-                      updateInterestField("language", value)
-                    }
-                  />
-                  <TextInput
-                    style={inputStyle}
-                    placeholder="City / country"
-                    placeholderTextColor="#6b6b6b"
-                    value={interestForm.location}
-                    onChangeText={(value) =>
-                      updateInterestField("location", value)
-                    }
-                  />
+                  {renderError(interestError)}
 
-                  <View style={styles.roleGroup}>
+                  <FormField label="Name">
+                    <TextInput
+                      accessibilityLabel="Name"
+                      style={styles.input}
+                      placeholder="Your name"
+                      placeholderTextColor="#777"
+                      value={interestForm.name}
+                      onChangeText={(value) =>
+                        updateInterestField("name", value)
+                      }
+                      autoCapitalize="words"
+                    />
+                  </FormField>
+
+                  <FormField label="Email">
+                    <TextInput
+                      accessibilityLabel="Email"
+                      style={styles.input}
+                      placeholder="you@example.com"
+                      placeholderTextColor="#777"
+                      value={interestForm.email}
+                      onChangeText={(value) =>
+                        updateInterestField("email", value)
+                      }
+                      autoCapitalize="none"
+                      keyboardType="email-address"
+                    />
+                  </FormField>
+
+                  <FormField label="Language">
+                    <TextInput
+                      accessibilityLabel="Language needed or offered"
+                      style={styles.input}
+                      placeholder="For example, Spanish or Arabic"
+                      placeholderTextColor="#777"
+                      value={interestForm.language}
+                      onChangeText={(value) =>
+                        updateInterestField("language", value)
+                      }
+                    />
+                  </FormField>
+
+                  <FormField label="Location">
+                    <TextInput
+                      accessibilityLabel="City or country"
+                      style={styles.input}
+                      placeholder="City / country"
+                      placeholderTextColor="#777"
+                      value={interestForm.location}
+                      onChangeText={(value) =>
+                        updateInterestField("location", value)
+                      }
+                      autoCapitalize="words"
+                    />
+                  </FormField>
+
+                  <Text style={styles.sectionLabel}>What brings you here?</Text>
+                  <View style={styles.choiceList}>
                     {audienceOptions.map((option) => {
                       const selected = interestForm.role === option;
+
                       return (
                         <Pressable
                           key={option}
-                          style={[
-                            styles.roleChip,
-                            selected && styles.roleChipActive,
-                          ]}
+                          accessibilityRole="radio"
+                          accessibilityState={{ selected }}
                           onPress={() => updateInterestField("role", option)}
+                          style={({ pressed }) => [
+                            styles.choiceRow,
+                            selected && styles.choiceRowActive,
+                            pressed && styles.pressed,
+                          ]}
                         >
+                          <View
+                            style={[
+                              styles.radioOuter,
+                              selected && styles.radioOuterActive,
+                            ]}
+                          >
+                            {selected ? (
+                              <View style={styles.radioInner} />
+                            ) : null}
+                          </View>
                           <Text
                             style={[
-                              styles.roleChipText,
-                              selected && styles.roleChipTextActive,
+                              styles.choiceText,
+                              selected && styles.choiceTextActive,
                             ]}
                           >
                             {option}
@@ -726,21 +841,31 @@ const AuthScreen: React.FC = () => {
                     })}
                   </View>
 
-                  <TextInput
-                    style={[inputStyle, styles.textArea]}
-                    placeholder="What work or language gap should Worka solve first?"
-                    placeholderTextColor="#6b6b6b"
-                    value={interestForm.message}
-                    onChangeText={(value) =>
-                      updateInterestField("message", value)
-                    }
-                    multiline
-                  />
+                  <FormField label="Anything else? (optional)">
+                    <TextInput
+                      accessibilityLabel="Additional details"
+                      style={[styles.input, styles.textArea]}
+                      placeholder="What work or language gap should Worka solve first?"
+                      placeholderTextColor="#777"
+                      value={interestForm.message}
+                      onChangeText={(value) =>
+                        updateInterestField("message", value)
+                      }
+                      multiline
+                    />
+                  </FormField>
 
-                  <TouchableOpacity
+                  <Pressable
+                    accessibilityRole="button"
                     onPress={registerInterest}
                     disabled={interestLoading}
-                    style={primaryButtonStyle}
+                    style={({ pressed }) => [
+                      styles.primaryButton,
+                      interestLoading && styles.disabledButton,
+                      pressed &&
+                        !interestLoading &&
+                        styles.primaryButtonPressed,
+                    ]}
                   >
                     {interestLoading ? (
                       <ActivityIndicator color="#fff" />
@@ -748,7 +873,7 @@ const AuthScreen: React.FC = () => {
                       <>
                         <MaterialCommunityIcons
                           name="arrow-right"
-                          size={19}
+                          size={20}
                           color="#fff"
                         />
                         <Text style={styles.primaryButtonText}>
@@ -756,55 +881,38 @@ const AuthScreen: React.FC = () => {
                         </Text>
                       </>
                     )}
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() => {
-                      setShowLogin(true);
-                      setAuthMode("signup");
-                      setAuthError("");
-                    }}
-                    style={secondaryButtonStyle}
+                  </Pressable>
+
+                  <Pressable
+                    accessibilityRole="button"
+                    onPress={() => openAuth("signup")}
+                    style={({ pressed }) => [
+                      styles.secondaryButton,
+                      pressed && styles.pressed,
+                    ]}
                   >
                     <MaterialCommunityIcons
                       name="account-plus-outline"
-                      size={19}
+                      size={20}
                       color="#111"
                     />
                     <Text style={styles.secondaryButtonText}>
                       Create account now
                     </Text>
-                  </TouchableOpacity>
-                </>
+                  </Pressable>
+                </View>
               )}
             </View>
+
+            {isStacked ? (
+              <View style={styles.stackedBenefits}>{renderBenefits(true)}</View>
+            ) : null}
           </View>
 
-          {isNarrow && (
-            <View
-              style={[
-                styles.signalRow,
-                { flexDirection: "column", marginTop: 0 },
-              ]}
-            >
-              {launchSignals.map((signal) => (
-                <View
-                  key={signal.value}
-                  style={[styles.signal, styles.signalMobile]}
-                >
-                  <Text style={styles.signalValue}>{signal.value}</Text>
-                  <Text style={styles.signalLabel}>{signal.label}</Text>
-                </View>
-              ))}
-            </View>
-          )}
-        </View>
-
-        {(isNarrow || !isShortDesktop) && (
           <View
             style={[
               styles.footer,
-              contentShell,
-              { flexDirection: isNarrow ? "column" : "row" },
+              isPhone ? styles.footerPhone : styles.footerDesktop,
             ]}
           >
             <Text style={styles.footerText}>
@@ -812,16 +920,16 @@ const AuthScreen: React.FC = () => {
             </Text>
             <Text style={styles.footerText}>Black. White. Clear.</Text>
           </View>
-        )}
+        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
-  keyboard: {
+  screen: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#f6f6f3",
   },
   scroll: {
     flex: 1,
@@ -829,429 +937,531 @@ const styles = StyleSheet.create({
   },
   page: {
     flexGrow: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#f6f6f3",
   },
-  nav: {
+  shell: {
+    width: "100%",
     maxWidth: 1180,
     alignSelf: "center",
+  },
+  nav: {
+    width: "100%",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    marginBottom: 52,
+  },
+  navPhone: {
+    marginBottom: 30,
   },
   logo: {
-    width: 156,
-    height: 68,
+    width: 150,
+    height: 60,
   },
-  logoMobile: {
-    width: 126,
-    height: 54,
+  logoPhone: {
+    width: 116,
+    height: 46,
   },
-  logoCompact: {
-    width: 128,
-    height: 50,
-  },
-  navAction: {
+  navButton: {
+    minHeight: 44,
+    maxWidth: "55%",
     borderWidth: 1,
     borderColor: "#111",
     borderRadius: 999,
-    paddingHorizontal: 14,
-    paddingVertical: 9,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    backgroundColor: "#fff",
     flexDirection: "row",
     alignItems: "center",
-    gap: 7,
-  },
-  navActionText: {
-    color: "#111",
-    fontWeight: "800",
-    fontSize: 13,
-  },
-  heroGrid: {
-    width: "100%",
-    maxWidth: 1180,
-    alignSelf: "center",
-    alignItems: "stretch",
-    gap: 28,
-  },
-  heroCopy: {
-    flex: 1.14,
     justifyContent: "center",
+    gap: 8,
+  },
+  navButtonText: {
     minWidth: 0,
+    flexShrink: 1,
+    color: "#111",
+    fontSize: 14,
+    fontWeight: "800",
+    textAlign: "center",
+  },
+  main: {
+    width: "100%",
+  },
+  mainDesktop: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 68,
+  },
+  mainStacked: {
+    flexDirection: "column",
+    alignItems: "stretch",
+    gap: 32,
+  },
+  hero: {
+    minWidth: 0,
+    flex: 1,
+  },
+  heroDesktop: {
+    paddingTop: 20,
+  },
+  eyebrowRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 9,
+    marginBottom: 18,
+  },
+  eyebrowDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#111",
   },
   eyebrow: {
+    minWidth: 0,
+    flexShrink: 1,
     color: "#111",
     fontSize: 12,
     fontWeight: "900",
-    letterSpacing: 0,
+    letterSpacing: 0.7,
     textTransform: "uppercase",
-    marginBottom: 18,
-  },
-  eyebrowCompact: {
-    marginBottom: 10,
   },
   heroTitle: {
-    color: "#000",
+    maxWidth: 720,
+    color: "#050505",
     fontWeight: "900",
-    letterSpacing: 0,
-    maxWidth: 760,
+    letterSpacing: -1.2,
   },
-  heroTitleCompact: {
-    fontSize: 42,
-    lineHeight: 47,
+  heroTitleDesktop: {
+    fontSize: 58,
+  },
+  heroTitleTablet: {
+    maxWidth: 760,
+    fontSize: 48,
+  },
+  heroTitlePhone: {
+    fontSize: 36,
+    letterSpacing: -0.7,
   },
   heroText: {
-    color: "#222",
+    maxWidth: 650,
+    marginTop: 22,
+    color: "#333",
     fontSize: 18,
     lineHeight: 28,
-    marginTop: 22,
-    maxWidth: 650,
   },
-  heroTextCompact: {
+  heroTextPhone: {
+    marginTop: 16,
+    fontSize: 16,
+    lineHeight: 24,
+  },
+  benefitList: {
+    width: "100%",
+    maxWidth: 640,
+    marginTop: 34,
+    gap: 18,
+  },
+  benefitListStacked: {
+    marginTop: 0,
+  },
+  benefitItem: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 12,
+  },
+  benefitIcon: {
+    width: 30,
+    height: 30,
+    flexShrink: 0,
+    borderRadius: 15,
+    backgroundColor: "#111",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  benefitCopy: {
+    minWidth: 0,
+    flex: 1,
+    paddingTop: 1,
+  },
+  benefitTitle: {
+    color: "#111",
+    fontSize: 15,
+    fontWeight: "900",
+    marginBottom: 3,
+  },
+  benefitText: {
+    color: "#444",
+    fontSize: 14,
+    lineHeight: 21,
+  },
+  stackedBenefits: {
+    width: "100%",
+    maxWidth: 620,
+    alignSelf: "center",
+    paddingTop: 4,
+  },
+  panel: {
+    width: "100%",
+    borderWidth: 1,
+    borderColor: "#111",
+    borderRadius: 18,
+    backgroundColor: "#fff",
+    padding: 28,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.1,
+    shadowRadius: 24,
+    elevation: 5,
+  },
+  panelDesktop: {
+    maxWidth: 500,
+    flexBasis: 500,
+    flexGrow: 0,
+    flexShrink: 0,
+  },
+  panelStacked: {
+    maxWidth: 620,
+    alignSelf: "center",
+  },
+  panelPhone: {
+    padding: 20,
+    borderRadius: 14,
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
+  },
+  panelHeader: {
+    marginBottom: 24,
+  },
+  panelKicker: {
+    color: "#555",
+    fontSize: 12,
+    fontWeight: "900",
+    letterSpacing: 0.7,
+    textTransform: "uppercase",
+    marginBottom: 8,
+  },
+  panelTitle: {
+    color: "#050505",
+    fontSize: 30,
+    fontWeight: "900",
+    letterSpacing: -0.5,
+  },
+  panelTitlePhone: {
+    fontSize: 26,
+  },
+  panelText: {
+    marginTop: 10,
+    color: "#444",
     fontSize: 15,
     lineHeight: 23,
-    marginTop: 14,
   },
-  signalRow: {
-    gap: 12,
-    marginTop: 34,
+  tabList: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "stretch",
+    gap: 8,
+    marginBottom: 20,
   },
-  signal: {
+  tabListStacked: {
+    flexDirection: "column",
+  },
+  tabButton: {
+    minWidth: 0,
     flex: 1,
     borderWidth: 1,
     borderColor: "#111",
-    borderRadius: 8,
-    padding: 16,
+    borderRadius: 10,
     backgroundColor: "#fff",
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  signalMobile: {
-    width: "100%",
-    flex: 0,
+  tabButtonActive: {
+    backgroundColor: "#111",
   },
-  signalValue: {
-    color: "#000",
-    fontSize: 16,
-    fontWeight: "900",
-    marginBottom: 6,
-  },
-  signalLabel: {
-    color: "#333",
-    lineHeight: 20,
-  },
-  formPanel: {
-    flex: 0.86,
+  tabButtonText: {
     flexShrink: 1,
-    borderWidth: 1,
-    borderColor: "#000",
-    borderRadius: 8,
-    padding: 22,
-    backgroundColor: "#fff",
-    shadowColor: "#000",
-    shadowOffset: { width: 10, height: 10 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    minHeight: 0,
-  },
-  formPanelMobile: {
-    width: "100%",
-    flex: 0,
-  },
-  formPanelDesktop: {
-    minWidth: 360,
-    maxWidth: 470,
-  },
-  formPanelCompact: {
-    padding: 18,
-    shadowOffset: { width: 8, height: 8 },
-  },
-  formPanelBody: {
-    width: "100%",
-    minHeight: 0,
-  },
-  formPanelBodyContent: {
-    paddingBottom: 2,
-  },
-  formPanelBodyContentCompact: {
-    paddingBottom: 1,
-  },
-  panelKicker: {
     color: "#111",
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: "900",
-    letterSpacing: 0,
-    textTransform: "uppercase",
-    marginBottom: 10,
+    textAlign: "center",
   },
-  panelKickerCompact: {
-    marginBottom: 6,
+  tabButtonTextActive: {
+    color: "#fff",
   },
-  panelTitle: {
-    color: "#000",
-    fontSize: 28,
-    lineHeight: 34,
-    fontWeight: "900",
-    marginBottom: 10,
+  field: {
+    width: "100%",
+    marginBottom: 16,
   },
-  panelTitleCompact: {
-    fontSize: 22,
-    lineHeight: 27,
-    marginBottom: 6,
-  },
-  panelText: {
-    color: "#333",
-    lineHeight: 22,
-    marginBottom: 18,
-  },
-  panelTextCompact: {
-    lineHeight: 19,
-    marginBottom: 10,
+  fieldLabel: {
+    color: "#111",
+    fontSize: 14,
+    fontWeight: "800",
+    marginBottom: 7,
   },
   input: {
     width: "100%",
-    minHeight: 52,
+    minHeight: 54,
     borderWidth: 1,
-    borderColor: "#111",
-    borderRadius: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 13,
-    marginBottom: 12,
-    color: "#000",
+    borderColor: "#777",
+    borderRadius: 10,
     backgroundColor: "#fff",
+    color: "#050505",
     fontSize: 16,
-    lineHeight: 22,
-  },
-  inputCompact: {
-    minHeight: 34,
-    paddingVertical: 6,
-    marginBottom: 6,
+    paddingHorizontal: 14,
+    paddingVertical: Platform.select({
+      ios: 13,
+      android: 0,
+      web: 13,
+      default: 13,
+    }),
+    textAlignVertical: "center",
   },
   textArea: {
-    minHeight: 116,
+    minHeight: 124,
+    paddingTop: 14,
+    paddingBottom: 14,
     textAlignVertical: "top",
   },
-  textAreaCompact: {
-    minHeight: 44,
-  },
-  roleGroup: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    marginBottom: 12,
-  },
-  roleChip: {
-    maxWidth: "100%",
-    flexShrink: 1,
-    borderWidth: 1,
-    borderColor: "#111",
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 9,
-    backgroundColor: "#fff",
-  },
-  roleChipCompact: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-  },
-  roleChipActive: {
-    backgroundColor: "#000",
-  },
-  roleChipText: {
-    flexShrink: 1,
+  sectionLabel: {
     color: "#111",
-    fontWeight: "800",
-    fontSize: 13,
-  },
-  roleChipTextActive: {
-    color: "#fff",
-  },
-  primaryButton: {
-    width: "100%",
-    minHeight: 52,
-    backgroundColor: "#000",
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
-    flexDirection: "row",
-    gap: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  buttonCompact: {
-    minHeight: 38,
-  },
-  disabledButton: {
-    opacity: 0.68,
-  },
-  primaryButtonText: {
-    color: "#fff",
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "900",
-    flexShrink: 1,
-    textAlign: "center",
-  },
-  secondaryButton: {
-    width: "100%",
-    minHeight: 50,
-    borderWidth: 1,
-    borderColor: "#111",
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
-    flexDirection: "row",
-    gap: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    marginTop: 12,
-  },
-  secondaryButtonCompact: {
-    minHeight: 38,
-    marginTop: 7,
-  },
-  secondaryButtonText: {
-    color: "#111",
-    fontWeight: "900",
-    flexShrink: 1,
-    textAlign: "center",
-  },
-  linkButton: {
-    alignSelf: "flex-start",
-    marginTop: 16,
-    paddingVertical: 6,
-  },
-  linkButtonText: {
-    color: "#000",
-    fontWeight: "900",
-    textDecorationLine: "underline",
-  },
-  panelHint: {
-    color: "#333",
-    lineHeight: 20,
-    marginTop: 12,
-    fontSize: 13,
-  },
-  authSwitch: {
-    minHeight: 48,
-    borderWidth: 1,
-    borderColor: "#111",
-    borderRadius: 8,
-    flexDirection: "row",
-    marginBottom: 14,
-    overflow: "hidden",
-  },
-  authSwitchCompact: {
-    minHeight: 40,
     marginBottom: 9,
   },
-  authSwitchOption: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 8,
-  },
-  authSwitchOptionActive: {
-    backgroundColor: "#000",
-  },
-  authSwitchText: {
-    color: "#111",
-    fontWeight: "900",
-  },
-  authSwitchTextActive: {
-    color: "#fff",
-  },
-  errorBox: {
-    borderWidth: 1,
-    borderColor: "#111",
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 12,
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 8,
-    backgroundColor: "#fff",
-  },
-  errorText: {
-    flex: 1,
-    color: "#111",
-    fontWeight: "800",
-    lineHeight: 20,
-  },
-  accountTypeGrid: {
+  accountTypeList: {
     width: "100%",
     flexDirection: "row",
     alignItems: "stretch",
     gap: 10,
-    marginBottom: 12,
+    marginBottom: 18,
   },
-  accountTypeGridStacked: {
+  accountTypeListPhone: {
     flexDirection: "column",
   },
   accountTypeCard: {
-    flex: 1,
     minWidth: 0,
-    minHeight: 132,
+    flex: 1,
     borderWidth: 1,
     borderColor: "#111",
-    borderRadius: 8,
-    padding: 12,
+    borderRadius: 12,
     backgroundColor: "#fff",
-    justifyContent: "center",
-    overflow: "visible",
+    padding: 13,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 11,
   },
-  accountTypeCardStacked: {
+  accountTypeCardPhone: {
     width: "100%",
     flex: 0,
   },
-  accountTypeCardCompact: {
-    minHeight: 76,
-    padding: 9,
-  },
   accountTypeCardActive: {
-    backgroundColor: "#000",
+    backgroundColor: "#111",
+  },
+  accountTypeIcon: {
+    width: 38,
+    height: 38,
+    flexShrink: 0,
+    borderRadius: 19,
+    backgroundColor: "#111",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  accountTypeIconActive: {
+    backgroundColor: "#fff",
+  },
+  accountTypeCopy: {
+    minWidth: 0,
+    flex: 1,
   },
   accountTypeTitle: {
-    flexShrink: 1,
     color: "#111",
     fontSize: 15,
     fontWeight: "900",
-    marginTop: 8,
+    marginBottom: 3,
   },
   accountTypeTitleActive: {
     color: "#fff",
   },
   accountTypeText: {
-    flexShrink: 1,
-    color: "#333",
-    lineHeight: 18,
-    marginTop: 5,
+    color: "#555",
     fontSize: 12,
+    lineHeight: 18,
     fontWeight: "700",
   },
   accountTypeTextActive: {
-    color: "#e8e8e8",
+    color: "#e4e4e4",
   },
-  successPanel: {
-    minHeight: 330,
-    justifyContent: "center",
+  choiceList: {
+    width: "100%",
+    gap: 9,
+    marginBottom: 18,
   },
-  successIcon: {
-    width: 54,
-    height: 54,
-    borderRadius: 27,
-    backgroundColor: "#000",
+  choiceRow: {
+    width: "100%",
+    borderWidth: 1,
+    borderColor: "#777",
+    borderRadius: 10,
+    backgroundColor: "#fff",
+    paddingHorizontal: 13,
+    paddingVertical: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  choiceRowActive: {
+    borderColor: "#111",
+    backgroundColor: "#111",
+  },
+  radioOuter: {
+    width: 20,
+    height: 20,
+    flexShrink: 0,
+    borderWidth: 1.5,
+    borderColor: "#555",
+    borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
+  },
+  radioOuterActive: {
+    borderColor: "#fff",
+  },
+  radioInner: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: "#fff",
+  },
+  choiceText: {
+    minWidth: 0,
+    flex: 1,
+    color: "#111",
+    fontSize: 14,
+    fontWeight: "800",
+  },
+  choiceTextActive: {
+    color: "#fff",
+  },
+  errorBox: {
+    width: "100%",
+    borderWidth: 1,
+    borderColor: "#111",
+    borderRadius: 10,
+    backgroundColor: "#f1f1ed",
+    padding: 13,
     marginBottom: 16,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 9,
+  },
+  errorText: {
+    minWidth: 0,
+    flex: 1,
+    color: "#111",
+    fontSize: 14,
+    fontWeight: "800",
+  },
+  primaryButton: {
+    width: "100%",
+    minHeight: 54,
+    borderRadius: 10,
+    backgroundColor: "#111",
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 9,
+  },
+  primaryButtonPressed: {
+    opacity: 0.82,
+    transform: [{ translateY: 1 }],
+  },
+  primaryButtonText: {
+    minWidth: 0,
+    flexShrink: 1,
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "900",
+    textAlign: "center",
+  },
+  secondaryButton: {
+    width: "100%",
+    minHeight: 52,
+    borderWidth: 1,
+    borderColor: "#111",
+    borderRadius: 10,
+    backgroundColor: "#fff",
+    marginTop: 11,
+    paddingHorizontal: 16,
+    paddingVertical: 13,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 9,
+  },
+  secondaryButtonText: {
+    minWidth: 0,
+    flexShrink: 1,
+    color: "#111",
+    fontSize: 15,
+    fontWeight: "900",
+    textAlign: "center",
+  },
+  textButton: {
+    alignSelf: "flex-start",
+    marginTop: 16,
+    paddingVertical: 8,
+  },
+  textButtonText: {
+    color: "#111",
+    fontSize: 14,
+    fontWeight: "900",
+    textDecorationLine: "underline",
+  },
+  disabledButton: {
+    opacity: 0.55,
+  },
+  pressed: {
+    opacity: 0.72,
+  },
+  successPanel: {
+    width: "100%",
+    paddingVertical: 8,
+  },
+  successIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: "#111",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 18,
   },
   footer: {
-    maxWidth: 1180,
-    alignSelf: "center",
+    width: "100%",
     borderTopWidth: 1,
-    borderTopColor: "#111",
-    marginTop: 22,
-    paddingTop: 18,
-    justifyContent: "space-between",
+    borderTopColor: "#bbb",
+    marginTop: 52,
+    paddingTop: 20,
     gap: 8,
   },
+  footerDesktop: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  footerPhone: {
+    flexDirection: "column",
+    alignItems: "flex-start",
+  },
   footerText: {
-    color: "#222",
+    minWidth: 0,
+    flexShrink: 1,
+    color: "#555",
+    fontSize: 13,
     fontWeight: "700",
   },
 });
