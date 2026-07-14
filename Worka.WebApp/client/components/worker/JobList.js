@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
+  ImageBackground,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -16,6 +17,16 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { api, formatDate, formatMoney, getErrorMessage, unwrap } from '../../api/workaApi';
+import { formatDistance, getDistanceKm, requestCurrentLocation } from '../../Utils/locationUtils';
+
+const categoryImages = {
+  Plumbing: 'https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?auto=format&fit=crop&w=900&q=80',
+  Electrical: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=900&q=80',
+  Painting: 'https://images.unsplash.com/photo-1562259949-e8e7689d7828?auto=format&fit=crop&w=900&q=80',
+  Cleaning: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=900&q=80',
+  Garden: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=900&q=80',
+  Repairs: 'https://images.unsplash.com/photo-1504148455328-c376907d081c?auto=format&fit=crop&w=900&q=80',
+};
 
 const WorkerJobList = () => {
   const [account, setAccount] = useState(null);
@@ -27,6 +38,9 @@ const WorkerJobList = () => {
   const [selectedJob, setSelectedJob] = useState(null);
   const [quoteForm, setQuoteForm] = useState({ price: '', description: '' });
   const [submitting, setSubmitting] = useState(false);
+  const [currentLocation, setCurrentLocation] = useState(null);
+  const [locating, setLocating] = useState(false);
+  const [locationError, setLocationError] = useState('');
 
   const loadMarketplace = useCallback(async () => {
     setError(null);
@@ -69,8 +83,28 @@ const WorkerJobList = () => {
   }, [quotes]);
 
   const openJobs = useMemo(() => {
-    return jobs.filter((job) => !job.acceptedQuoteId);
-  }, [jobs]);
+    const nextJobs = jobs.filter((job) => !job.acceptedQuoteId);
+    if (!currentLocation) return nextJobs;
+
+    return [...nextJobs].sort((a, b) => {
+      const aDistance = getDistanceKm(currentLocation, a) ?? Number.MAX_SAFE_INTEGER;
+      const bDistance = getDistanceKm(currentLocation, b) ?? Number.MAX_SAFE_INTEGER;
+      return aDistance - bDistance;
+    });
+  }, [currentLocation, jobs]);
+
+  const useCurrentLocation = async () => {
+    try {
+      setLocating(true);
+      setLocationError('');
+      const location = await requestCurrentLocation();
+      setCurrentLocation(location);
+    } catch (error) {
+      setLocationError(error instanceof Error ? error.message : 'Could not get current location.');
+    } finally {
+      setLocating(false);
+    }
+  };
 
   const openQuoteModal = (job) => {
     setSelectedJob(job);
@@ -158,6 +192,24 @@ const WorkerJobList = () => {
                 <Text style={styles.statLabel}>Your bids</Text>
               </View>
             </View>
+            <TouchableOpacity style={styles.locationButton} onPress={useCurrentLocation} disabled={locating}>
+              {locating ? (
+                <ActivityIndicator color="#111" />
+              ) : (
+                <>
+                  <MaterialCommunityIcons name="crosshairs-gps" size={18} color="#111" />
+                  <Text style={styles.locationButtonText}>
+                    {currentLocation ? 'Update current location' : 'Use current location'}
+                  </Text>
+                </>
+              )}
+            </TouchableOpacity>
+            {currentLocation ? (
+              <Text style={styles.locationStatus}>
+                Current location set. Jobs are sorted by distance where available.
+              </Text>
+            ) : null}
+            {locationError ? <Text style={styles.locationError}>{locationError}</Text> : null}
           </View>
         }
         ListEmptyComponent={
@@ -169,15 +221,28 @@ const WorkerJobList = () => {
         }
         renderItem={({ item }) => {
           const existingQuote = quoteByJob[item.jobId];
+          const distance = getDistanceKm(currentLocation, item);
+          const distanceLabel = formatDistance(distance);
+          const image = item.photoUrl || categoryImages[item.category] || categoryImages.Repairs;
           return (
             <View style={styles.card}>
+              <ImageBackground source={{ uri: image }} style={styles.cardImage} imageStyle={styles.cardImageRadius}>
+                <View style={styles.cardImageOverlay}>
+                  <Text style={styles.cardImageText}>{item.photoUrl ? 'Customer photo' : item.category || 'Home services'}</Text>
+                  <Text style={styles.cardImageText}>{distanceLabel || formatDate(item.createdAt)}</Text>
+                </View>
+              </ImageBackground>
+
               <View style={styles.cardHeader}>
                 <View style={styles.categoryIcon}>
                   <MaterialCommunityIcons name="hammer-wrench" size={22} color="#111" />
                 </View>
                 <View style={styles.cardTitleBlock}>
                   <Text style={styles.cardTitle}>{item.jobName}</Text>
-                  <Text style={styles.cardMeta}>{item.category || 'Home services'} - {formatDate(item.createdAt)}</Text>
+                  <Text style={styles.cardMeta}>
+                    {item.category || 'Home services'} - {formatDate(item.createdAt)}
+                    {distanceLabel ? ` - ${distanceLabel}` : ''}
+                  </Text>
                 </View>
               </View>
 
@@ -189,6 +254,17 @@ const WorkerJobList = () => {
                   <Text style={styles.locationText}>{item.locationLabel || item.address}</Text>
                 </View>
               )}
+
+              <View style={styles.detailStrip}>
+                <View style={styles.detailChip}>
+                  <MaterialCommunityIcons name={item.photoUrl ? 'image-check-outline' : 'image-outline'} size={15} color="#111" />
+                  <Text style={styles.detailChipText}>{item.photoUrl ? 'Photo included' : 'Category image'}</Text>
+                </View>
+                <View style={styles.detailChip}>
+                  <MaterialCommunityIcons name="map-marker-check-outline" size={15} color="#111" />
+                  <Text style={styles.detailChipText}>{Number.isFinite(Number(item.latitude)) ? 'Located' : 'Needs location'}</Text>
+                </View>
+              </View>
 
               {existingQuote ? (
                 <View style={styles.quotedBox}>
@@ -219,6 +295,23 @@ const WorkerJobList = () => {
               </View>
 
               <Text style={styles.modalJobTitle}>{selectedJob?.jobName}</Text>
+              {selectedJob ? (
+                <ImageBackground
+                  source={{ uri: selectedJob.photoUrl || categoryImages[selectedJob.category] || categoryImages.Repairs }}
+                  style={styles.modalJobImage}
+                  imageStyle={styles.modalJobImageRadius}
+                >
+                  <View style={styles.modalJobImageOverlay}>
+                    <Text style={styles.modalJobImageText}>{selectedJob.photoUrl ? 'Customer reference photo' : selectedJob.category}</Text>
+                  </View>
+                </ImageBackground>
+              ) : null}
+              {!!(selectedJob?.locationLabel || selectedJob?.address) && (
+                <View style={styles.modalLocationBox}>
+                  <MaterialCommunityIcons name="map-marker-outline" size={18} color="#111" />
+                  <Text style={styles.modalLocationText}>{selectedJob.locationLabel || selectedJob.address}</Text>
+                </View>
+              )}
               <TextInput
                 style={styles.input}
                 value={quoteForm.price}
@@ -290,6 +383,32 @@ const styles = StyleSheet.create({
     gap: 10,
     marginTop: 16,
   },
+  locationButton: {
+    minHeight: 42,
+    marginTop: 14,
+    alignSelf: 'flex-start',
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  locationButtonText: {
+    color: '#111',
+    fontWeight: '900',
+  },
+  locationStatus: {
+    color: '#d8ded8',
+    marginTop: 8,
+    lineHeight: 20,
+  },
+  locationError: {
+    color: '#fff',
+    marginTop: 8,
+    fontWeight: '800',
+  },
   statChip: {
     flex: 1,
     backgroundColor: 'rgba(255,255,255,0.1)',
@@ -312,6 +431,28 @@ const styles = StyleSheet.create({
     borderColor: '#e3dfd2',
     padding: 14,
     marginBottom: 14,
+  },
+  cardImage: {
+    minHeight: 146,
+    borderRadius: 8,
+    overflow: 'hidden',
+    justifyContent: 'flex-end',
+    backgroundColor: '#f1ede4',
+    marginBottom: 12,
+  },
+  cardImageRadius: {
+    borderRadius: 8,
+  },
+  cardImageOverlay: {
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    padding: 11,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 10,
+  },
+  cardImageText: {
+    color: '#fff',
+    fontWeight: '900',
   },
   cardHeader: {
     flexDirection: 'row',
@@ -354,6 +495,28 @@ const styles = StyleSheet.create({
     flex: 1,
     color: '#64675f',
     fontWeight: '600',
+  },
+  detailStrip: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 12,
+  },
+  detailChip: {
+    minHeight: 32,
+    borderWidth: 1,
+    borderColor: '#d9d5ca',
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#fbfaf6',
+  },
+  detailChipText: {
+    color: '#111',
+    fontSize: 12,
+    fontWeight: '900',
   },
   primaryButton: {
     backgroundColor: '#111',
@@ -462,6 +625,41 @@ const styles = StyleSheet.create({
     color: '#565951',
     fontWeight: '800',
     marginBottom: 12,
+  },
+  modalJobImage: {
+    minHeight: 170,
+    borderRadius: 8,
+    overflow: 'hidden',
+    justifyContent: 'flex-end',
+    backgroundColor: '#f1ede4',
+    marginBottom: 12,
+  },
+  modalJobImageRadius: {
+    borderRadius: 8,
+  },
+  modalJobImageOverlay: {
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    padding: 11,
+  },
+  modalJobImageText: {
+    color: '#fff',
+    fontWeight: '900',
+  },
+  modalLocationBox: {
+    borderWidth: 1,
+    borderColor: '#d9d5ca',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+    flexDirection: 'row',
+    gap: 8,
+    backgroundColor: '#fbfaf6',
+  },
+  modalLocationText: {
+    flex: 1,
+    color: '#4d504b',
+    fontWeight: '700',
+    lineHeight: 20,
   },
   input: {
     minHeight: 50,

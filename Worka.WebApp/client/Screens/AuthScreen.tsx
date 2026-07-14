@@ -86,6 +86,20 @@ const AuthScreen: React.FC = () => {
   const primaryButtonStyle = [styles.primaryButton, isShortDesktop && styles.buttonCompact];
   const secondaryButtonStyle = [styles.secondaryButton, isShortDesktop && styles.secondaryButtonCompact];
   const panelTitleStyle = [styles.panelTitle, isShortDesktop && styles.panelTitleCompact];
+  const desktopPanelMaxHeight =
+    Platform.OS === 'web' && !isNarrow ? Math.max(420, height - (isShortDesktop ? 82 : 126)) : undefined;
+  const formPanelBodyStyle =
+    Platform.OS === 'web' && !isNarrow
+      ? ([
+          styles.formPanelBody,
+          {
+            maxHeight: desktopPanelMaxHeight
+              ? desktopPanelMaxHeight - (isShortDesktop ? 28 : 44)
+              : undefined,
+            overflowY: 'auto',
+          },
+        ] as any)
+      : styles.formPanelBody;
 
   const [interestForm, setInterestForm] = useState(emptyInterestForm);
   const [interestLoading, setInterestLoading] = useState(false);
@@ -318,8 +332,20 @@ const AuthScreen: React.FC = () => {
               styles.formPanel,
               !isNarrow && styles.formPanelDesktop,
               isShortDesktop && styles.formPanelCompact,
+              !isNarrow && ({ maxHeight: desktopPanelMaxHeight, minHeight: 0, overflow: 'hidden' } as any),
             ]}
           >
+            <ScrollView
+              style={formPanelBodyStyle}
+              contentContainerStyle={[
+                styles.formPanelBodyContent,
+                isShortDesktop && styles.formPanelBodyContentCompact,
+              ]}
+              keyboardShouldPersistTaps="handled"
+              nestedScrollEnabled
+              scrollEnabled={Platform.OS === 'web' && !isNarrow}
+              showsVerticalScrollIndicator={false}
+            >
             {showLogin ? (
               <>
                 <Text style={[styles.panelKicker, isShortDesktop && styles.panelKickerCompact]}>Builder access</Text>
@@ -616,6 +642,7 @@ const AuthScreen: React.FC = () => {
                 </TouchableOpacity>
               </>
             )}
+            </ScrollView>
           </View>
 
           {isNarrow && (
@@ -767,6 +794,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 10, height: 10 },
     shadowOpacity: 1,
     shadowRadius: 0,
+    minHeight: 0,
   },
   formPanelDesktop: {
     minWidth: 380,
@@ -774,6 +802,15 @@ const styles = StyleSheet.create({
   formPanelCompact: {
     padding: 14,
     shadowOffset: { width: 8, height: 8 },
+  },
+  formPanelBody: {
+    minHeight: 0,
+  },
+  formPanelBodyContent: {
+    paddingBottom: 2,
+  },
+  formPanelBodyContentCompact: {
+    paddingBottom: 1,
   },
   panelKicker: {
     color: '#111',
@@ -820,16 +857,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   inputCompact: {
-    minHeight: 38,
-    paddingVertical: 7,
-    marginBottom: 7,
+    minHeight: 34,
+    paddingVertical: 6,
+    marginBottom: 6,
   },
   textArea: {
     minHeight: 102,
     textAlignVertical: 'top',
   },
   textAreaCompact: {
-    minHeight: 52,
+    minHeight: 44,
   },
   roleGroup: {
     flexDirection: 'row',
@@ -870,7 +907,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   buttonCompact: {
-    minHeight: 42,
+    minHeight: 38,
   },
   disabledButton: {
     opacity: 0.68,
@@ -879,6 +916,8 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '900',
+    flexShrink: 1,
+    textAlign: 'center',
   },
   secondaryButton: {
     minHeight: 50,
@@ -893,12 +932,14 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   secondaryButtonCompact: {
-    minHeight: 40,
-    marginTop: 8,
+    minHeight: 38,
+    marginTop: 7,
   },
   secondaryButtonText: {
     color: '#111',
     fontWeight: '900',
+    flexShrink: 1,
+    textAlign: 'center',
   },
   linkButton: {
     alignSelf: 'flex-start',

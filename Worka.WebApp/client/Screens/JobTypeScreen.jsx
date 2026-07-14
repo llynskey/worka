@@ -12,6 +12,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { api, getErrorMessage, unwrap } from '../api/workaApi';
 import { lookupLocations } from '../api/locationLookup';
@@ -54,6 +55,7 @@ const JobTypeScreen = ({ navigation }) => {
   const [account, setAccount] = useState(null);
   const [loadingAccount, setLoadingAccount] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [lookupLoading, setLookupLoading] = useState(false);
   const [locationSuggestions, setLocationSuggestions] = useState([]);
   const [locationError, setLocationError] = useState('');
@@ -62,6 +64,7 @@ const JobTypeScreen = ({ navigation }) => {
     jobDescription: '',
     address: '',
     locationLabel: '',
+    photoUrl: '',
     latitude: null,
     longitude: null,
   });
@@ -141,6 +144,85 @@ const JobTypeScreen = ({ navigation }) => {
 
   const hasVerifiedLocation = Number.isFinite(form.latitude) && Number.isFinite(form.longitude);
 
+  const getAssetName = (asset) => {
+    if (asset.fileName) return asset.fileName;
+
+    const extension = asset.mimeType?.split('/')[1] || 'jpg';
+    return `worka-job-photo-${Date.now()}.${extension === 'jpeg' ? 'jpg' : extension}`;
+  };
+
+  const getAssetType = (asset) => asset.mimeType || asset.type || 'image/jpeg';
+
+  const appendAssetToForm = async (upload, asset) => {
+    const fileName = getAssetName(asset);
+    const mimeType = getAssetType(asset);
+
+    if (Platform.OS === 'web') {
+      if (asset.file) {
+        upload.append('file', asset.file, fileName);
+        return;
+      }
+
+      const response = await fetch(asset.uri);
+      const blob = await response.blob();
+      upload.append('file', blob, fileName);
+      return;
+    }
+
+    upload.append('file', {
+      uri: asset.uri,
+      name: fileName,
+      type: mimeType,
+    });
+  };
+
+  const pickAndUploadJobPhoto = async () => {
+    try {
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permission.granted) {
+        Alert.alert('Photo access needed', 'Allow photo library access to attach a job image.');
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.86,
+      });
+
+      if (result.canceled) return;
+
+      const asset = result.assets?.[0];
+      if (!asset?.uri) {
+        Alert.alert('No photo selected', 'Choose an image and try again.');
+        return;
+      }
+
+      if (asset.fileSize && asset.fileSize > 8 * 1024 * 1024) {
+        Alert.alert('Image too large', 'Use an image that is 8MB or smaller.');
+        return;
+      }
+
+      const upload = new FormData();
+      await appendAssetToForm(upload, asset);
+
+      setUploadingPhoto(true);
+      const response = await api.post('/uploads/job-photo', upload);
+      const uploaded = unwrap(response.data);
+      if (!uploaded?.url) {
+        Alert.alert('Upload failed', 'No image URL was returned.');
+        return;
+      }
+
+      setForm((current) => ({ ...current, photoUrl: uploaded.url }));
+    } catch (error) {
+      Alert.alert('Could not upload photo', getErrorMessage(error, 'Try another image or paste a URL.'));
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
   const submitJob = async () => {
     if (!account?.customerId) {
       Alert.alert('Account needed', 'Your customer account is still loading.');
@@ -174,6 +256,7 @@ const JobTypeScreen = ({ navigation }) => {
         jobDescription: form.jobDescription.trim(),
         address: form.address.trim(),
         locationLabel: form.locationLabel || form.address.trim(),
+        photoUrl: form.photoUrl.trim(),
         latitude: form.latitude,
         longitude: form.longitude,
         category: selectedType.type,
@@ -185,6 +268,7 @@ const JobTypeScreen = ({ navigation }) => {
         jobDescription: '',
         address: '',
         locationLabel: '',
+        photoUrl: '',
         latitude: null,
         longitude: null,
       });
@@ -244,6 +328,59 @@ const JobTypeScreen = ({ navigation }) => {
             style={[styles.input, styles.textArea]}
             multiline
           />
+
+          <View style={styles.photoPanel}>
+            <View style={styles.photoHeader}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.photoTitle}>Reference photo</Text>
+                <Text style={styles.photoText}>Show the room, repair, appliance, item, or access issue.</Text>
+              </View>
+              {form.photoUrl ? (
+                <TouchableOpacity style={styles.clearPhotoButton} onPress={() => updateField('photoUrl', '')}>
+                  <MaterialCommunityIcons name="close" size={18} color="#111" />
+                </TouchableOpacity>
+              ) : null}
+            </View>
+
+            {form.photoUrl ? (
+              <ImageBackground source={{ uri: form.photoUrl }} style={styles.photoPreview} imageStyle={styles.photoPreviewImage}>
+                <View style={styles.photoPreviewOverlay}>
+                  <MaterialCommunityIcons name="image-check-outline" size={18} color="#fff" />
+                  <Text style={styles.photoPreviewText}>Photo attached</Text>
+                </View>
+              </ImageBackground>
+            ) : (
+              <View style={styles.photoEmpty}>
+                <MaterialCommunityIcons name="image-plus-outline" size={26} color="#111" />
+                <Text style={styles.photoEmptyText}>Add a photo so quotes are faster and more accurate.</Text>
+              </View>
+            )}
+
+            <TouchableOpacity
+              style={[styles.photoUploadButton, uploadingPhoto && styles.submitButtonDisabled]}
+              onPress={pickAndUploadJobPhoto}
+              disabled={uploadingPhoto}
+            >
+              {uploadingPhoto ? (
+                <ActivityIndicator color="#111" />
+              ) : (
+                <>
+                  <MaterialCommunityIcons name="image-search-outline" size={20} color="#111" />
+                  <Text style={styles.photoUploadButtonText}>Choose photo</Text>
+                </>
+              )}
+            </TouchableOpacity>
+
+            <TextInput
+              placeholder="Or paste an image URL"
+              placeholderTextColor="#686b64"
+              value={form.photoUrl}
+              onChangeText={(text) => updateField('photoUrl', text)}
+              autoCapitalize="none"
+              style={[styles.input, styles.photoUrlInput]}
+            />
+          </View>
+
           <TextInput
             placeholder="Start typing the job address"
             placeholderTextColor="#686b64"
@@ -419,6 +556,100 @@ const styles = StyleSheet.create({
   textArea: {
     minHeight: 110,
     textAlignVertical: 'top',
+  },
+  photoPanel: {
+    borderWidth: 1,
+    borderColor: '#d9d5ca',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+    backgroundColor: '#fbfaf6',
+  },
+  photoHeader: {
+    flexDirection: 'row',
+    gap: 12,
+    alignItems: 'flex-start',
+    marginBottom: 10,
+  },
+  photoTitle: {
+    color: '#111',
+    fontWeight: '900',
+  },
+  photoText: {
+    color: '#62645c',
+    marginTop: 3,
+    lineHeight: 19,
+  },
+  clearPhotoButton: {
+    width: 34,
+    height: 34,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#111',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+  },
+  photoPreview: {
+    minHeight: 170,
+    borderRadius: 8,
+    overflow: 'hidden',
+    justifyContent: 'flex-end',
+    marginBottom: 10,
+    backgroundColor: '#eee9dd',
+  },
+  photoPreviewImage: {
+    borderRadius: 8,
+  },
+  photoPreviewOverlay: {
+    backgroundColor: 'rgba(0,0,0,0.52)',
+    padding: 11,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  photoPreviewText: {
+    color: '#fff',
+    fontWeight: '900',
+  },
+  photoEmpty: {
+    minHeight: 112,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: '#bdb7aa',
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 14,
+    marginBottom: 10,
+    backgroundColor: '#fff',
+  },
+  photoEmptyText: {
+    color: '#565951',
+    textAlign: 'center',
+    fontWeight: '700',
+    lineHeight: 20,
+    marginTop: 7,
+  },
+  photoUploadButton: {
+    minHeight: 46,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#111',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 8,
+    backgroundColor: '#fff',
+    marginBottom: 10,
+  },
+  photoUploadButtonText: {
+    color: '#111',
+    fontWeight: '900',
+  },
+  photoUrlInput: {
+    marginBottom: 0,
+    backgroundColor: '#fff',
   },
   lookupButton: {
     minHeight: 48,

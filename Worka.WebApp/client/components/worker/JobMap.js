@@ -12,6 +12,7 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { api, formatDate, getErrorMessage, unwrap } from '../../api/workaApi';
+import { formatDistance, getDistanceKm, requestCurrentLocation } from '../../Utils/locationUtils';
 
 const hasCoordinates = (job) => Number.isFinite(Number(job.latitude)) && Number.isFinite(Number(job.longitude));
 
@@ -32,10 +33,12 @@ const getMapUrl = (job) => {
   return `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${latitude},${longitude}`;
 };
 
-const openExternalMap = (job) => {
+const openExternalMap = (job, currentLocation) => {
   const latitude = Number(job.latitude);
   const longitude = Number(job.longitude);
-  const url = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
+  const url = currentLocation
+    ? `https://www.google.com/maps/dir/?api=1&origin=${currentLocation.latitude},${currentLocation.longitude}&destination=${latitude},${longitude}`
+    : `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
   Linking.openURL(url);
 };
 
@@ -69,6 +72,9 @@ const JobMap = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
   const [selectedJobId, setSelectedJobId] = useState(null);
+  const [currentLocation, setCurrentLocation] = useState(null);
+  const [locating, setLocating] = useState(false);
+  const [locationError, setLocationError] = useState('');
 
   const loadJobs = useCallback(async () => {
     setError(null);
@@ -104,9 +110,31 @@ const JobMap = () => {
     }, [refresh])
   );
 
-  const locatedJobs = useMemo(() => jobs.filter(hasCoordinates), [jobs]);
+  const locatedJobs = useMemo(() => {
+    const nextJobs = jobs.filter(hasCoordinates);
+    if (!currentLocation) return nextJobs;
+
+    return [...nextJobs].sort((a, b) => {
+      const aDistance = getDistanceKm(currentLocation, a) ?? Number.MAX_SAFE_INTEGER;
+      const bDistance = getDistanceKm(currentLocation, b) ?? Number.MAX_SAFE_INTEGER;
+      return aDistance - bDistance;
+    });
+  }, [currentLocation, jobs]);
   const unlocatedJobs = useMemo(() => jobs.filter((job) => !hasCoordinates(job)), [jobs]);
   const selectedJob = locatedJobs.find((job) => job.jobId === selectedJobId) ?? locatedJobs[0] ?? null;
+
+  const useCurrentLocation = async () => {
+    try {
+      setLocating(true);
+      setLocationError('');
+      const location = await requestCurrentLocation();
+      setCurrentLocation(location);
+    } catch (err) {
+      setLocationError(err instanceof Error ? err.message : 'Could not get current location.');
+    } finally {
+      setLocating(false);
+    }
+  };
 
   if (loading && !refreshing) {
     return (
@@ -147,6 +175,30 @@ const JobMap = () => {
         </TouchableOpacity>
       </View>
 
+      <View style={styles.locationBar}>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.locationBarTitle}>
+            {currentLocation ? 'Current location set' : 'Current location not set'}
+          </Text>
+          <Text style={styles.locationBarText}>
+            {currentLocation
+              ? 'Located jobs are sorted by distance. Open a job for directions.'
+              : 'Share location to show distance to each job.'}
+          </Text>
+          {locationError ? <Text style={styles.locationError}>{locationError}</Text> : null}
+        </View>
+        <TouchableOpacity style={styles.locationButton} onPress={useCurrentLocation} disabled={locating}>
+          {locating ? (
+            <ActivityIndicator color="#111" />
+          ) : (
+            <>
+              <MaterialCommunityIcons name="crosshairs-gps" size={18} color="#111" />
+              <Text style={styles.locationButtonText}>{currentLocation ? 'Update' : 'Use location'}</Text>
+            </>
+          )}
+        </TouchableOpacity>
+      </View>
+
       <View style={styles.mapLayout}>
         <View style={styles.mapPane}>
           <WebMapFrame job={selectedJob} />
@@ -162,6 +214,7 @@ const JobMap = () => {
           ) : (
             locatedJobs.map((job) => {
               const active = selectedJob?.jobId === job.jobId;
+              const distanceLabel = formatDistance(getDistanceKm(currentLocation, job));
               return (
                 <TouchableOpacity
                   key={job.jobId}
@@ -170,16 +223,20 @@ const JobMap = () => {
                 >
                   <View style={styles.jobItemHeader}>
                     <Text style={[styles.jobTitle, active && styles.jobTitleActive]}>{job.jobName}</Text>
-                    <Text style={[styles.jobMeta, active && styles.jobMetaActive]}>{formatDate(job.createdAt)}</Text>
+                    <Text style={[styles.jobMeta, active && styles.jobMetaActive]}>
+                      {distanceLabel || formatDate(job.createdAt)}
+                    </Text>
                   </View>
                   <Text style={[styles.jobLocation, active && styles.jobLocationActive]}>{getLocationLabel(job)}</Text>
                   <View style={styles.jobFooter}>
                     <Text style={[styles.jobCategory, active && styles.jobCategoryActive]}>
                       {job.category || 'Home services'}
                     </Text>
-                    <TouchableOpacity style={styles.openMapButton} onPress={() => openExternalMap(job)}>
+                    <TouchableOpacity style={styles.openMapButton} onPress={() => openExternalMap(job, currentLocation)}>
                       <MaterialCommunityIcons name="open-in-new" size={15} color={active ? '#fff' : '#111'} />
-                      <Text style={[styles.openMapText, active && styles.openMapTextActive]}>Open</Text>
+                      <Text style={[styles.openMapText, active && styles.openMapTextActive]}>
+                        {currentLocation ? 'Directions' : 'Open'}
+                      </Text>
                     </TouchableOpacity>
                   </View>
                 </TouchableOpacity>
@@ -220,6 +277,47 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     gap: 14,
+  },
+  locationBar: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#e3dfd2',
+    borderRadius: 8,
+    padding: 14,
+    marginBottom: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  locationBarTitle: {
+    color: '#111',
+    fontWeight: '900',
+  },
+  locationBarText: {
+    color: '#62645c',
+    lineHeight: 20,
+    marginTop: 3,
+  },
+  locationButton: {
+    minHeight: 42,
+    borderWidth: 1,
+    borderColor: '#111',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#fff',
+  },
+  locationButtonText: {
+    color: '#111',
+    fontWeight: '900',
+  },
+  locationError: {
+    color: '#111',
+    fontWeight: '800',
+    marginTop: 5,
   },
   eyebrow: {
     color: '#62645c',

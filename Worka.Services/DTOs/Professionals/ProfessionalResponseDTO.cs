@@ -20,6 +20,14 @@ namespace Worka.Services.DTOs.Professionals
 
         public string ServiceArea { get; set; }
 
+        public bool StripeConnected { get; set; }
+
+        public bool StripeChargesEnabled { get; set; }
+
+        public bool StripePayoutsEnabled { get; set; }
+
+        public bool StripeDetailsSubmitted { get; set; }
+
         public ProfessionalResponseDTO(Professional professional)
         {
             ProfessionalId = professional.ProfessionalId.ToString();
@@ -30,6 +38,10 @@ namespace Worka.Services.DTOs.Professionals
             Specialty = professional.Specialty;
             Bio = professional.Bio;
             ServiceArea = professional.ServiceArea;
+            StripeConnected = !string.IsNullOrWhiteSpace(professional.StripeAccountId);
+            StripeChargesEnabled = professional.StripeChargesEnabled;
+            StripePayoutsEnabled = professional.StripePayoutsEnabled;
+            StripeDetailsSubmitted = professional.StripeDetailsSubmitted;
         }
     }
 }

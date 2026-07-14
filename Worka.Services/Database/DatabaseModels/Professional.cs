@@ -18,6 +18,14 @@ namespace Worka.Services.Database.DatabaseModels
 
         public string ServiceArea { get; set; } = string.Empty;
 
+        public string StripeAccountId { get; set; } = string.Empty;
+
+        public bool StripeChargesEnabled { get; set; }
+
+        public bool StripePayoutsEnabled { get; set; }
+
+        public bool StripeDetailsSubmitted { get; set; }
+
         public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 
         public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;

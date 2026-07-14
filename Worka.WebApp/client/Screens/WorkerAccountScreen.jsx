@@ -2,6 +2,8 @@ import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Linking,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -23,6 +25,9 @@ const WorkerAccountScreen = () => {
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [stripeStatus, setStripeStatus] = useState(null);
+  const [stripeLoading, setStripeLoading] = useState(false);
+  const [stripeError, setStripeError] = useState('');
 
   const loadAccount = useCallback(async () => {
     try {
@@ -37,6 +42,13 @@ const WorkerAccountScreen = () => {
         serviceArea: account.serviceArea ?? '',
         bio: account.bio ?? '',
       });
+      setStripeStatus({
+        connected: !!account.stripeConnected,
+        chargesEnabled: !!account.stripeChargesEnabled,
+        payoutsEnabled: !!account.stripePayoutsEnabled,
+        detailsSubmitted: !!account.stripeDetailsSubmitted,
+        readyForPayments: !!account.stripeChargesEnabled && !!account.stripePayoutsEnabled,
+      });
     } catch (error) {
       Alert.alert('Could not load account', getErrorMessage(error));
     } finally {
@@ -44,9 +56,58 @@ const WorkerAccountScreen = () => {
     }
   }, []);
 
+  const loadStripeStatus = useCallback(async () => {
+    try {
+      setStripeError('');
+      const response = await api.get('/payments/stripe/status');
+      setStripeStatus(unwrap(response.data));
+    } catch (error) {
+      setStripeError(getErrorMessage(error, 'Could not load payout status.'));
+    }
+  }, []);
+
   useEffect(() => {
     loadAccount();
   }, [loadAccount]);
+
+  useEffect(() => {
+    if (!loading) {
+      loadStripeStatus();
+    }
+  }, [loadStripeStatus, loading]);
+
+  const startStripeOnboarding = async () => {
+    try {
+      setStripeLoading(true);
+      setStripeError('');
+      const origin =
+        Platform.OS === 'web' && typeof window !== 'undefined'
+          ? window.location.origin
+          : 'https://worka-uk.online';
+
+      const response = await api.post('/payments/stripe/onboarding', {
+        returnUrl: `${origin}/?stripe=return`,
+        refreshUrl: `${origin}/?stripe=refresh`,
+      });
+
+      const onboarding = unwrap(response.data);
+      if (!onboarding?.url) {
+        setStripeError('No onboarding link was returned.');
+        return;
+      }
+
+      if (Platform.OS === 'web' && typeof window !== 'undefined') {
+        window.location.href = onboarding.url;
+        return;
+      }
+
+      await Linking.openURL(onboarding.url);
+    } catch (error) {
+      setStripeError(getErrorMessage(error, 'Could not start payout setup.'));
+    } finally {
+      setStripeLoading(false);
+    }
+  };
 
   const save = async () => {
     if (!form.firstName.trim() || !form.lastName.trim() || !form.email.trim()) {
@@ -91,6 +152,46 @@ const WorkerAccountScreen = () => {
           <Text style={styles.title}>Professional account</Text>
           <Text style={styles.subtitle}>Help customers understand your trade, coverage, and approach.</Text>
         </View>
+      </View>
+
+      <View style={styles.payoutCard}>
+        <View style={styles.payoutHeader}>
+          <MaterialCommunityIcons name="bank-transfer" size={28} color="#111" />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.payoutTitle}>Payouts</Text>
+            <Text style={styles.payoutText}>
+              {stripeStatus?.readyForPayments
+                ? 'Ready to receive your share when customers pay.'
+                : 'Set up Stripe payouts before customers can pay your quotes.'}
+            </Text>
+          </View>
+          <View style={[styles.statusPill, stripeStatus?.readyForPayments && styles.statusPillReady]}>
+            <Text style={[styles.statusText, stripeStatus?.readyForPayments && styles.statusTextReady]}>
+              {stripeStatus?.readyForPayments ? 'Ready' : 'Action needed'}
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.payoutChecklist}>
+          <Text style={styles.payoutCheck}>Account: {stripeStatus?.connected ? 'connected' : 'not connected'}</Text>
+          <Text style={styles.payoutCheck}>Charges: {stripeStatus?.chargesEnabled ? 'enabled' : 'pending'}</Text>
+          <Text style={styles.payoutCheck}>Payouts: {stripeStatus?.payoutsEnabled ? 'enabled' : 'pending'}</Text>
+        </View>
+
+        {stripeError ? <Text style={styles.payoutError}>{stripeError}</Text> : null}
+
+        <TouchableOpacity style={styles.payoutButton} onPress={startStripeOnboarding} disabled={stripeLoading}>
+          {stripeLoading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <>
+              <MaterialCommunityIcons name="open-in-new" size={19} color="#fff" />
+              <Text style={styles.buttonText}>
+                {stripeStatus?.connected ? 'Continue payout setup' : 'Set up payouts'}
+              </Text>
+            </>
+          )}
+        </TouchableOpacity>
       </View>
 
       <View style={styles.formCard}>
@@ -188,6 +289,73 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#e3dfd2',
     padding: 14,
+  },
+  payoutCard: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#111',
+    padding: 14,
+    marginBottom: 14,
+  },
+  payoutHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+  },
+  payoutTitle: {
+    color: '#111',
+    fontSize: 18,
+    fontWeight: '900',
+  },
+  payoutText: {
+    color: '#62645c',
+    marginTop: 4,
+    lineHeight: 20,
+  },
+  payoutChecklist: {
+    borderTopWidth: 1,
+    borderTopColor: '#ece7dc',
+    marginTop: 13,
+    paddingTop: 12,
+    gap: 4,
+  },
+  payoutCheck: {
+    color: '#111',
+    fontWeight: '800',
+  },
+  payoutError: {
+    color: '#111',
+    fontWeight: '800',
+    marginTop: 10,
+  },
+  payoutButton: {
+    backgroundColor: '#111',
+    borderRadius: 8,
+    paddingVertical: 13,
+    paddingHorizontal: 14,
+    marginTop: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  statusPill: {
+    backgroundColor: '#f1ede4',
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  statusPillReady: {
+    backgroundColor: '#dff4e8',
+  },
+  statusText: {
+    color: '#565951',
+    fontWeight: '900',
+    fontSize: 12,
+  },
+  statusTextReady: {
+    color: '#24513b',
   },
   input: {
     minHeight: 50,

@@ -17,6 +17,8 @@ namespace Worka.Services.DTOs.Jobs
 
         public string LocationLabel { get; set; }
 
+        public string PhotoUrl { get; set; }
+
         public double? Latitude { get; set; }
 
         public double? Longitude { get; set; }
@@ -37,6 +39,7 @@ namespace Worka.Services.DTOs.Jobs
             Category = job.Category;
             Address = job.Address;
             LocationLabel = job.LocationLabel;
+            PhotoUrl = job.PhotoUrl;
             Latitude = job.Latitude;
             Longitude = job.Longitude;
             JobStatus = job.Status;

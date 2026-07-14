@@ -137,6 +137,19 @@ const BidList = () => {
 
             <Text style={styles.amount}>{formatMoney(item.price)}</Text>
             <Text style={styles.description}>{item.description || 'No quote note provided.'}</Text>
+            {accepted ? (
+              <View style={styles.payoutBox}>
+                <MaterialCommunityIcons name="cash-fast" size={18} color="#24513b" />
+                <Text style={styles.payoutText}>
+                  Customer booked this quote. Your share is {formatMoney(item.price)} and is paid out through Stripe Connect once your payout account is ready.
+                </Text>
+              </View>
+            ) : (
+              <View style={styles.pendingBox}>
+                <MaterialCommunityIcons name="clock-outline" size={18} color="#111" />
+                <Text style={styles.pendingText}>The customer can review this quote and pay securely through Worka.</Text>
+              </View>
+            )}
           </View>
         );
       }}
@@ -228,6 +241,36 @@ const styles = StyleSheet.create({
     color: '#4d504b',
     lineHeight: 20,
     marginTop: 6,
+  },
+  payoutBox: {
+    marginTop: 12,
+    borderRadius: 8,
+    padding: 12,
+    backgroundColor: '#e8f5ed',
+    flexDirection: 'row',
+    gap: 8,
+  },
+  payoutText: {
+    flex: 1,
+    color: '#24513b',
+    fontWeight: '800',
+    lineHeight: 20,
+  },
+  pendingBox: {
+    marginTop: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e3dfd2',
+    padding: 12,
+    backgroundColor: '#fbfaf6',
+    flexDirection: 'row',
+    gap: 8,
+  },
+  pendingText: {
+    flex: 1,
+    color: '#111',
+    fontWeight: '800',
+    lineHeight: 20,
   },
   statusPill: {
     alignSelf: 'flex-start',

@@ -10,6 +10,7 @@ using Worka.Services.Customers;
 using Worka.Services.Database;
 using Worka.Services.Interest;
 using Worka.Services.Jobs;
+using Worka.Services.Payments;
 using Worka.Services.Professionals;
 using Worka.Services.Quotes;
 
@@ -59,6 +60,7 @@ namespace Worka.WebApp
             services.AddScoped<IQuoteService, QuoteService>();
             services.AddScoped<IJobsService, JobsService>();
             services.AddScoped<IInterestRegistrationService, InterestRegistrationService>();
+            services.AddScoped<IPaymentsService, PaymentsService>();
 
             services.AddAuthorization();
             services.AddControllers();
@@ -102,8 +104,34 @@ namespace Worka.WebApp
             dbContext.Database.EnsureCreated();
             dbContext.Database.ExecuteSqlRaw("""
                 ALTER TABLE jobs ADD COLUMN IF NOT EXISTS "LocationLabel" character varying(500) NOT NULL DEFAULT '';
+                ALTER TABLE jobs ADD COLUMN IF NOT EXISTS "PhotoUrl" character varying(1000) NOT NULL DEFAULT '';
                 ALTER TABLE jobs ADD COLUMN IF NOT EXISTS "Latitude" double precision NULL;
                 ALTER TABLE jobs ADD COLUMN IF NOT EXISTS "Longitude" double precision NULL;
+                ALTER TABLE professionals ADD COLUMN IF NOT EXISTS "StripeAccountId" character varying(200) NOT NULL DEFAULT '';
+                ALTER TABLE professionals ADD COLUMN IF NOT EXISTS "StripeChargesEnabled" boolean NOT NULL DEFAULT false;
+                ALTER TABLE professionals ADD COLUMN IF NOT EXISTS "StripePayoutsEnabled" boolean NOT NULL DEFAULT false;
+                ALTER TABLE professionals ADD COLUMN IF NOT EXISTS "StripeDetailsSubmitted" boolean NOT NULL DEFAULT false;
+                CREATE TABLE IF NOT EXISTS worka_payments (
+                    "PaymentId" uuid PRIMARY KEY,
+                    "JobId" uuid NOT NULL REFERENCES jobs("JobId") ON DELETE CASCADE,
+                    "QuoteId" uuid NOT NULL REFERENCES quotes("QuoteId") ON DELETE CASCADE,
+                    "CustomerId" uuid NOT NULL REFERENCES customers("CustomerId") ON DELETE CASCADE,
+                    "ProfessionalId" uuid NOT NULL REFERENCES professionals("ProfessionalId") ON DELETE CASCADE,
+                    "StripeCheckoutSessionId" character varying(200) NOT NULL DEFAULT '',
+                    "StripePaymentIntentId" character varying(200) NOT NULL DEFAULT '',
+                    "StripeConnectedAccountId" character varying(200) NOT NULL DEFAULT '',
+                    "QuoteAmount" numeric(12,2) NOT NULL,
+                    "ServiceFeeAmount" numeric(12,2) NOT NULL,
+                    "TotalAmount" numeric(12,2) NOT NULL,
+                    "WorkerAmount" numeric(12,2) NOT NULL,
+                    "Currency" character varying(10) NOT NULL DEFAULT 'gbp',
+                    "Status" character varying(40) NOT NULL DEFAULT 'pending_checkout',
+                    "CreatedAt" timestamp with time zone NOT NULL,
+                    "UpdatedAt" timestamp with time zone NOT NULL
+                );
+                CREATE UNIQUE INDEX IF NOT EXISTS "IX_worka_payments_StripeCheckoutSessionId"
+                    ON worka_payments("StripeCheckoutSessionId")
+                    WHERE "StripeCheckoutSessionId" <> '';
                 """);
         }
     }

@@ -29,6 +29,9 @@ namespace Worka.Services.Jobs
                 var locationLabel = string.IsNullOrWhiteSpace(jobDto.LocationLabel)
                     ? address
                     : jobDto.LocationLabel.Trim();
+                var photoUrl = string.IsNullOrWhiteSpace(jobDto.PhotoUrl)
+                    ? string.Empty
+                    : jobDto.PhotoUrl.Trim();
 
                 if (string.IsNullOrWhiteSpace(address))
                 {
@@ -53,6 +56,7 @@ namespace Worka.Services.Jobs
                     Category = jobDto.Category.Trim(),
                     Address = address,
                     LocationLabel = locationLabel,
+                    PhotoUrl = photoUrl,
                     Latitude = jobDto.Latitude,
                     Longitude = jobDto.Longitude,
                     CustomerId = customerId,

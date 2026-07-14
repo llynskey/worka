@@ -30,6 +30,14 @@
       "cors": ["https://localhost:5001"],
       "bundler": "metro"
     },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Worka needs photo access so you can attach reference images to your jobs."
+        }
+      ]
+    ],
     "extra": {
       "eas": {
         "projectId": "3a7bf158-229a-48ac-bd98-41ff375bc760"

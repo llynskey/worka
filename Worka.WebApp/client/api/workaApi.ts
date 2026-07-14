@@ -40,6 +40,10 @@ export type ProfessionalAccount = {
   specialty: string;
   bio: string;
   serviceArea: string;
+  stripeConnected?: boolean;
+  stripeChargesEnabled?: boolean;
+  stripePayoutsEnabled?: boolean;
+  stripeDetailsSubmitted?: boolean;
 };
 
 export type Job = {
@@ -49,6 +53,7 @@ export type Job = {
   category: string;
   address: string;
   locationLabel?: string;
+  photoUrl?: string;
   latitude?: number | null;
   longitude?: number | null;
   customerId: string;
@@ -64,6 +69,31 @@ export type Quote = {
   price: number;
   description: string;
   createdAt: string;
+};
+
+export type PaymentCheckout = {
+  paymentId: string;
+  checkoutSessionId: string;
+  checkoutUrl: string;
+  quoteAmount: number;
+  serviceFeeAmount: number;
+  workerAmount: number;
+  totalAmount: number;
+  currency: string;
+};
+
+export type JobPhotoUpload = {
+  url: string;
+  fileName: string;
+};
+
+export type StripeConnectStatus = {
+  connected: boolean;
+  chargesEnabled: boolean;
+  payoutsEnabled: boolean;
+  detailsSubmitted: boolean;
+  readyForPayments: boolean;
+  stripeAccountId: string;
 };
 
 const configuredApiUrl = process.env.EXPO_PUBLIC_API_URL;

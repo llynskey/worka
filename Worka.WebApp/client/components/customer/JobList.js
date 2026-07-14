@@ -1,8 +1,10 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
   FlatList,
+  Linking,
+  Platform,
   RefreshControl,
   StyleSheet,
   Text,
@@ -27,6 +29,31 @@ const CustomerJobList = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
+  const [checkoutMessage, setCheckoutMessage] = useState(null);
+
+  useEffect(() => {
+    if (Platform.OS !== 'web' || typeof window === 'undefined') return;
+
+    const params = new URLSearchParams(window.location.search);
+    const checkout = params.get('checkout');
+    if (checkout === 'success') {
+      setCheckoutMessage({
+        type: 'success',
+        title: 'Payment received',
+        text: 'Your booking is being confirmed. Pull to refresh if the job has not updated yet.',
+      });
+      window.history.replaceState(null, '', window.location.pathname);
+    }
+
+    if (checkout === 'cancelled') {
+      setCheckoutMessage({
+        type: 'cancelled',
+        title: 'Payment cancelled',
+        text: 'No money was taken. You can choose the quote again when you are ready.',
+      });
+      window.history.replaceState(null, '', window.location.pathname);
+    }
+  }, []);
 
   const loadDashboard = useCallback(async () => {
     setError(null);
@@ -89,14 +116,32 @@ const CustomerJobList = ({ navigation }) => {
   const acceptQuote = useCallback(
     async (job, quote) => {
       try {
-        await api.post(`/Jobs/${job.jobId}/acceptQuote`, { quoteId: quote.quoteId });
-        Alert.alert('Quote accepted', 'Your job has been marked as booked.');
-        await refresh();
+        const origin =
+          Platform.OS === 'web' && typeof window !== 'undefined'
+            ? window.location.origin
+            : 'https://worka-uk.online';
+
+        const response = await api.post(`/payments/jobs/${job.jobId}/quotes/${quote.quoteId}/checkout`, {
+          successUrl: `${origin}/?checkout=success`,
+          cancelUrl: `${origin}/?checkout=cancelled`,
+        });
+        const checkout = unwrap(response.data);
+        if (!checkout?.checkoutUrl) {
+          Alert.alert('Could not start payment', 'No checkout link was returned.');
+          return;
+        }
+
+        if (Platform.OS === 'web' && typeof window !== 'undefined') {
+          window.location.href = checkout.checkoutUrl;
+          return;
+        }
+
+        await Linking.openURL(checkout.checkoutUrl);
       } catch (err) {
-        Alert.alert('Could not accept quote', getErrorMessage(err, 'Try again in a moment.'));
+        Alert.alert('Could not start payment', getErrorMessage(err, 'Try again in a moment.'));
       }
     },
-    [refresh]
+    []
   );
 
   if (loading && !refreshing) {
@@ -129,6 +174,23 @@ const CustomerJobList = ({ navigation }) => {
       contentContainerStyle={styles.listContent}
       ListHeaderComponent={
         <View>
+          {checkoutMessage ? (
+            <View style={[styles.checkoutBanner, checkoutMessage.type === 'success' && styles.checkoutBannerSuccess]}>
+              <MaterialCommunityIcons
+                name={checkoutMessage.type === 'success' ? 'check-circle-outline' : 'alert-circle-outline'}
+                size={22}
+                color="#111"
+              />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.checkoutBannerTitle}>{checkoutMessage.title}</Text>
+                <Text style={styles.checkoutBannerText}>{checkoutMessage.text}</Text>
+              </View>
+              <TouchableOpacity style={styles.bannerClose} onPress={() => setCheckoutMessage(null)}>
+                <MaterialCommunityIcons name="close" size={18} color="#111" />
+              </TouchableOpacity>
+            </View>
+          ) : null}
+
           <View style={styles.hero}>
             <Text style={styles.eyebrow}>Customer marketplace</Text>
             <Text style={styles.heroTitle}>
@@ -251,6 +313,39 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     color: '#111',
     marginBottom: 8,
+  },
+  checkoutBanner: {
+    borderWidth: 1,
+    borderColor: '#111',
+    borderRadius: 8,
+    padding: 13,
+    marginBottom: 14,
+    backgroundColor: '#fff',
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+  },
+  checkoutBannerSuccess: {
+    backgroundColor: '#e8f5ed',
+  },
+  checkoutBannerTitle: {
+    color: '#111',
+    fontWeight: '900',
+  },
+  checkoutBannerText: {
+    color: '#4d504b',
+    lineHeight: 20,
+    marginTop: 3,
+  },
+  bannerClose: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#111',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff',
   },
   centerState: {
     flex: 1,

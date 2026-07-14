@@ -23,6 +23,7 @@
     "@rneui/themed": "4.0.0-rc.8",
     "axios": "^1.9.0",
     "expo": "^54.0.10",
+    "expo-image-picker": "~17.0.8",
     "jwt-decode": "^4.0.0",
     "nvm": "^0.0.4",
     "react": "19.1.0",

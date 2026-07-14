@@ -24,13 +24,18 @@ services:
       Stripe__SecretKey: ${Stripe__SecretKey:-}
       Stripe__WebhookSecret: ${Stripe__WebhookSecret:-}
       Stripe__ConnectClientId: ${Stripe__ConnectClientId:-}
+      Stripe__Currency: ${Stripe__Currency:-gbp}
+      Stripe__DefaultCountry: ${Stripe__DefaultCountry:-GB}
       Worka__ServiceFeePercent: ${Worka__ServiceFeePercent:-10}
+      Worka__ServiceFeeMinimum: ${Worka__ServiceFeeMinimum:-2}
     depends_on:
       postgres:
         condition: service_healthy
     expose:
       - "8080"
     restart: unless-stopped
+    volumes:
+      - worka_uploads:/app/wwwroot/uploads
 
   postgres:
     image: postgres:16-alpine
@@ -49,3 +54,4 @@ services:
 
 volumes:
   postgres_data:
+  worka_uploads:

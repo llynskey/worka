@@ -21,6 +21,8 @@ namespace Worka.Services.Database
 
         public DbSet<Quote> Quotes => Set<Quote>();
 
+        public DbSet<WorkaPayment> WorkaPayments => Set<WorkaPayment>();
+
         public DbSet<InterestRegistration> InterestRegistrations => Set<InterestRegistration>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -62,6 +64,7 @@ namespace Worka.Services.Database
                 entity.Property(professional => professional.Specialty).HasMaxLength(160).IsRequired();
                 entity.Property(professional => professional.Bio).HasMaxLength(2000).IsRequired();
                 entity.Property(professional => professional.ServiceArea).HasMaxLength(240).IsRequired();
+                entity.Property(professional => professional.StripeAccountId).HasMaxLength(200).IsRequired();
                 entity.HasOne<User>()
                     .WithMany()
                     .HasForeignKey(professional => professional.UserId)
@@ -77,6 +80,7 @@ namespace Worka.Services.Database
                 entity.Property(job => job.Category).HasMaxLength(120).IsRequired();
                 entity.Property(job => job.Address).HasMaxLength(500).IsRequired();
                 entity.Property(job => job.LocationLabel).HasMaxLength(500).IsRequired();
+                entity.Property(job => job.PhotoUrl).HasMaxLength(1000).IsRequired();
                 entity.HasOne<Customer>()
                     .WithMany()
                     .HasForeignKey(job => job.CustomerId)
@@ -96,6 +100,38 @@ namespace Worka.Services.Database
                 entity.HasOne<Professional>()
                     .WithMany()
                     .HasForeignKey(quote => quote.ProfessionalId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<WorkaPayment>(entity =>
+            {
+                entity.ToTable("worka_payments");
+                entity.HasKey(payment => payment.PaymentId);
+                entity.HasIndex(payment => payment.StripeCheckoutSessionId).IsUnique();
+                entity.Property(payment => payment.StripeCheckoutSessionId).HasMaxLength(200).IsRequired();
+                entity.Property(payment => payment.StripePaymentIntentId).HasMaxLength(200).IsRequired();
+                entity.Property(payment => payment.StripeConnectedAccountId).HasMaxLength(200).IsRequired();
+                entity.Property(payment => payment.QuoteAmount).HasPrecision(12, 2);
+                entity.Property(payment => payment.ServiceFeeAmount).HasPrecision(12, 2);
+                entity.Property(payment => payment.TotalAmount).HasPrecision(12, 2);
+                entity.Property(payment => payment.WorkerAmount).HasPrecision(12, 2);
+                entity.Property(payment => payment.Currency).HasMaxLength(10).IsRequired();
+                entity.Property(payment => payment.Status).HasMaxLength(40).IsRequired();
+                entity.HasOne<Job>()
+                    .WithMany()
+                    .HasForeignKey(payment => payment.JobId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne<Quote>()
+                    .WithMany()
+                    .HasForeignKey(payment => payment.QuoteId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne<Customer>()
+                    .WithMany()
+                    .HasForeignKey(payment => payment.CustomerId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne<Professional>()
+                    .WithMany()
+                    .HasForeignKey(payment => payment.ProfessionalId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
 
