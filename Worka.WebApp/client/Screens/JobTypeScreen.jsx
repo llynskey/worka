@@ -260,7 +260,6 @@ const JobTypeScreen = ({ navigation }) => {
         latitude: form.latitude,
         longitude: form.longitude,
         category: selectedType.type,
-        customerId: account.customerId,
       });
 
       setForm({
@@ -465,6 +464,9 @@ const styles = StyleSheet.create({
   content: {
     padding: 16,
     paddingBottom: 96,
+    width: '100%',
+    maxWidth: 720,
+    alignSelf: 'center',
   },
   hero: {
     minHeight: 190,

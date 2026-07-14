@@ -262,6 +262,9 @@ const styles = StyleSheet.create({
     paddingBottom: 96,
     backgroundColor: '#f7f5ef',
     flexGrow: 1,
+    width: '100%',
+    maxWidth: 720,
+    alignSelf: 'center',
   },
   headerCard: {
     backgroundColor: '#fff',

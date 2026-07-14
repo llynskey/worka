@@ -50,7 +50,7 @@ const WorkerJobList = () => {
 
     const [jobsResponse, quotesResponse] = await Promise.all([
       api.get('/Jobs'),
-      api.get('/ProfessionalQuotes', { params: { professionalId: accountData.professionalId } }),
+      api.get('/ProfessionalQuotes'),
     ]);
 
     setJobs(unwrap(jobsResponse.data) ?? []);
@@ -130,7 +130,6 @@ const WorkerJobList = () => {
       setSubmitting(true);
       await api.post('/createQuote', {
         jobId: selectedJob.jobId,
-        professionalId: account.professionalId,
         price: amount,
         description: quoteForm.description.trim(),
       });
@@ -352,6 +351,9 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingBottom: 96,
     backgroundColor: '#f7f5ef',
+    width: '100%',
+    maxWidth: 880,
+    alignSelf: 'center',
   },
   hero: {
     backgroundColor: '#18201d',

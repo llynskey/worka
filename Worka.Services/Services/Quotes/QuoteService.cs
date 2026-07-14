@@ -15,18 +15,30 @@ namespace Worka.Services.Quotes
             _dbContext = dbContext;
         }
 
-        public async Task<WorkaResponse<QuoteResponseDTO>> CreateQuoteAsync(CreateQuoteDTO quoteDto)
+        public async Task<WorkaResponse<QuoteResponseDTO>> CreateQuoteAsync(string userId, CreateQuoteDTO quoteDto)
         {
             try
             {
+                if (!Guid.TryParse(userId, out var userGuid))
+                {
+                    return new WorkaResponse<QuoteResponseDTO>("Invalid user identity.");
+                }
+
                 if (!Guid.TryParse(quoteDto.JobId, out var jobGuid))
                 {
                     return new WorkaResponse<QuoteResponseDTO>("Invalid job ID format.");
                 }
 
-                if (!Guid.TryParse(quoteDto.ProfessionalId, out var professionalGuid))
+                if (quoteDto.Price <= 0)
                 {
-                    return new WorkaResponse<QuoteResponseDTO>("Invalid professional ID format.");
+                    return new WorkaResponse<QuoteResponseDTO>("Quote price must be greater than zero.");
+                }
+
+                var professional = await _dbContext.Professionals
+                    .FirstOrDefaultAsync(p => p.UserId == userGuid);
+                if (professional == null)
+                {
+                    return new WorkaResponse<QuoteResponseDTO>("Professional profile not found.");
                 }
 
                 var jobExists = await _dbContext.Jobs.AnyAsync(job => job.JobId == jobGuid);
@@ -35,18 +47,12 @@ namespace Worka.Services.Quotes
                     return new WorkaResponse<QuoteResponseDTO>("Job not found.");
                 }
 
-                var professionalExists = await _dbContext.Professionals.AnyAsync(professional => professional.ProfessionalId == professionalGuid);
-                if (!professionalExists)
-                {
-                    return new WorkaResponse<QuoteResponseDTO>("Professional profile not found.");
-                }
-
                 var quote = new Quote
                 {
-                    ProfessionalId = professionalGuid,
+                    ProfessionalId = professional.ProfessionalId,
                     Price = quoteDto.Price,
                     JobId = jobGuid,
-                    Description = quoteDto.Description.Trim(),
+                    Description = (quoteDto.Description ?? string.Empty).Trim(),
                     CreatedAt = DateTimeOffset.UtcNow
                 };
 
@@ -61,17 +67,24 @@ namespace Worka.Services.Quotes
             }
         }
 
-        public async Task<WorkaResponse<List<QuoteResponseDTO>>> GetQuotesByCustomerIdAsync(string customerId)
+        public async Task<WorkaResponse<List<QuoteResponseDTO>>> GetQuotesForCustomerUserAsync(string userId)
         {
             try
             {
-                if (!Guid.TryParse(customerId, out var customerGuid))
+                if (!Guid.TryParse(userId, out var userGuid))
                 {
-                    return new WorkaResponse<List<QuoteResponseDTO>>("Invalid customer ID format.");
+                    return new WorkaResponse<List<QuoteResponseDTO>>("Invalid user identity.");
+                }
+
+                var customer = await _dbContext.Customers
+                    .FirstOrDefaultAsync(c => c.UserId == userGuid);
+                if (customer == null)
+                {
+                    return new WorkaResponse<List<QuoteResponseDTO>>("Customer profile not found.");
                 }
 
                 var jobIds = await _dbContext.Jobs
-                    .Where(job => job.CustomerId == customerGuid)
+                    .Where(job => job.CustomerId == customer.CustomerId)
                     .Select(job => job.JobId)
                     .ToListAsync();
 
@@ -93,17 +106,24 @@ namespace Worka.Services.Quotes
             }
         }
 
-        public async Task<WorkaResponse<List<QuoteResponseDTO>>> GetQuotesByProfessionalIdAsync(string professionalId)
+        public async Task<WorkaResponse<List<QuoteResponseDTO>>> GetQuotesForProfessionalUserAsync(string userId)
         {
             try
             {
-                if (!Guid.TryParse(professionalId, out var professionalGuid))
+                if (!Guid.TryParse(userId, out var userGuid))
                 {
-                    return new WorkaResponse<List<QuoteResponseDTO>>("Invalid professional ID format.");
+                    return new WorkaResponse<List<QuoteResponseDTO>>("Invalid user identity.");
+                }
+
+                var professional = await _dbContext.Professionals
+                    .FirstOrDefaultAsync(p => p.UserId == userGuid);
+                if (professional == null)
+                {
+                    return new WorkaResponse<List<QuoteResponseDTO>>("Professional profile not found.");
                 }
 
                 var quotes = await _dbContext.Quotes
-                    .Where(quote => quote.ProfessionalId == professionalGuid)
+                    .Where(quote => quote.ProfessionalId == professional.ProfessionalId)
                     .OrderByDescending(quote => quote.CreatedAt)
                     .ToListAsync();
 
@@ -112,22 +132,6 @@ namespace Worka.Services.Quotes
             catch (Exception ex)
             {
                 return WorkaResponse<List<QuoteResponseDTO>>.Fail(ex, "An error occurred while retrieving the quotes by professional ID.");
-            }
-        }
-
-        public async Task<WorkaResponse<List<QuoteResponseDTO>>> GetAllQuotesAsync()
-        {
-            try
-            {
-                var quotes = await _dbContext.Quotes
-                    .OrderByDescending(quote => quote.CreatedAt)
-                    .ToListAsync();
-
-                return new WorkaResponse<List<QuoteResponseDTO>>(quotes.Select(quote => new QuoteResponseDTO(quote)).ToList());
-            }
-            catch (Exception ex)
-            {
-                return WorkaResponse<List<QuoteResponseDTO>>.Fail(ex, "An error occurred while retrieving all quotes.");
             }
         }
 

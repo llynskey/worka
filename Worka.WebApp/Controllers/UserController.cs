@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.RateLimiting;
 using Worka.Services.Common;
 using Worka.Services.DTOs.Users;
 
@@ -5,6 +6,7 @@ namespace Worka.WebApp.Controllers
 {
     [ApiController]
     [Route("api")]
+    [EnableRateLimiting("auth")]
     public class UserController : ControllerBase
     {
         private readonly ILogger<UserController> _logger;

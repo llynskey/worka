@@ -370,7 +370,12 @@ namespace Worka.Services.Payments
 
         private decimal CalculateServiceFee(decimal quoteAmount)
         {
-            return RoundMoney(Math.Max(_serviceFeeMinimum, quoteAmount * (_serviceFeePercent / 100m)));
+            return CalculateServiceFee(quoteAmount, _serviceFeePercent, _serviceFeeMinimum);
+        }
+
+        public static decimal CalculateServiceFee(decimal quoteAmount, decimal feePercent, decimal feeMinimum)
+        {
+            return RoundMoney(Math.Max(feeMinimum, quoteAmount * (feePercent / 100m)));
         }
 
         private static decimal RoundMoney(decimal amount)

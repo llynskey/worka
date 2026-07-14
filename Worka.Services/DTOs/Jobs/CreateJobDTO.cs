@@ -17,7 +17,5 @@ namespace Worka.Services.DTOs.Jobs
         public double? Latitude { get; set; }
 
         public double? Longitude { get; set; }
-
-        public string CustomerId { get; set; } = string.Empty;
     }
 }

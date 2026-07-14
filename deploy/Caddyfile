@@ -21,3 +21,14 @@ worka-uk.online {
 www.worka-uk.online {
 	redir https://worka-uk.online{uri} permanent
 }
+
+api.worka-uk.online {
+	encode zstd gzip
+
+	header {
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+	}
+
+	reverse_proxy api:8080
+}

@@ -1,14 +1,29 @@
+using Worka.Services.Database;
+
 namespace Worka.WebApp.Controllers
 {
     [ApiController]
     [Route("api")]
     public class HealthController : ControllerBase
     {
+        private readonly WorkaDbContext _dbContext;
+
+        public HealthController(WorkaDbContext dbContext)
+        {
+            _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+        }
+
         [HttpGet("health")]
         [HttpGet("~/health")]
-        public IActionResult Get()
+        public async Task<IActionResult> Get()
         {
-            return Ok(new { status = "ok" });
+            var databaseHealthy = await _dbContext.Database.CanConnectAsync();
+            if (!databaseHealthy)
+            {
+                return StatusCode(503, new { status = "degraded", database = "unreachable" });
+            }
+
+            return Ok(new { status = "ok", database = "ok" });
         }
     }
 }

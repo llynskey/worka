@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Worka", "Worka.Services\Wor
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Worka.WebApp", "Worka.WebApp\Worka.WebApp.csproj", "{15BA0AC2-1A3A-4D6A-BCA9-B441D386D697}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Worka.Tests", "Worka.Tests\Worka.Tests.csproj", "{7C2A9C41-4E5B-4A6F-9D3E-2B8F1C6E5A21}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{15BA0AC2-1A3A-4D6A-BCA9-B441D386D697}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{15BA0AC2-1A3A-4D6A-BCA9-B441D386D697}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{15BA0AC2-1A3A-4D6A-BCA9-B441D386D697}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7C2A9C41-4E5B-4A6F-9D3E-2B8F1C6E5A21}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7C2A9C41-4E5B-4A6F-9D3E-2B8F1C6E5A21}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7C2A9C41-4E5B-4A6F-9D3E-2B8F1C6E5A21}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7C2A9C41-4E5B-4A6F-9D3E-2B8F1C6E5A21}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

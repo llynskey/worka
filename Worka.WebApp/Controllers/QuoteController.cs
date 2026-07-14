@@ -1,9 +1,11 @@
+using System.Security.Claims;
 using Worka.Services.DTOs.Quotes;
 using Worka.Services.Quotes;
 
 namespace Worka.WebApp.Controllers
 {
     [ApiController]
+    [Authorize]
     [Route("api")]
     public class QuoteController : ControllerBase
     {
@@ -20,31 +22,41 @@ namespace Worka.WebApp.Controllers
         [HttpPost("~/createQuote")]
         public async Task<IActionResult> Create([FromBody] CreateQuoteDTO quoteRequest)
         {
-            var result = await _quoteService.CreateQuoteAsync(quoteRequest);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Unauthorized();
+            }
+
+            var result = await _quoteService.CreateQuoteAsync(userId, quoteRequest);
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
         [HttpGet("ProfessionalQuotes")]
         [HttpGet("~/ProfessionalQuotes")]
-        public async Task<IActionResult> GetProfessionalQuotes(string professionalId)
+        public async Task<IActionResult> GetProfessionalQuotes()
         {
-            var result = await _quoteService.GetQuotesByProfessionalIdAsync(professionalId);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Unauthorized();
+            }
+
+            var result = await _quoteService.GetQuotesForProfessionalUserAsync(userId);
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
         [HttpGet("CustomerQuotes")]
         [HttpGet("~/CustomerQuotes")]
-        public async Task<IActionResult> GetCustomerQuotes(string customerId)
+        public async Task<IActionResult> GetCustomerQuotes()
         {
-            var result = await _quoteService.GetQuotesByCustomerIdAsync(customerId);
-            return result.Success ? Ok(result) : BadRequest(result);
-        }
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Unauthorized();
+            }
 
-        [HttpGet("Quotes")]
-        [HttpGet("~/Quotes")]
-        public async Task<IActionResult> GetAllQuotes()
-        {
-            var result = await _quoteService.GetAllQuotesAsync();
+            var result = await _quoteService.GetQuotesForCustomerUserAsync(userId);
             return result.Success ? Ok(result) : BadRequest(result);
         }
 

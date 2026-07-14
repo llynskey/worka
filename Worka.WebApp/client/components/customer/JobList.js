@@ -62,8 +62,8 @@ const CustomerJobList = ({ navigation }) => {
     setAccount(accountData);
 
     const [jobsResponse, quotesResponse] = await Promise.all([
-      api.get('/CustomerJobs', { params: { customerId: accountData.customerId } }),
-      api.get('/CustomerQuotes', { params: { customerId: accountData.customerId } }),
+      api.get('/CustomerJobs'),
+      api.get('/CustomerQuotes'),
     ]);
 
     setJobs(unwrap(jobsResponse.data) ?? []);
@@ -241,6 +241,9 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingBottom: 96,
     backgroundColor: '#f7f5ef',
+    width: '100%',
+    maxWidth: 880,
+    alignSelf: 'center',
   },
   hero: {
     backgroundColor: '#18201d',
@@ -290,7 +293,9 @@ const styles = StyleSheet.create({
     marginBottom: 18,
   },
   statCard: {
-    width: '47.8%',
+    flexGrow: 1,
+    flexBasis: '46%',
+    minWidth: 150,
     minHeight: 82,
     backgroundColor: '#fff',
     borderRadius: 8,

@@ -27,7 +27,7 @@ const BidList = () => {
     setAccount(accountData);
 
     const [quotesResponse, jobsResponse] = await Promise.all([
-      api.get('/ProfessionalQuotes', { params: { professionalId: accountData.professionalId } }),
+      api.get('/ProfessionalQuotes'),
       api.get('/Jobs'),
     ]);
 
@@ -162,6 +162,9 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingBottom: 96,
     backgroundColor: '#f7f5ef',
+    width: '100%',
+    maxWidth: 880,
+    alignSelf: 'center',
   },
   hero: {
     backgroundColor: '#18201d',
@@ -336,7 +339,7 @@ const styles = StyleSheet.create({
   },
   primaryButtonText: {
     color: '#fff',
-    fontWeight: '900',
+   fontWeight: '900',
   },
 });
 

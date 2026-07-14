@@ -1,11 +1,17 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.Text;
+using System.Text.Json;
+using System.Threading.RateLimiting;
 using Worka.Services.Customers;
 using Worka.Services.Database;
 using Worka.Services.Interest;
@@ -40,16 +46,31 @@ namespace Worka.WebApp
             {
                 options.AddPolicy("AllowOrigin", builder =>
                 {
-                    builder.AllowAnyOrigin()
-                        .AllowAnyHeader()
-                        .AllowAnyMethod();
+                    var allowedOrigins = (Configuration["Cors:AllowedOrigins"] ?? string.Empty)
+                        .Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+                    if (allowedOrigins.Length > 0)
+                    {
+                        builder.WithOrigins(allowedOrigins)
+                            .AllowAnyHeader()
+                            .AllowAnyMethod();
+                    }
+                    else
+                    {
+                        // Production deploys serve web + API from the same origin behind Caddy,
+                        // so cross-origin requests are only expected during local development.
+                        builder.AllowAnyOrigin()
+                            .AllowAnyHeader()
+                            .AllowAnyMethod();
+                    }
                 });
             });
 
             var connectionString =
                 Configuration.GetConnectionString("Postgres")
                 ?? Configuration["PostgresConnectionString"]
-                ?? "Host=localhost;Port=5432;Database=worka;Username=worka;Password=worka";
+                ?? throw new InvalidOperationException(
+                    "No Postgres connection string configured. Set ConnectionStrings__Postgres.");
 
             services.AddDbContext<WorkaDbContext>(options =>
                 options.UseNpgsql(connectionString));
@@ -62,11 +83,71 @@ namespace Worka.WebApp
             services.AddScoped<IInterestRegistrationService, InterestRegistrationService>();
             services.AddScoped<IPaymentsService, PaymentsService>();
 
+            var jwtSecret = Configuration["JwtSecret"];
+            if (string.IsNullOrWhiteSpace(jwtSecret) || jwtSecret.Length < 32)
+            {
+                throw new InvalidOperationException(
+                    "JwtSecret is missing or too short. Provide a random secret of at least 32 characters via configuration/environment.");
+            }
+
+            services
+                .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
+                {
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = false,
+                        ValidateAudience = false,
+                        ValidateIssuerSigningKey = true,
+                        ValidateLifetime = true,
+                        ClockSkew = TimeSpan.FromMinutes(2),
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret))
+                    };
+                });
+
             services.AddAuthorization();
+
+            services.AddRateLimiter(options =>
+            {
+                options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+                options.AddPolicy("auth", context =>
+                    RateLimitPartition.GetFixedWindowLimiter(
+                        context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                        _ => new FixedWindowRateLimiterOptions
+                        {
+                            PermitLimit = 10,
+                            Window = TimeSpan.FromMinutes(1),
+                            QueueLimit = 0
+                        }));
+            });
+
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Worka API", Version = "v1" });
+                c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                {
+                    Name = "Authorization",
+                    Type = SecuritySchemeType.Http,
+                    Scheme = "bearer",
+                    BearerFormat = "JWT",
+                    In = ParameterLocation.Header,
+                    Description = "JWT Authorization header. Paste the token only."
+                });
+                c.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference
+                            {
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            }
+                        },
+                        Array.Empty<string>()
+                    }
+                });
             });
         }
 
@@ -81,14 +162,27 @@ namespace Worka.WebApp
                 app.UseSwagger();
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Worka API v1"));
             }
-
-            if (!env.IsDevelopment())
+            else
             {
+                app.UseExceptionHandler(builder => builder.Run(async context =>
+                {
+                    context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+                    context.Response.ContentType = "application/json";
+                    await context.Response.WriteAsync(JsonSerializer.Serialize(new
+                    {
+                        success = false,
+                        message = "An unexpected error occurred. Please try again.",
+                        errors = Array.Empty<string>()
+                    }));
+                }));
+
                 app.UseHttpsRedirection();
             }
+
             app.UseRouting();
             app.UseCors("AllowOrigin");
-            app.UseWorkaJwt(Configuration);
+            app.UseRateLimiter();
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>

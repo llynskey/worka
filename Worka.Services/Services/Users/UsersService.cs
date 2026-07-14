@@ -125,8 +125,8 @@ namespace Worka.Services.Users
 
         private static bool IsPasswordValid(string password, byte[] salt, byte[] expectedHash)
         {
-            return HashPasswordWithSalt(password, salt, PasswordIterations).SequenceEqual(expectedHash)
-                || HashPasswordWithLegacySalt(password, salt).SequenceEqual(expectedHash);
+            var computed = HashPasswordWithSalt(password, salt, PasswordIterations);
+            return CryptographicOperations.FixedTimeEquals(computed, expectedHash);
         }
 
         private static byte[] HashPasswordWithSalt(string password, byte[] salt, int iterations)
@@ -136,17 +136,6 @@ namespace Worka.Services.Users
                 salt,
                 iterations,
                 HashAlgorithmName.SHA256);
-
-            return pbkdf2.GetBytes(32);
-        }
-
-        private static byte[] HashPasswordWithLegacySalt(string password, byte[] salt)
-        {
-            using var pbkdf2 = new Rfc2898DeriveBytes(
-                password,
-                salt,
-                1_000,
-                HashAlgorithmName.SHA1);
 
             return pbkdf2.GetBytes(32);
         }
@@ -191,7 +180,8 @@ namespace Worka.Services.Users
                 new Claim(ClaimTypes.Email, user.Email),
                 new Claim("Username", user.Email),
                 new Claim("Type", role),
-                new Claim("AccountType", role)
+                new Claim("AccountType", role),
+                new Claim(ClaimTypes.Role, role)
             };
 
             var jwt = new JwtSecurityToken(

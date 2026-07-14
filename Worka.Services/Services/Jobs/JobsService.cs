@@ -16,22 +16,34 @@ namespace Worka.Services.Jobs
             _dbContext = dbContext;
         }
 
-        public async Task<WorkaResponse<JobResponseDTO>> CreateJobAsync(CreateJobDTO jobDto)
+        public async Task<WorkaResponse<JobResponseDTO>> CreateJobAsync(string userId, CreateJobDTO jobDto)
         {
             try
             {
-                if (!Guid.TryParse(jobDto.CustomerId, out var customerId))
+                if (!Guid.TryParse(userId, out var userGuid))
                 {
-                    return new WorkaResponse<JobResponseDTO>("Invalid customer ID format.");
+                    return new WorkaResponse<JobResponseDTO>("Invalid user identity.");
                 }
 
-                var address = jobDto.Address.Trim();
+                var customer = await _dbContext.Customers
+                    .FirstOrDefaultAsync(c => c.UserId == userGuid);
+                if (customer == null)
+                {
+                    return new WorkaResponse<JobResponseDTO>("Customer profile not found.");
+                }
+
+                var address = (jobDto.Address ?? string.Empty).Trim();
                 var locationLabel = string.IsNullOrWhiteSpace(jobDto.LocationLabel)
                     ? address
                     : jobDto.LocationLabel.Trim();
                 var photoUrl = string.IsNullOrWhiteSpace(jobDto.PhotoUrl)
                     ? string.Empty
                     : jobDto.PhotoUrl.Trim();
+
+                if (string.IsNullOrWhiteSpace(jobDto.JobName))
+                {
+                    return new WorkaResponse<JobResponseDTO>("Give the job a name.");
+                }
 
                 if (string.IsNullOrWhiteSpace(address))
                 {
@@ -43,23 +55,17 @@ namespace Worka.Services.Jobs
                     return new WorkaResponse<JobResponseDTO>("Choose a location from the address lookup.");
                 }
 
-                var customerExists = await _dbContext.Customers.AnyAsync(customer => customer.CustomerId == customerId);
-                if (!customerExists)
-                {
-                    return new WorkaResponse<JobResponseDTO>("Customer profile not found.");
-                }
-
                 var newJob = new Job
                 {
                     Name = jobDto.JobName.Trim(),
-                    Description = jobDto.JobDescription.Trim(),
-                    Category = jobDto.Category.Trim(),
+                    Description = (jobDto.JobDescription ?? string.Empty).Trim(),
+                    Category = (jobDto.Category ?? string.Empty).Trim(),
                     Address = address,
                     LocationLabel = locationLabel,
                     PhotoUrl = photoUrl,
                     Latitude = jobDto.Latitude,
                     Longitude = jobDto.Longitude,
-                    CustomerId = customerId,
+                    CustomerId = customer.CustomerId,
                     Status = JobStatusEnum.Pending,
                     CreatedAt = DateTimeOffset.UtcNow,
                     UpdatedAt = DateTimeOffset.UtcNow
@@ -76,17 +82,24 @@ namespace Worka.Services.Jobs
             }
         }
 
-        public async Task<WorkaResponse<List<JobResponseDTO>>> GetJobsByCustomerIdAsync(string customerId)
+        public async Task<WorkaResponse<List<JobResponseDTO>>> GetJobsForCustomerUserAsync(string userId)
         {
             try
             {
-                if (!Guid.TryParse(customerId, out var customerGuid))
+                if (!Guid.TryParse(userId, out var userGuid))
                 {
-                    return new WorkaResponse<List<JobResponseDTO>>("Invalid customer ID format.");
+                    return new WorkaResponse<List<JobResponseDTO>>("Invalid user identity.");
+                }
+
+                var customer = await _dbContext.Customers
+                    .FirstOrDefaultAsync(c => c.UserId == userGuid);
+                if (customer == null)
+                {
+                    return new WorkaResponse<List<JobResponseDTO>>("Customer profile not found.");
                 }
 
                 var jobs = await _dbContext.Jobs
-                    .Where(job => job.CustomerId == customerGuid)
+                    .Where(job => job.CustomerId == customer.CustomerId)
                     .OrderByDescending(job => job.CreatedAt)
                     .ToListAsync();
 
@@ -98,17 +111,24 @@ namespace Worka.Services.Jobs
             }
         }
 
-        public async Task<WorkaResponse<List<JobResponseDTO>>> GetJobsByProfessionalIdAsync(string professionalId)
+        public async Task<WorkaResponse<List<JobResponseDTO>>> GetJobsForProfessionalUserAsync(string userId)
         {
             try
             {
-                if (!Guid.TryParse(professionalId, out var professionalGuid))
+                if (!Guid.TryParse(userId, out var userGuid))
                 {
-                    return new WorkaResponse<List<JobResponseDTO>>("Invalid professional ID format.");
+                    return new WorkaResponse<List<JobResponseDTO>>("Invalid user identity.");
+                }
+
+                var professional = await _dbContext.Professionals
+                    .FirstOrDefaultAsync(p => p.UserId == userGuid);
+                if (professional == null)
+                {
+                    return new WorkaResponse<List<JobResponseDTO>>("Professional profile not found.");
                 }
 
                 var quoteJobIds = await _dbContext.Quotes
-                    .Where(quote => quote.ProfessionalId == professionalGuid)
+                    .Where(quote => quote.ProfessionalId == professional.ProfessionalId)
                     .Select(quote => quote.JobId)
                     .Distinct()
                     .ToListAsync();
@@ -144,48 +164,6 @@ namespace Worka.Services.Jobs
             catch (Exception ex)
             {
                 return WorkaResponse<List<JobResponseDTO>>.Fail(ex, "An error occurred while retrieving all jobs.");
-            }
-        }
-
-        public async Task<WorkaResponse<JobResponseDTO>> AcceptQuoteAsync(string jobId, string quoteId)
-        {
-            try
-            {
-                if (!Guid.TryParse(jobId, out var jobGuid))
-                {
-                    return new WorkaResponse<JobResponseDTO>("Invalid job ID format.");
-                }
-
-                if (!Guid.TryParse(quoteId, out var quoteGuid))
-                {
-                    return new WorkaResponse<JobResponseDTO>("Invalid quote ID format.");
-                }
-
-                var quote = await _dbContext.Quotes
-                    .FirstOrDefaultAsync(q => q.QuoteId == quoteGuid && q.JobId == jobGuid);
-
-                if (quote == null)
-                {
-                    return new WorkaResponse<JobResponseDTO>("Quote not found for this job.");
-                }
-
-                var job = await _dbContext.Jobs.FirstOrDefaultAsync(j => j.JobId == jobGuid);
-                if (job == null)
-                {
-                    return new WorkaResponse<JobResponseDTO>("Job not found.");
-                }
-
-                job.AcceptedQuoteId = quoteGuid;
-                job.Status = JobStatusEnum.Accepted;
-                job.UpdatedAt = DateTimeOffset.UtcNow;
-
-                await _dbContext.SaveChangesAsync();
-
-                return new WorkaResponse<JobResponseDTO>(new JobResponseDTO(job));
-            }
-            catch (Exception ex)
-            {
-                return WorkaResponse<JobResponseDTO>.Fail(ex, "An error occurred while accepting the quote.");
             }
         }
 

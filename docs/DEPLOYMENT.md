@@ -30,17 +30,7 @@ Set `JwtSecret` to the generated `openssl rand -hex 32` value.
 
 ## HTTPS
 
-For automatic HTTPS, point your domain's DNS `A` record at the VPS IPv4 address, then set:
-
-```bash
-SITE_ADDRESS=your-domain.example
-```
-
-For both apex and `www`, use:
-
-```bash
-SITE_ADDRESS=your-domain.example, www.your-domain.example
-```
+Domains are configured in `deploy/Caddyfile` (currently `worka-uk.online`, `www.worka-uk.online`, and `api.worka-uk.online`). Point DNS `A` records for all three at the VPS IPv4 address. The `api.` subdomain is what the native iOS/Android apps call; web traffic stays same-origin through `/api`.
 
 Make sure ports `80` and `443` are open in the VPS firewall and any OVH network firewall. Caddy will request and renew Let's Encrypt certificates automatically. Certificate data is stored in the `caddy_data` Docker volume, so it survives rebuilds.
 

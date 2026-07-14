@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+
+jobs:
+  backend:
+    name: Backend build & tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore
+        run: dotnet restore Worka.sln
+
+      - name: Build
+        run: dotnet build Worka.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test Worka.Tests/Worka.Tests.csproj --configuration Release --no-build --logger "trx"
+
+  web:
+    name: Web client export
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Worka.WebApp/client
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: Worka.WebApp/client/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript check
+        run: npx tsc --noEmit
+
+      - name: Export web build
+        run: npx expo export --platform web
+        env:
+          EXPO_PUBLIC_API_URL: /api

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.RateLimiting;
 using Worka.Services.DTOs.Interest;
 using Worka.Services.Interest;
 
@@ -5,6 +6,7 @@ namespace Worka.WebApp.Controllers
 {
     [ApiController]
     [Route("api")]
+    [EnableRateLimiting("auth")]
     public class InterestController : ControllerBase
     {
         private readonly IInterestRegistrationService _interestRegistrationService;

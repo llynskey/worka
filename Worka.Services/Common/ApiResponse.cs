@@ -43,7 +43,9 @@ namespace Worka.Services.Common
 
         public static WorkaResponse<T> Fail(Exception exception, string message)
         {
-            return new WorkaResponse<T>(message, exception.Message);
+            // Never surface raw exception details to API consumers.
+            _ = exception;
+            return new WorkaResponse<T>(message);
         }
     }
 }
