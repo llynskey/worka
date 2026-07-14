@@ -41,6 +41,7 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
   const [hidePassword, setHidePassword] = useState(true);
   const [loading, setLoading] = useState(false);
   const [accountType, setAccountType] = useState<0 | 1>(0);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const [formData, setFormData] = useState({
     firstName: '',
@@ -66,9 +67,10 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const handleSignUp = useCallback(async () => {
+    setErrorMessage('');
     const error = validate();
     if (error) {
-      Alert.alert('Check your input', error);
+      setErrorMessage(error);
       return;
     }
 
@@ -76,19 +78,21 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
       setLoading(true);
       const response = await api.post('/signup', {
         ...formData,
-        email: formData.email.trim(),
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        email: formData.email.trim().toLowerCase(),
         accountType,
       });
 
       const token = response?.data?.token;
       if (!token) {
-        Alert.alert('Signup failed', 'No session token was returned.');
+        setErrorMessage('No session token was returned.');
         return;
       }
 
       await signInWithToken(token);
     } catch (error) {
-      Alert.alert('Signup error', getErrorMessage(error, 'Unable to create your account right now.'));
+      setErrorMessage(getErrorMessage(error, 'Unable to create your account right now.'));
     } finally {
       setLoading(false);
     }
@@ -117,7 +121,10 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
                 return (
                   <TouchableOpacity
                     key={type.value}
-                    onPress={() => setAccountType(type.value)}
+                    onPress={() => {
+                      setAccountType(type.value);
+                      setErrorMessage('');
+                    }}
                     style={[styles.segmentCard, selected && styles.segmentCardActive]}
                   >
                     <MaterialCommunityIcons
@@ -135,6 +142,13 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
                 );
               })}
             </View>
+
+            {errorMessage ? (
+              <View style={styles.errorBox}>
+                <MaterialCommunityIcons name="alert-circle-outline" size={18} color="#111" />
+                <Text style={styles.errorBoxText}>{errorMessage}</Text>
+              </View>
+            ) : null}
 
             <TextInput
               style={styles.input}
@@ -180,13 +194,18 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
                 secureTextEntry={hidePassword}
                 autoCapitalize="none"
                 maxLength={64}
+                onSubmitEditing={handleSignUp}
               />
               <TouchableOpacity style={styles.inputIcon} onPress={() => setHidePassword((value) => !value)}>
                 <MaterialCommunityIcons name={hidePassword ? 'eye' : 'eye-off'} size={22} color="#111" />
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity onPress={handleSignUp} disabled={loading} style={styles.button}>
+            <TouchableOpacity
+              onPress={handleSignUp}
+              disabled={loading}
+              style={[styles.button, loading && styles.disabledButton]}
+            >
               {loading ? (
                 <ActivityIndicator color="#fff" />
               ) : (

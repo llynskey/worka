@@ -3,6 +3,9 @@ import { ImageBackground, StyleSheet, Text, TouchableOpacity, View } from 'react
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { formatDate, formatMoney } from '../../api/workaApi';
 
+const WORKA_SERVICE_FEE_RATE = 0.12;
+const WORKA_SERVICE_FEE_MINIMUM = 2;
+
 const categoryImages = {
   Plumbing:
     'https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?auto=format&fit=crop&w=900&q=80',
@@ -18,6 +21,12 @@ const categoryImages = {
     'https://images.unsplash.com/photo-1504148455328-c376907d081c?auto=format&fit=crop&w=900&q=80',
 };
 
+const getServiceFee = (price) => {
+  const amount = Number(price);
+  if (!Number.isFinite(amount) || amount <= 0) return 0;
+  return Math.max(WORKA_SERVICE_FEE_MINIMUM, amount * WORKA_SERVICE_FEE_RATE);
+};
+
 const statusLabel = (status) => {
   if (status === 1 || String(status).toLowerCase() === 'accepted') return 'Booked';
   if (status === 2 || String(status).toLowerCase() === 'rejected') return 'Closed';
@@ -28,6 +37,9 @@ const JobCard = ({ job, quotes = [], onAcceptQuote }) => {
   const status = statusLabel(job.jobStatus);
   const acceptedQuote = quotes.find((quote) => quote.quoteId === job.acceptedQuoteId);
   const image = categoryImages[job.category] || categoryImages.Repairs;
+  const acceptedTotal = acceptedQuote
+    ? Number(acceptedQuote.price) + getServiceFee(acceptedQuote.price)
+    : 0;
 
   return (
     <View style={styles.card}>
@@ -58,7 +70,7 @@ const JobCard = ({ job, quotes = [], onAcceptQuote }) => {
         <View style={styles.quoteBlock}>
           <View style={styles.quoteHeader}>
             <Text style={styles.quoteTitle}>{quotes.length} quote{quotes.length === 1 ? '' : 's'}</Text>
-            {acceptedQuote && <Text style={styles.acceptedText}>Accepted {formatMoney(acceptedQuote.price)}</Text>}
+            {acceptedQuote && <Text style={styles.acceptedText}>Booked total {formatMoney(acceptedTotal)}</Text>}
           </View>
 
           {quotes.length === 0 ? (
@@ -66,11 +78,16 @@ const JobCard = ({ job, quotes = [], onAcceptQuote }) => {
           ) : (
             quotes.map((quote) => {
               const accepted = quote.quoteId === job.acceptedQuoteId;
+              const serviceFee = getServiceFee(quote.price);
+              const total = Number(quote.price) + serviceFee;
               return (
                 <View key={quote.quoteId} style={styles.quoteRow}>
                   <View style={styles.quoteCopy}>
                     <Text style={styles.quotePrice}>{formatMoney(quote.price)}</Text>
                     <Text style={styles.quoteDescription}>{quote.description || 'No note provided.'}</Text>
+                    <Text style={styles.quoteFee}>
+                      Worka service fee {formatMoney(serviceFee)}. Customer total {formatMoney(total)}.
+                    </Text>
                   </View>
 
                   {accepted ? (
@@ -83,7 +100,7 @@ const JobCard = ({ job, quotes = [], onAcceptQuote }) => {
                       onPress={() => onAcceptQuote?.(quote)}
                       disabled={status === 'Booked'}
                     >
-                      <Text style={styles.acceptButtonText}>Accept</Text>
+                      <Text style={styles.acceptButtonText}>Accept quote</Text>
                     </TouchableOpacity>
                   )}
                 </View>
@@ -220,6 +237,12 @@ const styles = StyleSheet.create({
   quoteDescription: {
     marginTop: 3,
     color: '#64675f',
+  },
+  quoteFee: {
+    marginTop: 5,
+    color: '#111',
+    fontSize: 12,
+    fontWeight: '800',
   },
   acceptButton: {
     backgroundColor: '#111',

@@ -1,5 +1,5 @@
 import React from 'react';
-import { SafeAreaView, Text, View } from 'react-native';
+import { Platform, SafeAreaView, Text, View } from 'react-native';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createDrawerNavigator, DrawerContentComponentProps } from '@react-navigation/drawer';
@@ -111,10 +111,49 @@ const WorkerDrawer: React.FC<{ onLogout: () => void }> = ({ onLogout }) => (
 const AppInner: React.FC = () => {
   const { user, role, loading, signOut } = React.useContext(AuthContext);
 
+  React.useEffect(() => {
+    if (Platform.OS !== 'web' || typeof document === 'undefined') {
+      return;
+    }
+
+    const root = document.getElementById('root');
+    const targets = [document.documentElement, document.body, root].filter(Boolean) as HTMLElement[];
+    const previous = targets.map((element) => ({
+      element,
+      height: element.style.height,
+      width: element.style.width,
+      overflow: element.style.overflow,
+      margin: element.style.margin,
+    }));
+
+    targets.forEach((element) => {
+      element.style.height = '100%';
+      element.style.width = '100%';
+      element.style.overflow = 'hidden';
+      if (element === document.body) {
+        element.style.margin = '0';
+      }
+    });
+
+    return () => {
+      previous.forEach(({ element, height, width, overflow, margin }) => {
+        element.style.height = height;
+        element.style.width = width;
+        element.style.overflow = overflow;
+        element.style.margin = margin;
+      });
+    };
+  }, []);
+
   if (loading) return <LoadingScreen />;
 
+  const webViewportStyle =
+    Platform.OS === 'web'
+      ? ({ height: '100vh', maxHeight: '100vh', overflow: 'hidden' } as any)
+      : null;
+
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+    <SafeAreaView style={[{ flex: 1, backgroundColor: '#fff' }, webViewportStyle]}>
       <NavigationContainer theme={DefaultTheme}>
         {!user ? (
           <AuthStack />

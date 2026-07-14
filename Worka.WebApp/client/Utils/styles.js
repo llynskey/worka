@@ -134,10 +134,30 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 8,
   },
+  disabledButton: {
+    opacity: 0.68,
+  },
   buttonText: {
     color: '#fff',
     fontWeight: '900',
     fontSize: 16,
+  },
+  errorBox: {
+    borderWidth: 1,
+    borderColor: '#111',
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 14,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+  },
+  errorBoxText: {
+    flex: 1,
+    color: '#111',
+    fontWeight: '800',
+    lineHeight: 20,
   },
   authScreenWrapper: {
     flexGrow: 1,

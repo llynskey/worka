@@ -40,6 +40,21 @@ const launchSignals = [
   },
 ];
 
+const accountTypes = [
+  {
+    label: 'Customer',
+    value: 0,
+    icon: 'home-search-outline',
+    description: 'Post jobs and compare quotes.',
+  },
+  {
+    label: 'Professional',
+    value: 1,
+    icon: 'briefcase-check-outline',
+    description: 'Find work and send quotes.',
+  },
+] as const;
+
 const emptyInterestForm = {
   name: '',
   email: '',
@@ -49,38 +64,47 @@ const emptyInterestForm = {
   message: '',
 };
 
-type Props = {
-  navigation: {
-    navigate: (screen: string) => void;
-  };
+const emptySignupForm = {
+  firstName: '',
+  lastName: '',
+  email: '',
+  password: '',
 };
 
-const AuthScreen: React.FC<Props> = ({ navigation }) => {
+const AuthScreen: React.FC = () => {
   const { signInWithToken } = useContext(AuthContext);
   const { width, height } = useWindowDimensions();
   const isNarrow = width < 780;
+  const isShortDesktop = Platform.OS === 'web' && !isNarrow && height < 840;
   const contentWidth = isNarrow ? Math.min(width * 0.74, 322) : Math.min(width * 0.84, 1180);
   const contentShell = {
     width: contentWidth,
     alignSelf: isNarrow ? 'flex-start' : 'center',
     marginLeft: isNarrow ? 24 : 0,
   } as const;
+  const inputStyle = [styles.input, isShortDesktop && styles.inputCompact];
+  const panelTitleStyle = [styles.panelTitle, isShortDesktop && styles.panelTitleCompact];
 
   const [interestForm, setInterestForm] = useState(emptyInterestForm);
   const [interestLoading, setInterestLoading] = useState(false);
   const [registered, setRegistered] = useState(false);
 
   const [showLogin, setShowLogin] = useState(false);
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const [loginEmail, setLoginEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
+  const [authError, setAuthError] = useState('');
+  const [signupForm, setSignupForm] = useState(emptySignupForm);
+  const [accountType, setAccountType] = useState<0 | 1>(0);
+  const [signupLoading, setSignupLoading] = useState(false);
 
   const updateInterestField = (name: keyof typeof interestForm, value: string) => {
     setInterestForm((current) => ({ ...current, [name]: value }));
   };
 
-  const createAccount = () => {
-    navigation.navigate('Signup');
+  const updateSignupField = (name: keyof typeof signupForm, value: string) => {
+    setSignupForm((current) => ({ ...current, [name]: value }));
   };
 
   const registerInterest = async () => {
@@ -118,8 +142,9 @@ const AuthScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const onLogin = async () => {
+    setAuthError('');
     if (!loginEmail.trim() || !password) {
-      Alert.alert('Missing info', 'Enter email and password.');
+      setAuthError('Enter email and password.');
       return;
     }
 
@@ -132,15 +157,55 @@ const AuthScreen: React.FC<Props> = ({ navigation }) => {
 
       const token = response?.data?.token;
       if (!token) {
-        Alert.alert('Login failed', 'No session token was returned.');
+        setAuthError('No session token was returned.');
         return;
       }
 
       await signInWithToken(token);
     } catch (error) {
-      Alert.alert('Login error', getErrorMessage(error, 'Unable to log in right now.'));
+      setAuthError(getErrorMessage(error, 'Unable to log in right now.'));
     } finally {
       setLoginLoading(false);
+    }
+  };
+
+  const validateSignup = () => {
+    if (!signupForm.firstName.trim()) return 'First name is required.';
+    if (!signupForm.lastName.trim()) return 'Last name is required.';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(signupForm.email.trim())) return 'Enter a valid email.';
+    if (signupForm.password.length < 6) return 'Password must be at least 6 characters.';
+    return '';
+  };
+
+  const onSignup = async () => {
+    setAuthError('');
+    const validationError = validateSignup();
+    if (validationError) {
+      setAuthError(validationError);
+      return;
+    }
+
+    try {
+      setSignupLoading(true);
+      const response = await api.post('/signup', {
+        firstName: signupForm.firstName.trim(),
+        lastName: signupForm.lastName.trim(),
+        email: signupForm.email.trim().toLowerCase(),
+        password: signupForm.password,
+        accountType,
+      });
+
+      const token = response?.data?.token;
+      if (!token) {
+        setAuthError('No session token was returned.');
+        return;
+      }
+
+      await signInWithToken(token);
+    } catch (error) {
+      setAuthError(getErrorMessage(error, 'Unable to create your account right now.'));
+    } finally {
+      setSignupLoading(false);
     }
   };
 
@@ -151,7 +216,14 @@ const AuthScreen: React.FC<Props> = ({ navigation }) => {
 
   const scrollStyle =
     Platform.OS === 'web'
-      ? ([styles.scroll, { height: '100%', maxHeight: '100%', overflowY: 'auto' }] as any)
+      ? ([
+          styles.scroll,
+          {
+            height: '100%',
+            maxHeight: '100%',
+            overflowY: isNarrow ? 'auto' : 'hidden',
+          },
+        ] as any)
       : styles.scroll;
 
   return (
@@ -165,20 +237,32 @@ const AuthScreen: React.FC<Props> = ({ navigation }) => {
           styles.page,
           {
             minHeight: height,
-            paddingBottom: isNarrow ? 48 : 24,
+            height: Platform.OS === 'web' && !isNarrow ? height : undefined,
+            maxHeight: Platform.OS === 'web' && !isNarrow ? height : undefined,
+            paddingTop: isNarrow ? 24 : isShortDesktop ? 12 : 18,
+            paddingBottom: isNarrow ? 48 : isShortDesktop ? 12 : 18,
+            overflow: Platform.OS === 'web' && !isNarrow ? 'hidden' : 'visible',
           },
         ]}
         keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator
+        scrollEnabled={isNarrow}
+        showsVerticalScrollIndicator={isNarrow}
         nestedScrollEnabled
       >
-        <View style={[styles.nav, contentShell, { marginBottom: isNarrow ? 34 : 54 }]}>
+        <View style={[styles.nav, contentShell, { marginBottom: isNarrow ? 34 : isShortDesktop ? 14 : 26 }]}>
           <Image
             source={require('../assets/logo.png')}
-            style={[styles.logo, isNarrow && styles.logoMobile]}
+            style={[styles.logo, isNarrow && styles.logoMobile, isShortDesktop && styles.logoCompact]}
             resizeMode="contain"
           />
-          <Pressable style={styles.navAction} onPress={() => setShowLogin((value) => !value)}>
+          <Pressable
+            style={styles.navAction}
+            onPress={() => {
+              setShowLogin((value) => !value);
+              setAuthMode('login');
+              setAuthError('');
+            }}
+          >
             <MaterialCommunityIcons name="lock-outline" size={16} color="#111" />
             <Text style={styles.navActionText}>{showLogin ? 'Waitlist' : 'Early access'}</Text>
           </Pressable>
@@ -195,6 +279,7 @@ const AuthScreen: React.FC<Props> = ({ navigation }) => {
                   lineHeight: isNarrow ? 41 : 64,
                   maxWidth: contentWidth,
                 },
+                isShortDesktop && styles.heroTitleCompact,
               ]}
             >
               Get things done by someone who speaks your language.
@@ -204,7 +289,7 @@ const AuthScreen: React.FC<Props> = ({ navigation }) => {
               forms, installs, and everyday jobs, with language fit built in from the start.
             </Text>
 
-            {!isNarrow && (
+            {!isNarrow && !isShortDesktop && (
               <View style={[styles.signalRow, { flexDirection: 'row' }]}>
                 {launchSignals.map((signal) => (
                   <View key={signal.value} style={styles.signal}>
@@ -216,52 +301,196 @@ const AuthScreen: React.FC<Props> = ({ navigation }) => {
             )}
           </View>
 
-          <View style={[styles.formPanel, !isNarrow && styles.formPanelDesktop]}>
+          <View
+            style={[
+              styles.formPanel,
+              !isNarrow && styles.formPanelDesktop,
+              isShortDesktop && styles.formPanelCompact,
+            ]}
+          >
             {showLogin ? (
               <>
                 <Text style={styles.panelKicker}>Builder access</Text>
-                <Text style={styles.panelTitle}>Sign in to the private app.</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Email"
-                  placeholderTextColor="#6b6b6b"
-                  value={loginEmail}
-                  onChangeText={setLoginEmail}
-                  autoCapitalize="none"
-                  keyboardType="email-address"
-                />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Password"
-                  placeholderTextColor="#6b6b6b"
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry
-                />
-                <TouchableOpacity onPress={onLogin} disabled={loginLoading} style={styles.primaryButton}>
-                  {loginLoading ? (
-                    <ActivityIndicator color="#fff" />
-                  ) : (
-                    <>
-                      <MaterialCommunityIcons name="login" size={19} color="#fff" />
-                      <Text style={styles.primaryButtonText}>Log in</Text>
-                    </>
-                  )}
-                </TouchableOpacity>
-                <TouchableOpacity onPress={createAccount} style={styles.secondaryButton}>
-                  <MaterialCommunityIcons name="account-plus-outline" size={19} color="#111" />
-                  <Text style={styles.secondaryButtonText}>Create account</Text>
-                </TouchableOpacity>
-                <Text style={styles.panelHint}>
-                  Make a customer account to post work, or a professional account to send quotes.
+                <Text style={panelTitleStyle}>
+                  {authMode === 'login' ? 'Sign in to Worka.' : 'Create your Worka account.'}
                 </Text>
+
+                <View style={styles.authSwitch}>
+                  <Pressable
+                    style={[styles.authSwitchOption, authMode === 'login' && styles.authSwitchOptionActive]}
+                    onPress={() => {
+                      setAuthMode('login');
+                      setAuthError('');
+                    }}
+                  >
+                    <Text style={[styles.authSwitchText, authMode === 'login' && styles.authSwitchTextActive]}>
+                      Log in
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    style={[styles.authSwitchOption, authMode === 'signup' && styles.authSwitchOptionActive]}
+                    onPress={() => {
+                      setAuthMode('signup');
+                      setAuthError('');
+                    }}
+                  >
+                    <Text style={[styles.authSwitchText, authMode === 'signup' && styles.authSwitchTextActive]}>
+                      Create account
+                    </Text>
+                  </Pressable>
+                </View>
+
+                {authError ? (
+                  <View style={styles.errorBox}>
+                    <MaterialCommunityIcons name="alert-circle-outline" size={18} color="#111" />
+                    <Text style={styles.errorText}>{authError}</Text>
+                  </View>
+                ) : null}
+
+                {authMode === 'login' ? (
+                  <>
+                    <TextInput
+                      style={inputStyle}
+                      placeholder="Email"
+                      placeholderTextColor="#6b6b6b"
+                      value={loginEmail}
+                      onChangeText={setLoginEmail}
+                      autoCapitalize="none"
+                      keyboardType="email-address"
+                    />
+                    <TextInput
+                      style={inputStyle}
+                      placeholder="Password"
+                      placeholderTextColor="#6b6b6b"
+                      value={password}
+                      onChangeText={setPassword}
+                      secureTextEntry
+                      onSubmitEditing={onLogin}
+                    />
+                    <Pressable
+                      onPress={onLogin}
+                      disabled={loginLoading}
+                      style={[styles.primaryButton, loginLoading && styles.disabledButton]}
+                    >
+                      {loginLoading ? (
+                        <ActivityIndicator color="#fff" />
+                      ) : (
+                        <>
+                          <MaterialCommunityIcons name="login" size={19} color="#fff" />
+                          <Text style={styles.primaryButtonText}>Log in</Text>
+                        </>
+                      )}
+                    </Pressable>
+                    <Pressable
+                      onPress={() => {
+                        setAuthMode('signup');
+                        setAuthError('');
+                      }}
+                      style={styles.secondaryButton}
+                    >
+                      <MaterialCommunityIcons name="account-plus-outline" size={19} color="#111" />
+                      <Text style={styles.secondaryButtonText}>Create account instead</Text>
+                    </Pressable>
+                  </>
+                ) : (
+                  <>
+                    <View style={styles.accountTypeGrid}>
+                      {accountTypes.map((type) => {
+                        const selected = accountType === type.value;
+                        return (
+                          <Pressable
+                            key={type.value}
+                            style={[
+                              styles.accountTypeCard,
+                              isShortDesktop && styles.accountTypeCardCompact,
+                              selected && styles.accountTypeCardActive,
+                            ]}
+                            onPress={() => setAccountType(type.value)}
+                          >
+                            <MaterialCommunityIcons
+                              name={type.icon}
+                              size={24}
+                              color={selected ? '#fff' : '#111'}
+                            />
+                            <Text style={[styles.accountTypeTitle, selected && styles.accountTypeTitleActive]}>
+                              {type.label}
+                            </Text>
+                            <Text style={[styles.accountTypeText, selected && styles.accountTypeTextActive]}>
+                              {type.description}
+                            </Text>
+                          </Pressable>
+                        );
+                      })}
+                    </View>
+
+                    <TextInput
+                      style={inputStyle}
+                      placeholder="First name"
+                      placeholderTextColor="#6b6b6b"
+                      value={signupForm.firstName}
+                      onChangeText={(value) => updateSignupField('firstName', value)}
+                      autoCapitalize="words"
+                    />
+                    <TextInput
+                      style={inputStyle}
+                      placeholder="Last name"
+                      placeholderTextColor="#6b6b6b"
+                      value={signupForm.lastName}
+                      onChangeText={(value) => updateSignupField('lastName', value)}
+                      autoCapitalize="words"
+                    />
+                    <TextInput
+                      style={inputStyle}
+                      placeholder="Email"
+                      placeholderTextColor="#6b6b6b"
+                      value={signupForm.email}
+                      onChangeText={(value) => updateSignupField('email', value)}
+                      autoCapitalize="none"
+                      keyboardType="email-address"
+                    />
+                    <TextInput
+                      style={inputStyle}
+                      placeholder="Password"
+                      placeholderTextColor="#6b6b6b"
+                      value={signupForm.password}
+                      onChangeText={(value) => updateSignupField('password', value)}
+                      secureTextEntry
+                      onSubmitEditing={onSignup}
+                    />
+
+                    <Pressable
+                      onPress={onSignup}
+                      disabled={signupLoading}
+                      style={[styles.primaryButton, signupLoading && styles.disabledButton]}
+                    >
+                      {signupLoading ? (
+                        <ActivityIndicator color="#fff" />
+                      ) : (
+                        <>
+                          <MaterialCommunityIcons name="account-plus-outline" size={19} color="#fff" />
+                          <Text style={styles.primaryButtonText}>Create account</Text>
+                        </>
+                      )}
+                    </Pressable>
+                    <Pressable
+                      onPress={() => {
+                        setAuthMode('login');
+                        setAuthError('');
+                      }}
+                      style={styles.secondaryButton}
+                    >
+                      <MaterialCommunityIcons name="login" size={19} color="#111" />
+                      <Text style={styles.secondaryButtonText}>I already have an account</Text>
+                    </Pressable>
+                  </>
+                )}
               </>
             ) : registered ? (
               <View style={styles.successPanel}>
                 <View style={styles.successIcon}>
                   <MaterialCommunityIcons name="check" size={28} color="#fff" />
                 </View>
-                <Text style={styles.panelTitle}>You are on the list.</Text>
+                <Text style={panelTitleStyle}>You are on the list.</Text>
                 <Text style={styles.panelText}>
                   Thanks. I will use your language and location to shape the first Worka launch areas.
                 </Text>
@@ -274,27 +503,34 @@ const AuthScreen: React.FC<Props> = ({ navigation }) => {
                 >
                   <Text style={styles.secondaryButtonText}>Add another person</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.linkButton} onPress={createAccount}>
+                <TouchableOpacity
+                  style={styles.linkButton}
+                  onPress={() => {
+                    setShowLogin(true);
+                    setAuthMode('signup');
+                    setAuthError('');
+                  }}
+                >
                   <Text style={styles.linkButtonText}>Create a Worka account</Text>
                 </TouchableOpacity>
               </View>
             ) : (
               <>
                 <Text style={styles.panelKicker}>Register interest</Text>
-                <Text style={styles.panelTitle}>Join the expat waitlist.</Text>
+                <Text style={panelTitleStyle}>Join the expat waitlist.</Text>
                 <Text style={styles.panelText}>
                   Tell us where you are, which language matters, and whether you need help or can offer it.
                 </Text>
 
                 <TextInput
-                  style={styles.input}
+                  style={inputStyle}
                   placeholder="Name"
                   placeholderTextColor="#6b6b6b"
                   value={interestForm.name}
                   onChangeText={(value) => updateInterestField('name', value)}
                 />
                 <TextInput
-                  style={styles.input}
+                  style={inputStyle}
                   placeholder="Email"
                   placeholderTextColor="#6b6b6b"
                   value={interestForm.email}
@@ -303,14 +539,14 @@ const AuthScreen: React.FC<Props> = ({ navigation }) => {
                   keyboardType="email-address"
                 />
                 <TextInput
-                  style={styles.input}
+                  style={inputStyle}
                   placeholder="Language needed or offered"
                   placeholderTextColor="#6b6b6b"
                   value={interestForm.language}
                   onChangeText={(value) => updateInterestField('language', value)}
                 />
                 <TextInput
-                  style={styles.input}
+                  style={inputStyle}
                   placeholder="City / country"
                   placeholderTextColor="#6b6b6b"
                   value={interestForm.location}
@@ -333,7 +569,7 @@ const AuthScreen: React.FC<Props> = ({ navigation }) => {
                 </View>
 
                 <TextInput
-                  style={[styles.input, styles.textArea]}
+                  style={[inputStyle, styles.textArea, isShortDesktop && styles.textAreaCompact]}
                   placeholder="What work or language gap should Worka solve first?"
                   placeholderTextColor="#6b6b6b"
                   value={interestForm.message}
@@ -355,7 +591,14 @@ const AuthScreen: React.FC<Props> = ({ navigation }) => {
                     </>
                   )}
                 </TouchableOpacity>
-                <TouchableOpacity onPress={createAccount} style={styles.secondaryButton}>
+                <TouchableOpacity
+                  onPress={() => {
+                    setShowLogin(true);
+                    setAuthMode('signup');
+                    setAuthError('');
+                  }}
+                  style={styles.secondaryButton}
+                >
                   <MaterialCommunityIcons name="account-plus-outline" size={19} color="#111" />
                   <Text style={styles.secondaryButtonText}>Create account now</Text>
                 </TouchableOpacity>
@@ -375,10 +618,12 @@ const AuthScreen: React.FC<Props> = ({ navigation }) => {
           )}
         </View>
 
-        <View style={[styles.footer, contentShell, { flexDirection: isNarrow ? 'column' : 'row' }]}>
-          <Text style={styles.footerText}>Built for expats, language communities, and trusted local helpers.</Text>
-          <Text style={styles.footerText}>Black. White. Clear.</Text>
-        </View>
+        {(isNarrow || !isShortDesktop) && (
+          <View style={[styles.footer, contentShell, { flexDirection: isNarrow ? 'column' : 'row' }]}>
+            <Text style={styles.footerText}>Built for expats, language communities, and trusted local helpers.</Text>
+            <Text style={styles.footerText}>Black. White. Clear.</Text>
+          </View>
+        )}
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -413,6 +658,10 @@ const styles = StyleSheet.create({
   logoMobile: {
     width: 126,
     height: 54,
+  },
+  logoCompact: {
+    width: 128,
+    height: 50,
   },
   navAction: {
     borderWidth: 1,
@@ -453,6 +702,10 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     letterSpacing: 0,
     maxWidth: 760,
+  },
+  heroTitleCompact: {
+    fontSize: 46,
+    lineHeight: 52,
   },
   heroText: {
     color: '#222',
@@ -498,6 +751,9 @@ const styles = StyleSheet.create({
   formPanelDesktop: {
     minWidth: 380,
   },
+  formPanelCompact: {
+    padding: 18,
+  },
   panelKicker: {
     color: '#111',
     fontSize: 12,
@@ -512,6 +768,11 @@ const styles = StyleSheet.create({
     lineHeight: 34,
     fontWeight: '900',
     marginBottom: 10,
+  },
+  panelTitleCompact: {
+    fontSize: 24,
+    lineHeight: 29,
+    marginBottom: 8,
   },
   panelText: {
     color: '#333',
@@ -530,9 +791,17 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     fontSize: 16,
   },
+  inputCompact: {
+    minHeight: 44,
+    paddingVertical: 9,
+    marginBottom: 9,
+  },
   textArea: {
     minHeight: 102,
     textAlignVertical: 'top',
+  },
+  textAreaCompact: {
+    minHeight: 74,
   },
   roleGroup: {
     flexDirection: 'row',
@@ -567,6 +836,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     flexDirection: 'row',
     gap: 8,
+  },
+  disabledButton: {
+    opacity: 0.68,
   },
   primaryButtonText: {
     color: '#fff',
@@ -605,6 +877,89 @@ const styles = StyleSheet.create({
     marginTop: 12,
     fontSize: 13,
   },
+  authSwitch: {
+    minHeight: 48,
+    borderWidth: 1,
+    borderColor: '#111',
+    borderRadius: 8,
+    flexDirection: 'row',
+    marginBottom: 14,
+    overflow: 'hidden',
+  },
+  authSwitchOption: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 8,
+  },
+  authSwitchOptionActive: {
+    backgroundColor: '#000',
+  },
+  authSwitchText: {
+    color: '#111',
+    fontWeight: '900',
+  },
+  authSwitchTextActive: {
+    color: '#fff',
+  },
+  errorBox: {
+    borderWidth: 1,
+    borderColor: '#111',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    backgroundColor: '#fff',
+  },
+  errorText: {
+    flex: 1,
+    color: '#111',
+    fontWeight: '800',
+    lineHeight: 20,
+  },
+  accountTypeGrid: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 12,
+  },
+  accountTypeCard: {
+    flex: 1,
+    minHeight: 116,
+    borderWidth: 1,
+    borderColor: '#111',
+    borderRadius: 8,
+    padding: 12,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+  },
+  accountTypeCardCompact: {
+    minHeight: 92,
+    padding: 10,
+  },
+  accountTypeCardActive: {
+    backgroundColor: '#000',
+  },
+  accountTypeTitle: {
+    color: '#111',
+    fontSize: 15,
+    fontWeight: '900',
+    marginTop: 8,
+  },
+  accountTypeTitleActive: {
+    color: '#fff',
+  },
+  accountTypeText: {
+    color: '#333',
+    lineHeight: 18,
+    marginTop: 5,
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  accountTypeTextActive: {
+    color: '#e8e8e8',
+  },
   successPanel: {
     minHeight: 330,
     justifyContent: 'center',
@@ -623,7 +978,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     borderTopWidth: 1,
     borderTopColor: '#111',
-    marginTop: 54,
+    marginTop: 22,
     paddingTop: 18,
     justifyContent: 'space-between',
     gap: 8,
