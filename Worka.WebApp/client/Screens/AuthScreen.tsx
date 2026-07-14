@@ -75,7 +75,7 @@ const AuthScreen: React.FC = () => {
   const { signInWithToken } = useContext(AuthContext);
   const { width, height } = useWindowDimensions();
   const isNarrow = width < 780;
-  const isShortDesktop = Platform.OS === 'web' && !isNarrow && height < 840;
+  const isShortDesktop = Platform.OS === 'web' && !isNarrow && height < 1020;
   const contentWidth = isNarrow ? Math.min(width * 0.74, 322) : Math.min(width * 0.84, 1180);
   const contentShell = {
     width: contentWidth,
@@ -83,6 +83,8 @@ const AuthScreen: React.FC = () => {
     marginLeft: isNarrow ? 24 : 0,
   } as const;
   const inputStyle = [styles.input, isShortDesktop && styles.inputCompact];
+  const primaryButtonStyle = [styles.primaryButton, isShortDesktop && styles.buttonCompact];
+  const secondaryButtonStyle = [styles.secondaryButton, isShortDesktop && styles.secondaryButtonCompact];
   const panelTitleStyle = [styles.panelTitle, isShortDesktop && styles.panelTitleCompact];
 
   const [interestForm, setInterestForm] = useState(emptyInterestForm);
@@ -249,7 +251,7 @@ const AuthScreen: React.FC = () => {
         showsVerticalScrollIndicator={isNarrow}
         nestedScrollEnabled
       >
-        <View style={[styles.nav, contentShell, { marginBottom: isNarrow ? 34 : isShortDesktop ? 14 : 26 }]}>
+        <View style={[styles.nav, contentShell, { marginBottom: isNarrow ? 34 : isShortDesktop ? 6 : 26 }]}>
           <Image
             source={require('../assets/logo.png')}
             style={[styles.logo, isNarrow && styles.logoMobile, isShortDesktop && styles.logoCompact]}
@@ -268,9 +270,19 @@ const AuthScreen: React.FC = () => {
           </Pressable>
         </View>
 
-        <View style={[styles.heroGrid, contentShell, { flexDirection: isNarrow ? 'column' : 'row' }]}>
+        <View
+          style={[
+            styles.heroGrid,
+            contentShell,
+            {
+              flexDirection: isNarrow ? 'column' : 'row',
+              flex: Platform.OS === 'web' && !isNarrow ? 1 : undefined,
+              minHeight: 0,
+            },
+          ]}
+        >
           <View style={styles.heroCopy}>
-            <Text style={styles.eyebrow}>Worka for expats</Text>
+            <Text style={[styles.eyebrow, isShortDesktop && styles.eyebrowCompact]}>Worka for expats</Text>
             <Text
               style={[
                 styles.heroTitle,
@@ -284,7 +296,7 @@ const AuthScreen: React.FC = () => {
             >
               Get things done by someone who speaks your language.
             </Text>
-            <Text style={styles.heroText}>
+            <Text style={[styles.heroText, isShortDesktop && styles.heroTextCompact]}>
               Worka helps expats find trusted local people for repairs, moving, cleaning,
               forms, installs, and everyday jobs, with language fit built in from the start.
             </Text>
@@ -310,12 +322,12 @@ const AuthScreen: React.FC = () => {
           >
             {showLogin ? (
               <>
-                <Text style={styles.panelKicker}>Builder access</Text>
+                <Text style={[styles.panelKicker, isShortDesktop && styles.panelKickerCompact]}>Builder access</Text>
                 <Text style={panelTitleStyle}>
                   {authMode === 'login' ? 'Sign in to Worka.' : 'Create your Worka account.'}
                 </Text>
 
-                <View style={styles.authSwitch}>
+                <View style={[styles.authSwitch, isShortDesktop && styles.authSwitchCompact]}>
                   <Pressable
                     style={[styles.authSwitchOption, authMode === 'login' && styles.authSwitchOptionActive]}
                     onPress={() => {
@@ -370,7 +382,7 @@ const AuthScreen: React.FC = () => {
                     <Pressable
                       onPress={onLogin}
                       disabled={loginLoading}
-                      style={[styles.primaryButton, loginLoading && styles.disabledButton]}
+                      style={[styles.primaryButton, isShortDesktop && styles.buttonCompact, loginLoading && styles.disabledButton]}
                     >
                       {loginLoading ? (
                         <ActivityIndicator color="#fff" />
@@ -386,7 +398,7 @@ const AuthScreen: React.FC = () => {
                         setAuthMode('signup');
                         setAuthError('');
                       }}
-                      style={styles.secondaryButton}
+                      style={secondaryButtonStyle}
                     >
                       <MaterialCommunityIcons name="account-plus-outline" size={19} color="#111" />
                       <Text style={styles.secondaryButtonText}>Create account instead</Text>
@@ -409,7 +421,7 @@ const AuthScreen: React.FC = () => {
                           >
                             <MaterialCommunityIcons
                               name={type.icon}
-                              size={24}
+                              size={isShortDesktop ? 20 : 24}
                               color={selected ? '#fff' : '#111'}
                             />
                             <Text style={[styles.accountTypeTitle, selected && styles.accountTypeTitleActive]}>
@@ -461,7 +473,7 @@ const AuthScreen: React.FC = () => {
                     <Pressable
                       onPress={onSignup}
                       disabled={signupLoading}
-                      style={[styles.primaryButton, signupLoading && styles.disabledButton]}
+                      style={[styles.primaryButton, isShortDesktop && styles.buttonCompact, signupLoading && styles.disabledButton]}
                     >
                       {signupLoading ? (
                         <ActivityIndicator color="#fff" />
@@ -477,7 +489,7 @@ const AuthScreen: React.FC = () => {
                         setAuthMode('login');
                         setAuthError('');
                       }}
-                      style={styles.secondaryButton}
+                      style={secondaryButtonStyle}
                     >
                       <MaterialCommunityIcons name="login" size={19} color="#111" />
                       <Text style={styles.secondaryButtonText}>I already have an account</Text>
@@ -495,7 +507,7 @@ const AuthScreen: React.FC = () => {
                   Thanks. I will use your language and location to shape the first Worka launch areas.
                 </Text>
                 <TouchableOpacity
-                  style={styles.secondaryButton}
+                  style={secondaryButtonStyle}
                   onPress={() => {
                     setRegistered(false);
                     setInterestForm(emptyInterestForm);
@@ -516,9 +528,9 @@ const AuthScreen: React.FC = () => {
               </View>
             ) : (
               <>
-                <Text style={styles.panelKicker}>Register interest</Text>
+                <Text style={[styles.panelKicker, isShortDesktop && styles.panelKickerCompact]}>Register interest</Text>
                 <Text style={panelTitleStyle}>Join the expat waitlist.</Text>
-                <Text style={styles.panelText}>
+                <Text style={[styles.panelText, isShortDesktop && styles.panelTextCompact]}>
                   Tell us where you are, which language matters, and whether you need help or can offer it.
                 </Text>
 
@@ -559,7 +571,7 @@ const AuthScreen: React.FC = () => {
                     return (
                       <Pressable
                         key={option}
-                        style={[styles.roleChip, selected && styles.roleChipActive]}
+                        style={[styles.roleChip, isShortDesktop && styles.roleChipCompact, selected && styles.roleChipActive]}
                         onPress={() => updateInterestField('role', option)}
                       >
                         <Text style={[styles.roleChipText, selected && styles.roleChipTextActive]}>{option}</Text>
@@ -580,7 +592,7 @@ const AuthScreen: React.FC = () => {
                 <TouchableOpacity
                   onPress={registerInterest}
                   disabled={interestLoading}
-                  style={styles.primaryButton}
+                  style={primaryButtonStyle}
                 >
                   {interestLoading ? (
                     <ActivityIndicator color="#fff" />
@@ -597,7 +609,7 @@ const AuthScreen: React.FC = () => {
                     setAuthMode('signup');
                     setAuthError('');
                   }}
-                  style={styles.secondaryButton}
+                  style={secondaryButtonStyle}
                 >
                   <MaterialCommunityIcons name="account-plus-outline" size={19} color="#111" />
                   <Text style={styles.secondaryButtonText}>Create account now</Text>
@@ -697,6 +709,9 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     marginBottom: 18,
   },
+  eyebrowCompact: {
+    marginBottom: 10,
+  },
   heroTitle: {
     color: '#000',
     fontWeight: '900',
@@ -704,8 +719,8 @@ const styles = StyleSheet.create({
     maxWidth: 760,
   },
   heroTitleCompact: {
-    fontSize: 46,
-    lineHeight: 52,
+    fontSize: 42,
+    lineHeight: 47,
   },
   heroText: {
     color: '#222',
@@ -713,6 +728,11 @@ const styles = StyleSheet.create({
     lineHeight: 28,
     marginTop: 22,
     maxWidth: 650,
+  },
+  heroTextCompact: {
+    fontSize: 15,
+    lineHeight: 23,
+    marginTop: 14,
   },
   signalRow: {
     gap: 12,
@@ -752,7 +772,8 @@ const styles = StyleSheet.create({
     minWidth: 380,
   },
   formPanelCompact: {
-    padding: 18,
+    padding: 14,
+    shadowOffset: { width: 8, height: 8 },
   },
   panelKicker: {
     color: '#111',
@@ -762,6 +783,9 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     marginBottom: 10,
   },
+  panelKickerCompact: {
+    marginBottom: 6,
+  },
   panelTitle: {
     color: '#000',
     fontSize: 28,
@@ -770,14 +794,18 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   panelTitleCompact: {
-    fontSize: 24,
-    lineHeight: 29,
-    marginBottom: 8,
+    fontSize: 22,
+    lineHeight: 27,
+    marginBottom: 6,
   },
   panelText: {
     color: '#333',
     lineHeight: 22,
     marginBottom: 18,
+  },
+  panelTextCompact: {
+    lineHeight: 19,
+    marginBottom: 10,
   },
   input: {
     minHeight: 50,
@@ -792,16 +820,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   inputCompact: {
-    minHeight: 44,
-    paddingVertical: 9,
-    marginBottom: 9,
+    minHeight: 38,
+    paddingVertical: 7,
+    marginBottom: 7,
   },
   textArea: {
     minHeight: 102,
     textAlignVertical: 'top',
   },
   textAreaCompact: {
-    minHeight: 74,
+    minHeight: 52,
   },
   roleGroup: {
     flexDirection: 'row',
@@ -816,6 +844,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 9,
     backgroundColor: '#fff',
+  },
+  roleChipCompact: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
   },
   roleChipActive: {
     backgroundColor: '#000',
@@ -837,6 +869,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 8,
   },
+  buttonCompact: {
+    minHeight: 42,
+  },
   disabledButton: {
     opacity: 0.68,
   },
@@ -856,6 +891,10 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingHorizontal: 14,
     marginTop: 12,
+  },
+  secondaryButtonCompact: {
+    minHeight: 40,
+    marginTop: 8,
   },
   secondaryButtonText: {
     color: '#111',
@@ -885,6 +924,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginBottom: 14,
     overflow: 'hidden',
+  },
+  authSwitchCompact: {
+    minHeight: 40,
+    marginBottom: 9,
   },
   authSwitchOption: {
     flex: 1,
@@ -935,8 +978,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   accountTypeCardCompact: {
-    minHeight: 92,
-    padding: 10,
+    minHeight: 76,
+    padding: 9,
   },
   accountTypeCardActive: {
     backgroundColor: '#000',

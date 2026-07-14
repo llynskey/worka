@@ -5,6 +5,7 @@ services:
       dockerfile: Worka.WebApp/client/Dockerfile
       args:
         EXPO_PUBLIC_API_URL: /api
+        EXPO_PUBLIC_MAPBOX_TOKEN: ${EXPO_PUBLIC_MAPBOX_TOKEN:-}
     depends_on:
       - api
     ports:

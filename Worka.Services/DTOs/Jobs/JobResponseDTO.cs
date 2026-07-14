@@ -15,6 +15,12 @@ namespace Worka.Services.DTOs.Jobs
 
         public string Address { get; set; }
 
+        public string LocationLabel { get; set; }
+
+        public double? Latitude { get; set; }
+
+        public double? Longitude { get; set; }
+
         public string CustomerId { get; set; }
 
         public string AcceptedQuoteId { get; set; }
@@ -30,6 +36,9 @@ namespace Worka.Services.DTOs.Jobs
             JobDescription = job.Description;
             Category = job.Category;
             Address = job.Address;
+            LocationLabel = job.LocationLabel;
+            Latitude = job.Latitude;
+            Longitude = job.Longitude;
             JobStatus = job.Status;
             CustomerId = job.CustomerId.ToString();
             AcceptedQuoteId = job.AcceptedQuoteId?.ToString();

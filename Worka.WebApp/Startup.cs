@@ -100,6 +100,11 @@ namespace Worka.WebApp
             using var scope = app.ApplicationServices.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<WorkaDbContext>();
             dbContext.Database.EnsureCreated();
+            dbContext.Database.ExecuteSqlRaw("""
+                ALTER TABLE jobs ADD COLUMN IF NOT EXISTS "LocationLabel" character varying(500) NOT NULL DEFAULT '';
+                ALTER TABLE jobs ADD COLUMN IF NOT EXISTS "Latitude" double precision NULL;
+                ALTER TABLE jobs ADD COLUMN IF NOT EXISTS "Longitude" double precision NULL;
+                """);
         }
     }
 }

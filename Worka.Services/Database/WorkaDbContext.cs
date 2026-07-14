@@ -76,6 +76,7 @@ namespace Worka.Services.Database
                 entity.Property(job => job.Description).HasMaxLength(4000).IsRequired();
                 entity.Property(job => job.Category).HasMaxLength(120).IsRequired();
                 entity.Property(job => job.Address).HasMaxLength(500).IsRequired();
+                entity.Property(job => job.LocationLabel).HasMaxLength(500).IsRequired();
                 entity.HasOne<Customer>()
                     .WithMany()
                     .HasForeignKey(job => job.CustomerId)

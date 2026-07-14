@@ -18,6 +18,12 @@ namespace Worka.Services.Database.DatabaseModels
 
         public string Address { get; set; } = string.Empty;
 
+        public string LocationLabel { get; set; } = string.Empty;
+
+        public double? Latitude { get; set; }
+
+        public double? Longitude { get; set; }
+
         public JobStatusEnum Status { get; set; } = JobStatusEnum.Pending;
 
         public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;

@@ -10,6 +10,12 @@ namespace Worka.Services.DTOs.Jobs
 
         public string Address { get; set; } = string.Empty;
 
+        public string LocationLabel { get; set; } = string.Empty;
+
+        public double? Latitude { get; set; }
+
+        public double? Longitude { get; set; }
+
         public string CustomerId { get; set; } = string.Empty;
     }
 }

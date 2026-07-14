@@ -183,10 +183,10 @@ const WorkerJobList = () => {
 
               <Text style={styles.description}>{item.jobDescription}</Text>
 
-              {!!item.address && (
+              {!!(item.locationLabel || item.address) && (
                 <View style={styles.locationRow}>
                   <MaterialCommunityIcons name="map-marker-outline" size={17} color="#64675f" />
-                  <Text style={styles.locationText}>{item.address}</Text>
+                  <Text style={styles.locationText}>{item.locationLabel || item.address}</Text>
                 </View>
               )}
 

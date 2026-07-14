@@ -25,6 +25,21 @@ namespace Worka.Services.Jobs
                     return new WorkaResponse<JobResponseDTO>("Invalid customer ID format.");
                 }
 
+                var address = jobDto.Address.Trim();
+                var locationLabel = string.IsNullOrWhiteSpace(jobDto.LocationLabel)
+                    ? address
+                    : jobDto.LocationLabel.Trim();
+
+                if (string.IsNullOrWhiteSpace(address))
+                {
+                    return new WorkaResponse<JobResponseDTO>("Choose a job location.");
+                }
+
+                if (!IsValidLatitude(jobDto.Latitude) || !IsValidLongitude(jobDto.Longitude))
+                {
+                    return new WorkaResponse<JobResponseDTO>("Choose a location from the address lookup.");
+                }
+
                 var customerExists = await _dbContext.Customers.AnyAsync(customer => customer.CustomerId == customerId);
                 if (!customerExists)
                 {
@@ -36,7 +51,10 @@ namespace Worka.Services.Jobs
                     Name = jobDto.JobName.Trim(),
                     Description = jobDto.JobDescription.Trim(),
                     Category = jobDto.Category.Trim(),
-                    Address = jobDto.Address.Trim(),
+                    Address = address,
+                    LocationLabel = locationLabel,
+                    Latitude = jobDto.Latitude,
+                    Longitude = jobDto.Longitude,
                     CustomerId = customerId,
                     Status = JobStatusEnum.Pending,
                     CreatedAt = DateTimeOffset.UtcNow,
@@ -165,6 +183,22 @@ namespace Worka.Services.Jobs
             {
                 return WorkaResponse<JobResponseDTO>.Fail(ex, "An error occurred while accepting the quote.");
             }
+        }
+
+        private static bool IsValidLatitude(double? value)
+        {
+            return value.HasValue
+                && !double.IsNaN(value.Value)
+                && value.Value >= -90
+                && value.Value <= 90;
+        }
+
+        private static bool IsValidLongitude(double? value)
+        {
+            return value.HasValue
+                && !double.IsNaN(value.Value)
+                && value.Value >= -180
+                && value.Value <= 180;
         }
     }
 }

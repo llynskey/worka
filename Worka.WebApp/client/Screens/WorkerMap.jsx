@@ -1,21 +1,3 @@
-import React from 'react';
-import MapView from 'react-native-maps';
-import { StyleSheet, View, Text } from 'react-native';
+import JobMap from '../components/worker/JobMap';
 
- const workerMap = () => {
-  return (
-      <MapView style={styles.map} />
-    )
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  map: {
-    width: '100%',
-    height: '70%',
-  },
-});
-
-export default workerMap;
+export default JobMap;

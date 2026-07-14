@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { api, getErrorMessage, unwrap } from '../api/workaApi';
+import { lookupLocations } from '../api/locationLookup';
 
 const jobTypes = [
   {
@@ -53,10 +54,16 @@ const JobTypeScreen = ({ navigation }) => {
   const [account, setAccount] = useState(null);
   const [loadingAccount, setLoadingAccount] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [lookupLoading, setLookupLoading] = useState(false);
+  const [locationSuggestions, setLocationSuggestions] = useState([]);
+  const [locationError, setLocationError] = useState('');
   const [form, setForm] = useState({
     jobName: '',
     jobDescription: '',
     address: '',
+    locationLabel: '',
+    latitude: null,
+    longitude: null,
   });
 
   useEffect(() => {
@@ -79,8 +86,60 @@ const JobTypeScreen = ({ navigation }) => {
   }, []);
 
   const updateField = (name, value) => {
-    setForm((current) => ({ ...current, [name]: value }));
+    setForm((current) => {
+      if (name === 'address') {
+        return {
+          ...current,
+          address: value,
+          locationLabel: '',
+          latitude: null,
+          longitude: null,
+        };
+      }
+
+      return { ...current, [name]: value };
+    });
+
+    if (name === 'address') {
+      setLocationError('');
+    }
   };
+
+  const searchLocations = async () => {
+    if (form.address.trim().length < 3) {
+      setLocationError('Enter at least 3 characters to search.');
+      return;
+    }
+
+    try {
+      setLookupLoading(true);
+      setLocationError('');
+      const results = await lookupLocations(form.address);
+      setLocationSuggestions(results);
+      if (results.length === 0) {
+        setLocationError('No matching locations found. Try a fuller address or nearby town.');
+      }
+    } catch (error) {
+      setLocationSuggestions([]);
+      setLocationError(getErrorMessage(error, 'Could not search locations right now.'));
+    } finally {
+      setLookupLoading(false);
+    }
+  };
+
+  const chooseLocation = (location) => {
+    setForm((current) => ({
+      ...current,
+      address: location.address,
+      locationLabel: location.label,
+      latitude: location.latitude,
+      longitude: location.longitude,
+    }));
+    setLocationSuggestions([]);
+    setLocationError('');
+  };
+
+  const hasVerifiedLocation = Number.isFinite(form.latitude) && Number.isFinite(form.longitude);
 
   const submitJob = async () => {
     if (!account?.customerId) {
@@ -103,17 +162,32 @@ const JobTypeScreen = ({ navigation }) => {
       return;
     }
 
+    if (!hasVerifiedLocation) {
+      Alert.alert('Choose a verified location', 'Search the address and choose one of the location results.');
+      return;
+    }
+
     try {
       setSubmitting(true);
       await api.post('/createJob', {
         jobName: form.jobName.trim(),
         jobDescription: form.jobDescription.trim(),
         address: form.address.trim(),
+        locationLabel: form.locationLabel || form.address.trim(),
+        latitude: form.latitude,
+        longitude: form.longitude,
         category: selectedType.type,
         customerId: account.customerId,
       });
 
-      setForm({ jobName: '', jobDescription: '', address: '' });
+      setForm({
+        jobName: '',
+        jobDescription: '',
+        address: '',
+        locationLabel: '',
+        latitude: null,
+        longitude: null,
+      });
       Alert.alert('Job posted', 'Professionals can now send quotes.');
       navigation?.navigate('Job List');
     } catch (error) {
@@ -171,12 +245,60 @@ const JobTypeScreen = ({ navigation }) => {
             multiline
           />
           <TextInput
-            placeholder="Address or service area"
+            placeholder="Start typing the job address"
             placeholderTextColor="#686b64"
             value={form.address}
             onChangeText={(text) => updateField('address', text)}
+            onSubmitEditing={searchLocations}
             style={styles.input}
           />
+
+          <TouchableOpacity
+            style={[styles.lookupButton, lookupLoading && styles.submitButtonDisabled]}
+            onPress={searchLocations}
+            disabled={lookupLoading}
+          >
+            {lookupLoading ? (
+              <ActivityIndicator color="#111" />
+            ) : (
+              <>
+                <MaterialCommunityIcons name="map-search-outline" size={20} color="#111" />
+                <Text style={styles.lookupButtonText}>Search address</Text>
+              </>
+            )}
+          </TouchableOpacity>
+
+          {locationError ? (
+            <View style={styles.locationMessage}>
+              <MaterialCommunityIcons name="alert-circle-outline" size={18} color="#111" />
+              <Text style={styles.locationMessageText}>{locationError}</Text>
+            </View>
+          ) : null}
+
+          {hasVerifiedLocation ? (
+            <View style={styles.locationSelected}>
+              <MaterialCommunityIcons name="map-marker-check-outline" size={20} color="#111" />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.locationSelectedTitle}>Location set</Text>
+                <Text style={styles.locationSelectedText}>{form.locationLabel || form.address}</Text>
+              </View>
+            </View>
+          ) : null}
+
+          {locationSuggestions.length > 0 ? (
+            <View style={styles.suggestionList}>
+              {locationSuggestions.map((location) => (
+                <TouchableOpacity
+                  key={location.id}
+                  style={styles.suggestionItem}
+                  onPress={() => chooseLocation(location)}
+                >
+                  <MaterialCommunityIcons name="map-marker-outline" size={19} color="#111" />
+                  <Text style={styles.suggestionText}>{location.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          ) : null}
 
           <TouchableOpacity
             style={[styles.submitButton, (loadingAccount || submitting) && styles.submitButtonDisabled]}
@@ -297,6 +419,82 @@ const styles = StyleSheet.create({
   textArea: {
     minHeight: 110,
     textAlignVertical: 'top',
+  },
+  lookupButton: {
+    minHeight: 48,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#111',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 12,
+    backgroundColor: '#fff',
+  },
+  lookupButtonText: {
+    color: '#111',
+    fontWeight: '900',
+    fontSize: 15,
+  },
+  locationMessage: {
+    borderWidth: 1,
+    borderColor: '#111',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+    flexDirection: 'row',
+    gap: 8,
+    backgroundColor: '#fff',
+  },
+  locationMessageText: {
+    flex: 1,
+    color: '#111',
+    fontWeight: '800',
+    lineHeight: 20,
+  },
+  locationSelected: {
+    borderWidth: 1,
+    borderColor: '#111',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+    backgroundColor: '#f3f7f1',
+    flexDirection: 'row',
+    gap: 10,
+  },
+  locationSelectedTitle: {
+    color: '#111',
+    fontWeight: '900',
+  },
+  locationSelectedText: {
+    color: '#4d504b',
+    marginTop: 3,
+    lineHeight: 19,
+  },
+  suggestionList: {
+    borderWidth: 1,
+    borderColor: '#d9d5ca',
+    borderRadius: 8,
+    overflow: 'hidden',
+    marginBottom: 12,
+    backgroundColor: '#fff',
+  },
+  suggestionItem: {
+    minHeight: 50,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ece7dc',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 9,
+  },
+  suggestionText: {
+    flex: 1,
+    color: '#111',
+    fontWeight: '700',
+    lineHeight: 19,
   },
   submitButton: {
     backgroundColor: '#111',

@@ -4,6 +4,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import JobList from '../components/worker/JobList';
 import BidList from '../components/worker/BidList';
+import JobMap from '../components/worker/JobMap';
 
 const Tab = createBottomTabNavigator();
 
@@ -13,6 +14,12 @@ const webTabs = [
     label: 'Available jobs',
     icon: 'briefcase-search-outline',
     description: 'Find work to quote',
+  },
+  {
+    key: 'map',
+    label: 'Map',
+    icon: 'map-marker-radius-outline',
+    description: 'Browse jobs by location',
   },
   {
     key: 'bids',
@@ -54,7 +61,7 @@ const WorkerWebWorkspace = () => {
       </View>
 
       <View style={styles.webMain}>
-        {activeTab === 'jobs' ? <JobList /> : <BidList />}
+        {activeTab === 'jobs' ? <JobList /> : activeTab === 'map' ? <JobMap /> : <BidList />}
       </View>
     </View>
   );
@@ -86,6 +93,7 @@ const WorkerScreen = () => {
       })}
     >
       <Tab.Screen name="Available Jobs" component={JobList} />
+      <Tab.Screen name="Map" component={JobMap} />
       <Tab.Screen name="My Bids" component={BidList} />
     </Tab.Navigator>
   );

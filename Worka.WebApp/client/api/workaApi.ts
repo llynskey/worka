@@ -48,6 +48,9 @@ export type Job = {
   jobDescription: string;
   category: string;
   address: string;
+  locationLabel?: string;
+  latitude?: number | null;
+  longitude?: number | null;
   customerId: string;
   acceptedQuoteId?: string | null;
   jobStatus: number | string;

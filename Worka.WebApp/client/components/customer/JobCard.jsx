@@ -60,10 +60,10 @@ const JobCard = ({ job, quotes = [], onAcceptQuote }) => {
 
         <Text style={styles.description}>{job.jobDescription}</Text>
 
-        {!!job.address && (
+        {!!(job.locationLabel || job.address) && (
           <View style={styles.metaRow}>
             <MaterialCommunityIcons name="map-marker-outline" size={17} color="#64675f" />
-            <Text style={styles.metaText}>{job.address}</Text>
+            <Text style={styles.metaText}>{job.locationLabel || job.address}</Text>
           </View>
         )}
 
