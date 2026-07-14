@@ -121,7 +121,10 @@ const LanguageCycler = ({ items, textStyle, containerStyle, interval = 4200 }) =
         ))}
       </View>
 
-      <Animated.Text style={[textStyle, styles.visible, { opacity, transform: [{ translateY }] }]}>
+      <Animated.Text
+        key={`headline-${index}`}
+        style={[textStyle, styles.visible, { opacity, transform: [{ translateY }] }]}
+      >
         {safeItems[index]}
       </Animated.Text>
     </View>
@@ -130,7 +133,7 @@ const LanguageCycler = ({ items, textStyle, containerStyle, interval = 4200 }) =
 
 const styles = StyleSheet.create({
   visible: {
-    zIndex: 1,
+    backfaceVisibility: 'hidden',
   },
   sizerClip: {
     position: 'absolute',
