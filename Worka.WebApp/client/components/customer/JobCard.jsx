@@ -39,6 +39,16 @@ const statusLabel = (status) => {
 
 const JobCard = ({ job, quotes = [], onAcceptQuote, onEditJob, onDeleteJob, onCompleteJob, onReviewJob }) => {
   const [detailsVisible, setDetailsVisible] = useState(false);
+  const [userLocation, setUserLocation] = useState(null);
+
+  const openDetails = () => {
+    setDetailsVisible(true);
+    if (!userLocation) {
+      // Best-effort: show "x km from you" on the map when the browser allows it.
+      requestCurrentLocation().then(setUserLocation).catch(() => {});
+    }
+  };
+
   const status = statusLabel(job.jobStatus);
   const acceptedQuote = quotes.find((quote) => quote.quoteId === job.acceptedQuoteId);
   const image = job.photoUrl || categoryImages[job.category] || categoryImages.Repairs;
@@ -78,7 +88,7 @@ const JobCard = ({ job, quotes = [], onAcceptQuote, onEditJob, onDeleteJob, onCo
           )}
 
           <View style={styles.actionRow}>
-            <TouchableOpacity style={styles.detailsButton} onPress={() => setDetailsVisible(true)}>
+            <TouchableOpacity style={styles.detailsButton} onPress={openDetails}>
               <MaterialCommunityIcons name="file-search-outline" size={18} color="#111" />
               <Text style={styles.detailsButtonText}>View details</Text>
             </TouchableOpacity>
@@ -204,10 +214,13 @@ const JobCard = ({ job, quotes = [], onAcceptQuote, onEditJob, onDeleteJob, onCo
               {!!(job.locationLabel || job.address) && (
                 <View style={styles.detailSection}>
                   <Text style={styles.detailLabel}>Location</Text>
-                  <View style={styles.modalLocationRow}>
-                    <MaterialCommunityIcons name="map-marker-outline" size={18} color="#111" />
-                    <Text style={styles.detailText}>{job.locationLabel || job.address}</Text>
-                  </View>
+                  <MapPreview
+                    latitude={job.latitude}
+                    longitude={job.longitude}
+                    userLocation={userLocation}
+                    locationLabel={job.locationLabel || job.address}
+                    height={220}
+                  />
                 </View>
               )}
 

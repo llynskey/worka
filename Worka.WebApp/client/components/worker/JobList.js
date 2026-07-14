@@ -18,6 +18,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { api, formatDate, formatMoney, getErrorMessage, unwrap } from '../../api/workaApi';
 import { formatDistance, getDistanceKm, requestCurrentLocation } from '../../Utils/locationUtils';
+import JobDetailsModal from './JobDetailsModal';
 
 const categoryImages = {
   Plumbing: 'https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?auto=format&fit=crop&w=900&q=80',
@@ -36,6 +37,7 @@ const WorkerJobList = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
   const [selectedJob, setSelectedJob] = useState(null);
+  const [selectedDetailsJob, setSelectedDetailsJob] = useState(null);
   const [quoteForm, setQuoteForm] = useState({ price: '', description: '' });
   const [submitting, setSubmitting] = useState(false);
   const [currentLocation, setCurrentLocation] = useState(null);
@@ -291,10 +293,32 @@ const WorkerJobList = () => {
                   <Text style={styles.primaryButtonText}>Send quote</Text>
                 </TouchableOpacity>
               )}
+
+              <TouchableOpacity style={styles.detailsButton} onPress={() => setSelectedDetailsJob(item)}>
+                <MaterialCommunityIcons name="file-search-outline" size={18} color="#111" />
+                <Text style={styles.detailsButtonText}>View details</Text>
+              </TouchableOpacity>
             </View>
           );
         }}
       />
+
+      {selectedDetailsJob ? (
+        <JobDetailsModal
+          job={selectedDetailsJob}
+          image={
+            selectedDetailsJob.photoUrl ||
+            categoryImages[selectedDetailsJob.category] ||
+            categoryImages.Repairs
+          }
+          userLocation={currentLocation}
+          onClose={() => setSelectedDetailsJob(null)}
+          onQuote={(job) => {
+            setSelectedDetailsJob(null);
+            openQuoteModal(job);
+          }}
+        />
+      ) : null}
 
       <Modal visible={!!selectedJob} transparent animationType="slide" onRequestClose={() => setSelectedJob(null)}>
         <View style={styles.modalBackdrop}>
@@ -544,6 +568,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     marginTop: 14,
+  },
+  detailsButton: {
+    minHeight: 44,
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+    borderWidth: 1,
+    borderColor: '#111',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    backgroundColor: '#fff',
+    marginTop: 10,
+  },
+  detailsButtonText: {
+    color: '#111',
+    fontWeight: '900',
   },
   primaryButtonText: {
     color: '#fff',

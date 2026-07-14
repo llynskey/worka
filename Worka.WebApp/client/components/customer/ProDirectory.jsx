@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  Modal,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -11,7 +12,7 @@ import {
   View,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { api, formatMoney, getErrorMessage, unwrap } from '../../api/workaApi';
+import { api, formatDate, formatMoney, getErrorMessage, unwrap } from '../../api/workaApi';
 import Avatar from '../Avatar';
 import Stars from '../Stars';
 import { SPOKEN_LANGUAGES, languageLabel } from '../../i18n/spokenLanguages';
@@ -34,6 +35,23 @@ const ProDirectory = () => {
   const [specialty, setSpecialty] = useState('');
   const [languageFilter, setLanguageFilter] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
+  const [selectedPro, setSelectedPro] = useState(null);
+  const [proReviews, setProReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+
+  const openProDetails = useCallback(async (pro) => {
+    setSelectedPro(pro);
+    setProReviews([]);
+    try {
+      setReviewsLoading(true);
+      const response = await api.get(`/api/Professionals/${pro.professionalId}/reviews`);
+      setProReviews(unwrap(response.data) ?? []);
+    } catch {
+      setProReviews([]);
+    } finally {
+      setReviewsLoading(false);
+    }
+  }, []);
 
   const loadPros = useCallback(async () => {
     setError(null);
@@ -76,6 +94,7 @@ const ProDirectory = () => {
   }
 
   return (
+    <>
     <FlatList
       data={pros}
       keyExtractor={(item) => String(item.professionalId)}
@@ -195,7 +214,7 @@ const ProDirectory = () => {
         </View>
       }
       renderItem={({ item }) => (
-        <View style={styles.card}>
+        <TouchableOpacity style={styles.card} activeOpacity={0.85} onPress={() => openProDetails(item)}>
           <View style={styles.cardHeader}>
             <Avatar photoUrl={item.photoUrl} firstName={item.firstName} lastName={item.lastName} size={46} />
             <View style={{ flex: 1 }}>
@@ -254,13 +273,209 @@ const ProDirectory = () => {
               <Text style={styles.statLabel}>From</Text>
             </View>
           </View>
-        </View>
+
+          <View style={styles.viewProfileRow}>
+            <Text style={styles.viewProfileText}>View full profile & reviews</Text>
+            <MaterialCommunityIcons name="chevron-right" size={20} color="#111" />
+          </View>
+        </TouchableOpacity>
       )}
     />
+
+    <Modal visible={!!selectedPro} transparent animationType="slide" onRequestClose={() => setSelectedPro(null)}>
+      <View style={styles.proModalBackdrop}>
+        <View style={styles.proModalCard}>
+          <ScrollView contentContainerStyle={styles.proModalContent} showsVerticalScrollIndicator={false}>
+            {selectedPro ? (
+              <>
+                <View style={styles.proModalHeader}>
+                  <Avatar
+                    photoUrl={selectedPro.photoUrl}
+                    firstName={selectedPro.firstName}
+                    lastName={selectedPro.lastName}
+                    size={72}
+                  />
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.proModalName}>
+                      {selectedPro.firstName} {selectedPro.lastName}
+                    </Text>
+                    <Text style={styles.cardSpecialty}>
+                      {selectedPro.specialty || 'General home services'}
+                    </Text>
+                    <View style={styles.cardStars}>
+                      <Stars value={selectedPro.averageRating} count={selectedPro.reviewCount} />
+                    </View>
+                  </View>
+                  <TouchableOpacity
+                    style={styles.proModalClose}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    onPress={() => setSelectedPro(null)}
+                  >
+                    <MaterialCommunityIcons name="close" size={22} color="#111" />
+                  </TouchableOpacity>
+                </View>
+
+                {selectedPro.readyForPayments ? (
+                  <View style={[styles.verifiedPill, styles.proModalPill]}>
+                    <MaterialCommunityIcons name="shield-check-outline" size={14} color="#24513b" />
+                    <Text style={styles.verifiedText}>Payout ready — bookable through Worka</Text>
+                  </View>
+                ) : null}
+
+                {selectedPro.languages ? (
+                  <View style={styles.langChipRow}>
+                    {parseLanguages(selectedPro.languages).map((code) => (
+                      <View key={code} style={styles.langChip}>
+                        <Text style={styles.langChipText}>{languageLabel(code)}</Text>
+                      </View>
+                    ))}
+                  </View>
+                ) : null}
+
+                {selectedPro.bio ? <Text style={styles.proModalBio}>{selectedPro.bio}</Text> : null}
+
+                <View style={styles.metaRow}>
+                  <MaterialCommunityIcons name="map-marker-outline" size={16} color="#62645c" />
+                  <Text style={styles.metaText}>{selectedPro.serviceArea || 'Area not listed yet'}</Text>
+                </View>
+
+                <View style={styles.statsRow}>
+                  <View style={styles.statBox}>
+                    <Text style={styles.statValue}>{selectedPro.quoteCount}</Text>
+                    <Text style={styles.statLabel}>Quotes sent</Text>
+                  </View>
+                  <View style={styles.statBox}>
+                    <Text style={styles.statValue}>
+                      {selectedPro.averageQuotePrice != null
+                        ? formatMoney(selectedPro.averageQuotePrice)
+                        : '—'}
+                    </Text>
+                    <Text style={styles.statLabel}>Avg price</Text>
+                  </View>
+                  <View style={styles.statBox}>
+                    <Text style={styles.statValue}>
+                      {selectedPro.minQuotePrice != null ? formatMoney(selectedPro.minQuotePrice) : '—'}
+                    </Text>
+                    <Text style={styles.statLabel}>From</Text>
+                  </View>
+                </View>
+
+                <Text style={styles.reviewsTitle}>Reviews</Text>
+                {reviewsLoading ? (
+                  <ActivityIndicator color="#111" style={{ marginVertical: 16 }} />
+                ) : proReviews.length === 0 ? (
+                  <Text style={styles.mutedText}>No reviews yet — be the first to book them.</Text>
+                ) : (
+                  proReviews.map((review) => (
+                    <View key={review.reviewId} style={styles.reviewRow}>
+                      <Stars value={review.rating} />
+                      {review.comment ? (
+                        <Text style={styles.reviewComment}>{review.comment}</Text>
+                      ) : null}
+                      <Text style={styles.reviewMeta}>
+                        {review.reviewerFirstName} · {review.jobName} · {formatDate(review.createdAt)}
+                      </Text>
+                    </View>
+                  ))
+                )}
+              </>
+            ) : null}
+          </ScrollView>
+        </View>
+      </View>
+    </Modal>
+    </>
   );
 };
 
 const styles = StyleSheet.create({
+  viewProfileRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: 2,
+    marginTop: 12,
+  },
+  viewProfileText: {
+    color: '#111',
+    fontWeight: '800',
+    fontSize: 13,
+  },
+  proModalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.46)',
+    justifyContent: 'flex-end',
+  },
+  proModalCard: {
+    maxHeight: '92%',
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 8,
+    borderTopRightRadius: 8,
+    overflow: 'hidden',
+  },
+  proModalContent: {
+    padding: 18,
+    paddingBottom: 32,
+  },
+  proModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+  },
+  proModalName: {
+    color: '#111',
+    fontSize: 24,
+    fontWeight: '900',
+  },
+  proModalClose: {
+    width: 42,
+    height: 42,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#111',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+    alignSelf: 'flex-start',
+  },
+  proModalPill: {
+    alignSelf: 'flex-start',
+    marginTop: 14,
+  },
+  proModalBio: {
+    marginTop: 12,
+    color: '#4d504b',
+    lineHeight: 21,
+  },
+  reviewsTitle: {
+    marginTop: 18,
+    borderTopWidth: 1,
+    borderTopColor: '#ece7dc',
+    paddingTop: 14,
+    color: '#111',
+    fontSize: 18,
+    fontWeight: '900',
+    marginBottom: 8,
+  },
+  reviewRow: {
+    borderWidth: 1,
+    borderColor: '#e3dfd2',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 10,
+    backgroundColor: '#fbfaf6',
+  },
+  reviewComment: {
+    marginTop: 6,
+    color: '#4d504b',
+    lineHeight: 20,
+  },
+  reviewMeta: {
+    marginTop: 6,
+    color: '#8a8d84',
+    fontSize: 12,
+    fontWeight: '700',
+  },
   listContent: {
     padding: 16,
     paddingBottom: 96,
