@@ -76,44 +76,22 @@ const AuthScreen: React.FC = () => {
   const { width, height } = useWindowDimensions();
   const isNarrow = width < 780;
   const isDesktopWeb = Platform.OS === "web" && !isNarrow;
-  const isShortDesktop = isDesktopWeb && height < 1020;
+  const isShortDesktop = isDesktopWeb && height < 860;
+  const isVeryNarrow = width < 480;
   const horizontalGutter = isNarrow ? 16 : 24;
-  const contentWidth = Math.min(
-    Math.max(width - horizontalGutter * 2, 0),
-    1180,
-  );
+  const contentWidth = Math.max(width - horizontalGutter * 2, 0);
   const contentShell = {
-    width: contentWidth,
+    width: "100%",
+    maxWidth: 1180,
     alignSelf: "center",
   } as const;
-  const inputStyle = [styles.input, isShortDesktop && styles.inputCompact];
-  const primaryButtonStyle = [
-    styles.primaryButton,
-    isShortDesktop && styles.buttonCompact,
-  ];
-  const secondaryButtonStyle = [
-    styles.secondaryButton,
-    isShortDesktop && styles.secondaryButtonCompact,
-  ];
+  const inputStyle = styles.input;
+  const primaryButtonStyle = styles.primaryButton;
+  const secondaryButtonStyle = styles.secondaryButton;
   const panelTitleStyle = [
     styles.panelTitle,
     isShortDesktop && styles.panelTitleCompact,
   ];
-  const desktopPanelMaxHeight = isDesktopWeb
-    ? Math.max(420, height - (isShortDesktop ? 82 : 126))
-    : undefined;
-  const formPanelBodyStyle = isDesktopWeb
-    ? ([
-        styles.formPanelBody,
-        {
-          maxHeight: desktopPanelMaxHeight
-            ? desktopPanelMaxHeight - (isShortDesktop ? 28 : 44)
-            : undefined,
-          overflowY: "auto",
-        },
-      ] as any)
-    : styles.formPanelBody;
-
   const [interestForm, setInterestForm] = useState(emptyInterestForm);
   const [interestLoading, setInterestLoading] = useState(false);
   const [registered, setRegistered] = useState(false);
@@ -251,44 +229,25 @@ const AuthScreen: React.FC = () => {
     }
   };
 
-  const viewportStyle =
-    Platform.OS === "web"
-      ? ({ height: "100vh", maxHeight: "100vh", overflow: "hidden" } as any)
-      : null;
-
-  const scrollStyle =
-    Platform.OS === "web"
-      ? ([
-          styles.scroll,
-          {
-            height: "100%",
-            maxHeight: "100%",
-            overflowY: isNarrow ? "auto" : "hidden",
-          },
-        ] as any)
-      : styles.scroll;
-
   return (
     <KeyboardAvoidingView
-      style={[styles.keyboard, viewportStyle]}
+      style={styles.keyboard}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <ScrollView
-        style={scrollStyle}
+        style={styles.scroll}
         contentContainerStyle={[
           styles.page,
           {
             minHeight: height,
-            height: isDesktopWeb ? height : undefined,
-            maxHeight: isDesktopWeb ? height : undefined,
-            paddingTop: isNarrow ? 24 : isShortDesktop ? 12 : 18,
-            paddingBottom: isNarrow ? 48 : isShortDesktop ? 12 : 18,
-            overflow: isDesktopWeb ? "hidden" : "visible",
+            paddingHorizontal: horizontalGutter,
+            paddingTop: isNarrow ? 20 : 24,
+            paddingBottom: isNarrow ? 40 : 28,
           },
         ]}
         keyboardShouldPersistTaps="handled"
-        scrollEnabled={Platform.OS !== "web" || isNarrow}
-        showsVerticalScrollIndicator={Platform.OS !== "web" || isNarrow}
+        scrollEnabled
+        showsVerticalScrollIndicator
         nestedScrollEnabled
       >
         <View
@@ -332,7 +291,6 @@ const AuthScreen: React.FC = () => {
             contentShell,
             {
               flexDirection: isNarrow ? "column" : "row",
-              flex: isDesktopWeb ? 1 : undefined,
               minHeight: 0,
             },
           ]}
@@ -382,27 +340,12 @@ const AuthScreen: React.FC = () => {
           <View
             style={[
               styles.formPanel,
+              isNarrow && styles.formPanelMobile,
               !isNarrow && styles.formPanelDesktop,
               isShortDesktop && styles.formPanelCompact,
-              isDesktopWeb &&
-                ({
-                  maxHeight: desktopPanelMaxHeight,
-                  minHeight: 0,
-                  overflow: "hidden",
-                } as any),
             ]}
           >
-            <ScrollView
-              style={formPanelBodyStyle}
-              contentContainerStyle={[
-                styles.formPanelBodyContent,
-                isShortDesktop && styles.formPanelBodyContentCompact,
-              ]}
-              keyboardShouldPersistTaps="handled"
-              nestedScrollEnabled
-              scrollEnabled={isDesktopWeb}
-              showsVerticalScrollIndicator={false}
-            >
+            <View style={styles.formPanelBody}>
               {showLogin ? (
                 <>
                   <Text
@@ -419,12 +362,7 @@ const AuthScreen: React.FC = () => {
                       : "Create your Worka account."}
                   </Text>
 
-                  <View
-                    style={[
-                      styles.authSwitch,
-                      isShortDesktop && styles.authSwitchCompact,
-                    ]}
-                  >
+                  <View style={styles.authSwitch}>
                     <Pressable
                       style={[
                         styles.authSwitchOption,
@@ -537,7 +475,12 @@ const AuthScreen: React.FC = () => {
                     </>
                   ) : (
                     <>
-                      <View style={styles.accountTypeGrid}>
+                      <View
+                        style={[
+                          styles.accountTypeGrid,
+                          isVeryNarrow && styles.accountTypeGridStacked,
+                        ]}
+                      >
                         {accountTypes.map((type) => {
                           const selected = accountType === type.value;
                           return (
@@ -545,7 +488,7 @@ const AuthScreen: React.FC = () => {
                               key={type.value}
                               style={[
                                 styles.accountTypeCard,
-                                isShortDesktop && styles.accountTypeCardCompact,
+                                isVeryNarrow && styles.accountTypeCardStacked,
                                 selected && styles.accountTypeCardActive,
                               ]}
                               onPress={() => setAccountType(type.value)}
@@ -766,7 +709,6 @@ const AuthScreen: React.FC = () => {
                           key={option}
                           style={[
                             styles.roleChip,
-                            isShortDesktop && styles.roleChipCompact,
                             selected && styles.roleChipActive,
                           ]}
                           onPress={() => updateInterestField("role", option)}
@@ -785,11 +727,7 @@ const AuthScreen: React.FC = () => {
                   </View>
 
                   <TextInput
-                    style={[
-                      inputStyle,
-                      styles.textArea,
-                      isShortDesktop && styles.textAreaCompact,
-                    ]}
+                    style={[inputStyle, styles.textArea]}
                     placeholder="What work or language gap should Worka solve first?"
                     placeholderTextColor="#6b6b6b"
                     value={interestForm.message}
@@ -838,7 +776,7 @@ const AuthScreen: React.FC = () => {
                   </TouchableOpacity>
                 </>
               )}
-            </ScrollView>
+            </View>
           </View>
 
           {isNarrow && (
@@ -849,7 +787,10 @@ const AuthScreen: React.FC = () => {
               ]}
             >
               {launchSignals.map((signal) => (
-                <View key={signal.value} style={styles.signal}>
+                <View
+                  key={signal.value}
+                  style={[styles.signal, styles.signalMobile]}
+                >
                   <Text style={styles.signalValue}>{signal.value}</Text>
                   <Text style={styles.signalLabel}>{signal.label}</Text>
                 </View>
@@ -889,8 +830,6 @@ const styles = StyleSheet.create({
   page: {
     flexGrow: 1,
     backgroundColor: "#fff",
-    paddingHorizontal: 0,
-    paddingVertical: 24,
   },
   nav: {
     maxWidth: 1180,
@@ -927,6 +866,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   heroGrid: {
+    width: "100%",
     maxWidth: 1180,
     alignSelf: "center",
     alignItems: "stretch",
@@ -982,6 +922,10 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: "#fff",
   },
+  signalMobile: {
+    width: "100%",
+    flex: 0,
+  },
   signalValue: {
     color: "#000",
     fontSize: 16,
@@ -994,6 +938,7 @@ const styles = StyleSheet.create({
   },
   formPanel: {
     flex: 0.86,
+    flexShrink: 1,
     borderWidth: 1,
     borderColor: "#000",
     borderRadius: 8,
@@ -1005,14 +950,20 @@ const styles = StyleSheet.create({
     shadowRadius: 0,
     minHeight: 0,
   },
+  formPanelMobile: {
+    width: "100%",
+    flex: 0,
+  },
   formPanelDesktop: {
-    minWidth: 380,
+    minWidth: 360,
+    maxWidth: 470,
   },
   formPanelCompact: {
-    padding: 14,
+    padding: 18,
     shadowOffset: { width: 8, height: 8 },
   },
   formPanelBody: {
+    width: "100%",
     minHeight: 0,
   },
   formPanelBodyContent: {
@@ -1054,16 +1005,18 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   input: {
-    minHeight: 50,
+    width: "100%",
+    minHeight: 52,
     borderWidth: 1,
     borderColor: "#111",
     borderRadius: 8,
     paddingHorizontal: 14,
-    paddingVertical: 12,
+    paddingVertical: 13,
     marginBottom: 12,
     color: "#000",
     backgroundColor: "#fff",
     fontSize: 16,
+    lineHeight: 22,
   },
   inputCompact: {
     minHeight: 34,
@@ -1071,7 +1024,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   textArea: {
-    minHeight: 102,
+    minHeight: 116,
     textAlignVertical: "top",
   },
   textAreaCompact: {
@@ -1084,6 +1037,8 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   roleChip: {
+    maxWidth: "100%",
+    flexShrink: 1,
     borderWidth: 1,
     borderColor: "#111",
     borderRadius: 999,
@@ -1099,6 +1054,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#000",
   },
   roleChipText: {
+    flexShrink: 1,
     color: "#111",
     fontWeight: "800",
     fontSize: 13,
@@ -1107,6 +1063,7 @@ const styles = StyleSheet.create({
     color: "#fff",
   },
   primaryButton: {
+    width: "100%",
     minHeight: 52,
     backgroundColor: "#000",
     borderRadius: 8,
@@ -1114,6 +1071,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     flexDirection: "row",
     gap: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
   },
   buttonCompact: {
     minHeight: 38,
@@ -1129,6 +1088,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   secondaryButton: {
+    width: "100%",
     minHeight: 50,
     borderWidth: 1,
     borderColor: "#111",
@@ -1138,6 +1098,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 8,
     paddingHorizontal: 14,
+    paddingVertical: 12,
     marginTop: 12,
   },
   secondaryButtonCompact: {
@@ -1213,19 +1174,30 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   accountTypeGrid: {
+    width: "100%",
     flexDirection: "row",
+    alignItems: "stretch",
     gap: 10,
     marginBottom: 12,
   },
+  accountTypeGridStacked: {
+    flexDirection: "column",
+  },
   accountTypeCard: {
     flex: 1,
-    minHeight: 116,
+    minWidth: 0,
+    minHeight: 132,
     borderWidth: 1,
     borderColor: "#111",
     borderRadius: 8,
     padding: 12,
     backgroundColor: "#fff",
     justifyContent: "center",
+    overflow: "visible",
+  },
+  accountTypeCardStacked: {
+    width: "100%",
+    flex: 0,
   },
   accountTypeCardCompact: {
     minHeight: 76,
@@ -1235,6 +1207,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#000",
   },
   accountTypeTitle: {
+    flexShrink: 1,
     color: "#111",
     fontSize: 15,
     fontWeight: "900",
@@ -1244,6 +1217,7 @@ const styles = StyleSheet.create({
     color: "#fff",
   },
   accountTypeText: {
+    flexShrink: 1,
     color: "#333",
     lineHeight: 18,
     marginTop: 5,
