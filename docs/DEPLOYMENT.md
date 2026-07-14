@@ -28,6 +28,24 @@ Set both of these to the same strong database password:
 
 Set `JwtSecret` to the generated `openssl rand -hex 32` value.
 
+## HTTPS
+
+For automatic HTTPS, point your domain's DNS `A` record at the VPS IPv4 address, then set:
+
+```bash
+SITE_ADDRESS=your-domain.example
+```
+
+For both apex and `www`, use:
+
+```bash
+SITE_ADDRESS=your-domain.example, www.your-domain.example
+```
+
+Make sure ports `80` and `443` are open in the VPS firewall and any OVH network firewall. Caddy will request and renew Let's Encrypt certificates automatically. Certificate data is stored in the `caddy_data` Docker volume, so it survives rebuilds.
+
+Keep `SITE_ADDRESS=:80` only while testing on a raw IP address without DNS.
+
 Set the Stripe values before taking real payments:
 
 - `Stripe__SecretKey`
@@ -52,7 +70,7 @@ docker compose --env-file .env.production ps
 docker compose --env-file .env.production logs -f web api postgres
 ```
 
-The web app is exposed on port `80`, so `http://your-server-ip/` should load the landing page. The API is private inside Docker and is proxied through the web container at `/api`, so check it with:
+The web app is exposed on ports `80` and `443`. With `SITE_ADDRESS=:80`, `http://your-server-ip/` should load the landing page. With a real domain, `https://your-domain.example/` should load it and HTTP should redirect to HTTPS. The API is private inside Docker and is proxied through the web container at `/api`, so check it with:
 
 ```bash
 curl http://localhost/api/health
