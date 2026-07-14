@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ImageBackground, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { formatDate, formatMoney } from '../../api/workaApi';
+import { requestCurrentLocation } from '../../Utils/locationUtils';
+import MapPreview from '../MapPreview';
 
 const WORKA_SERVICE_FEE_RATE = 0.10;
 const WORKA_SERVICE_FEE_MINIMUM = 2;

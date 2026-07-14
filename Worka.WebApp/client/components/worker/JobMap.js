@@ -29,7 +29,7 @@ const getMapUrl = (job) => {
     // Interactive Mapbox GL embed — crisp vector tiles that match the brand
     // far better than the raster OSM fallback below.
     return (
-      `https://api.mapbox.com/styles/v1/mapbox/streets-v12.html` +
+      `https://api.mapbox.com/styles/v1/mapbox/light-v11.html` +
       `?title=false&zoomwheel=true&access_token=${encodeURIComponent(MAPBOX_TOKEN)}` +
       `#13.2/${latitude}/${longitude}`
     );
