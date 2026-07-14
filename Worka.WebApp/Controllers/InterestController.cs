@@ -4,6 +4,7 @@ using Worka.Services.Interest;
 namespace Worka.WebApp.Controllers
 {
     [ApiController]
+    [Route("api")]
     public class InterestController : ControllerBase
     {
         private readonly IInterestRegistrationService _interestRegistrationService;
@@ -14,8 +15,8 @@ namespace Worka.WebApp.Controllers
                 ?? throw new ArgumentNullException(nameof(interestRegistrationService));
         }
 
-        [HttpPost]
-        [Route("interest")]
+        [HttpPost("interest")]
+        [HttpPost("~/interest")]
         public async Task<IActionResult> RegisterInterest([FromBody] CreateInterestRegistrationDTO request)
         {
             var result = await _interestRegistrationService.RegisterAsync(request);

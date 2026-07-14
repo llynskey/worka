@@ -4,6 +4,7 @@ using Worka.Services.DTOs.Users;
 namespace Worka.WebApp.Controllers
 {
     [ApiController]
+    [Route("api")]
     public class UserController : ControllerBase
     {
         private readonly ILogger<UserController> _logger;
@@ -15,8 +16,8 @@ namespace Worka.WebApp.Controllers
             _usersService = usersService ?? throw new ArgumentNullException(nameof(usersService));
         }
 
-        [HttpPost]
-        [Route("login")]
+        [HttpPost("login")]
+        [HttpPost("~/login")]
         public async Task<IActionResult> Login([FromBody] UserLoginDTO loginRequest)
         {
             var result = await _usersService.AuthUserAsync(loginRequest);
@@ -29,8 +30,8 @@ namespace Worka.WebApp.Controllers
             return Ok(ToAuthResponse(result));
         }
 
-        [HttpPost]
-        [Route("signup")]
+        [HttpPost("signup")]
+        [HttpPost("~/signup")]
         public async Task<IActionResult> Signup([FromBody] UserRegisterDTO userModel)
         {
             var result = await _usersService.CreateUserAsync(userModel);

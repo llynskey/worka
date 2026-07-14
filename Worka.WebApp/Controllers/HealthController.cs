@@ -1,10 +1,11 @@
 namespace Worka.WebApp.Controllers
 {
     [ApiController]
+    [Route("api")]
     public class HealthController : ControllerBase
     {
-        [HttpGet]
-        [Route("health")]
+        [HttpGet("health")]
+        [HttpGet("~/health")]
         public IActionResult Get()
         {
             return Ok(new { status = "ok" });

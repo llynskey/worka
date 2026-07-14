@@ -76,6 +76,15 @@ export const api = axios.create({
   timeout: 15000,
 });
 
+api.interceptors.request.use((config) => {
+  const baseUrl = String(config.baseURL ?? '').replace(/\/+$/, '');
+  if (baseUrl.endsWith('/api') && typeof config.url === 'string' && config.url.startsWith('/api/')) {
+    config.url = config.url.slice('/api'.length);
+  }
+
+  return config;
+});
+
 api.interceptors.request.use(async (config) => {
   const token = await AsyncStorage.getItem(TOKEN_KEY);
   if (token) {

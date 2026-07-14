@@ -4,6 +4,7 @@ using Worka.Services.Jobs;
 namespace Worka.WebApp.Controllers
 {
     [ApiController]
+    [Route("api")]
     public class JobController : ControllerBase
     {
         private readonly ILogger<JobController> _logger;
@@ -20,40 +21,40 @@ namespace Worka.WebApp.Controllers
             public string QuoteId { get; set; } = string.Empty;
         }
 
-        [HttpPost]
-        [Route("createJob")]
+        [HttpPost("createJob")]
+        [HttpPost("~/createJob")]
         public async Task<IActionResult> Create([FromBody] CreateJobDTO jobRequest)
         {
             var result = await _jobService.CreateJobAsync(jobRequest);
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
-        [HttpPost]
-        [Route("Jobs/{jobId}/acceptQuote")]
+        [HttpPost("Jobs/{jobId}/acceptQuote")]
+        [HttpPost("~/Jobs/{jobId}/acceptQuote")]
         public async Task<IActionResult> AcceptQuote(string jobId, [FromBody] AcceptQuoteRequest request)
         {
             var result = await _jobService.AcceptQuoteAsync(jobId, request.QuoteId);
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
-        [HttpGet]
-        [Route("ProfessionalJobs")]
+        [HttpGet("ProfessionalJobs")]
+        [HttpGet("~/ProfessionalJobs")]
         public async Task<IActionResult> GetProfessionalJobs(string professionalId)
         {
             var result = await _jobService.GetJobsByProfessionalIdAsync(professionalId);
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
-        [HttpGet]
-        [Route("CustomerJobs")]
+        [HttpGet("CustomerJobs")]
+        [HttpGet("~/CustomerJobs")]
         public async Task<IActionResult> GetCustomerJobs(string customerId)
         {
             var result = await _jobService.GetJobsByCustomerIdAsync(customerId);
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
-        [HttpGet]
-        [Route("Jobs")]
+        [HttpGet("Jobs")]
+        [HttpGet("~/Jobs")]
         public async Task<IActionResult> GetAllJobs()
         {
             var result = await _jobService.GetAllJobsAsync();
