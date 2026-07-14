@@ -102,7 +102,7 @@ const apiBaseUrl =
   configuredApiUrl ||
   (Platform.OS === 'web'
     ? '/api'
-    : 'https://api.worka-uk.online');
+    : 'https://api.woka.site');
 
 export const api = axios.create({
   baseURL: apiBaseUrl,

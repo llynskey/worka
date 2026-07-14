@@ -43,7 +43,7 @@ namespace Worka.Services.Users
             _professionalsService = professionalsService;
             _emailService = emailService;
             _logger = logger;
-            _publicUrl = (configuration["Worka:PublicUrl"] ?? "https://worka-uk.online").TrimEnd('/');
+            _publicUrl = (configuration["Worka:PublicUrl"] ?? "https://woka.site").TrimEnd('/');
             JwtSecret = configuration.GetRequiredSection("JwtSecret").Value
                 ?? throw new ArgumentNullException("JwtSecret", "JWT Secret is not configured.");
         }
