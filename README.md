@@ -12,6 +12,10 @@ Customers post jobs, compare quotes, and pay to book through Stripe. Professiona
 - `Worka.WebApp/client` — Expo SDK 54 / React Native app (web + iOS + Android).
 - `docker-compose.yml` + `deploy/Caddyfile` — production stack: Caddy edge (auto-HTTPS), API, PostgreSQL 16.
 
+### Feature surface
+
+Customers: post, edit, delete, and complete jobs; browse and filter professionals by trade, area, and typical price; compare quotes; pay and book through Stripe Checkout. Professionals: browse jobs (list + map), send, edit, and withdraw quotes; Stripe Connect payouts. Both: change password, forgot/reset password by email, delete account in-app (App Store requirement), language selection (English, Spanish, Polish, Romanian — see Internationalisation below).
+
 ### Security model
 
 All job and quote endpoints require a valid JWT; the acting customer/professional is derived from the token, never from the request body. Booking happens exclusively through Stripe Checkout (`/api/payments/...`), confirmed by webhook. Passwords are PBKDF2-SHA256 (100k iterations). Secrets are supplied via environment variables only — nothing sensitive is committed.
@@ -63,6 +67,8 @@ Backend (environment variables in production, `appsettings.Development.json` loc
 | `Stripe__Currency`, `Stripe__DefaultCountry` | Default `gbp` / `GB`. |
 | `Worka__ServiceFeePercent`, `Worka__ServiceFeeMinimum` | Marketplace fee (default 10 / 2). |
 | `Cors__AllowedOrigins` | Comma-separated origins. Leave unset for same-origin deploys behind Caddy. |
+| `Smtp__Host`, `Smtp__Port`, `Smtp__Username`, `Smtp__Password`, `Smtp__From`, `Smtp__UseSsl` | SMTP for password-reset emails. Unset host disables sending (forgot-password still responds neutrally). |
+| `Worka__PublicUrl` | Public site URL used in reset-link emails (default `https://worka-uk.online`). |
 
 Client:
 
@@ -103,6 +109,10 @@ Both stores require a hosted privacy policy URL and app screenshots before revie
 
 - Service fee on every paid booking (Stripe application fee on destination charges).
 - Future: professional subscriptions, promoted placement, urgent-job convenience fees, payment protection.
+
+## Internationalisation
+
+The client has an i18n foundation in `Worka.WebApp/client/i18n/`: a `useI18n()` hook with `t('key')` lookups, device-locale detection, a persisted language choice, and dictionaries for English, Spanish, Polish, and Romanian. The landing page (including an animated headline that cycles through all supported languages) and the settings language picker are translated; missing keys fall back to English, so screens can be migrated key-by-key. Rollout plan: move remaining workspace strings into the dictionaries, add server-side error message localisation (send `Accept-Language`, map response codes), and only add RTL languages (Arabic, Hebrew) together with `I18nManager` layout testing.
 
 ## Known limitations / next steps
 

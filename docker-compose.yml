@@ -41,6 +41,7 @@ services:
       Smtp__Username: ${Smtp__Username:-}
       Smtp__Password: ${Smtp__Password:-}
       Smtp__From: ${Smtp__From:-no-reply@worka-uk.online}
+      Smtp__UseSsl: ${Smtp__UseSsl:-true}
     depends_on:
       postgres:
         condition: service_healthy
