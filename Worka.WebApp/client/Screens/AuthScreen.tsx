@@ -929,7 +929,7 @@ const AuthScreen: React.FC = () => {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "#f6f6f3",
+    backgroundColor: "#fff",
   },
   scroll: {
     flex: 1,
@@ -937,7 +937,7 @@ const styles = StyleSheet.create({
   },
   page: {
     flexGrow: 1,
-    backgroundColor: "#f6f6f3",
+    backgroundColor: "#fff",
   },
   shell: {
     width: "100%",
