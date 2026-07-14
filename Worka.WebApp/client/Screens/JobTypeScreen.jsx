@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   ImageBackground,
   KeyboardAvoidingView,
   Platform,
@@ -12,6 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import notify from '../Utils/notify';
 import * as ImagePicker from 'expo-image-picker';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { api, getErrorMessage, unwrap } from '../api/workaApi';
@@ -77,7 +77,7 @@ const JobTypeScreen = ({ navigation }) => {
         if (mounted) setAccount(unwrap(response.data));
       })
       .catch((error) => {
-        Alert.alert('Account needed', getErrorMessage(error, 'Unable to load your customer account.'));
+        notify('Account needed', getErrorMessage(error, 'Unable to load your customer account.'));
       })
       .finally(() => {
         if (mounted) setLoadingAccount(false);
@@ -180,12 +180,12 @@ const JobTypeScreen = ({ navigation }) => {
     try {
       const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permission.granted) {
-        Alert.alert('Photo access needed', 'Allow photo library access to attach a job image.');
+        notify('Photo access needed', 'Allow photo library access to attach a job image.');
         return;
       }
 
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ['images'],
         allowsEditing: true,
         aspect: [4, 3],
         quality: 0.86,
@@ -195,12 +195,12 @@ const JobTypeScreen = ({ navigation }) => {
 
       const asset = result.assets?.[0];
       if (!asset?.uri) {
-        Alert.alert('No photo selected', 'Choose an image and try again.');
+        notify('No photo selected', 'Choose an image and try again.');
         return;
       }
 
       if (asset.fileSize && asset.fileSize > 8 * 1024 * 1024) {
-        Alert.alert('Image too large', 'Use an image that is 8MB or smaller.');
+        notify('Image too large', 'Use an image that is 8MB or smaller.');
         return;
       }
 
@@ -211,13 +211,13 @@ const JobTypeScreen = ({ navigation }) => {
       const response = await api.post('/uploads/job-photo', upload);
       const uploaded = unwrap(response.data);
       if (!uploaded?.url) {
-        Alert.alert('Upload failed', 'No image URL was returned.');
+        notify('Upload failed', 'No image URL was returned.');
         return;
       }
 
       setForm((current) => ({ ...current, photoUrl: uploaded.url }));
     } catch (error) {
-      Alert.alert('Could not upload photo', getErrorMessage(error, 'Try another image or paste a URL.'));
+      notify('Could not upload photo', getErrorMessage(error, 'Try another image or paste a URL.'));
     } finally {
       setUploadingPhoto(false);
     }
@@ -225,27 +225,27 @@ const JobTypeScreen = ({ navigation }) => {
 
   const submitJob = async () => {
     if (!account?.customerId) {
-      Alert.alert('Account needed', 'Your customer account is still loading.');
+      notify('Account needed', 'Your customer account is still loading.');
       return;
     }
 
     if (!form.jobName.trim()) {
-      Alert.alert('Add a title', 'Give professionals a short title for the job.');
+      notify('Add a title', 'Give professionals a short title for the job.');
       return;
     }
 
     if (!form.jobDescription.trim()) {
-      Alert.alert('Add details', 'Describe the work so professionals can quote accurately.');
+      notify('Add details', 'Describe the work so professionals can quote accurately.');
       return;
     }
 
     if (!form.address.trim()) {
-      Alert.alert('Add an address', 'Add the job location or service area.');
+      notify('Add an address', 'Add the job location or service area.');
       return;
     }
 
     if (!hasVerifiedLocation) {
-      Alert.alert('Choose a verified location', 'Search the address and choose one of the location results.');
+      notify('Choose a verified location', 'Search the address and choose one of the location results.');
       return;
     }
 
@@ -271,10 +271,10 @@ const JobTypeScreen = ({ navigation }) => {
         latitude: null,
         longitude: null,
       });
-      Alert.alert('Job posted', 'Professionals can now send quotes.');
+      notify('Job posted', 'Professionals can now send quotes.');
       navigation?.navigate('Job List');
     } catch (error) {
-      Alert.alert('Could not post job', getErrorMessage(error, 'Try again in a moment.'));
+      notify('Could not post job', getErrorMessage(error, 'Try again in a moment.'));
     } finally {
       setSubmitting(false);
     }
@@ -285,7 +285,7 @@ const JobTypeScreen = ({ navigation }) => {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <ImageBackground source={{ uri: selectedType.image }} style={styles.hero} imageStyle={styles.heroImage}>
           <View style={styles.heroOverlay}>
             <Text style={styles.eyebrow}>New job</Text>
@@ -335,7 +335,7 @@ const JobTypeScreen = ({ navigation }) => {
                 <Text style={styles.photoText}>Show the room, repair, appliance, item, or access issue.</Text>
               </View>
               {form.photoUrl ? (
-                <TouchableOpacity style={styles.clearPhotoButton} onPress={() => updateField('photoUrl', '')}>
+                <TouchableOpacity style={styles.clearPhotoButton} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} onPress={() => updateField('photoUrl', '')}>
                   <MaterialCommunityIcons name="close" size={18} color="#111" />
                 </TouchableOpacity>
               ) : null}
@@ -459,7 +459,12 @@ const JobTypeScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    minHeight: 0,
     backgroundColor: '#f7f5ef',
+  },
+  scroll: {
+    flex: 1,
+    minHeight: 0,
   },
   content: {
     padding: 16,

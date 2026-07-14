@@ -89,7 +89,7 @@ const BidList = () => {
   return (
     <FlatList
       data={quotes}
-      keyExtractor={(item) => item.quoteId}
+      keyExtractor={(item) => String(item.quoteId)}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} />}
       contentContainerStyle={styles.listContent}
       ListHeaderComponent={

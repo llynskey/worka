@@ -51,7 +51,7 @@ const WorkerSettingsScreen = ({ navigation }) => {
 
       <View style={styles.card}>
         <Text style={styles.settingTitle}>Support</Text>
-        <Text style={styles.settingText}>pros@worka.local</Text>
+        <Text style={styles.settingText}>pros@worka-uk.online</Text>
         <Text style={styles.settingText}>For urgent bid issues, include the job title and quote amount.</Text>
       </View>
     </ScrollView>

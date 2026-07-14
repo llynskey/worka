@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
   topBar: {
     backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#dedad0',
+    borderBottomColor: '#e3dfd2',
     paddingTop: 12,
     paddingBottom: 10,
     paddingHorizontal: 16,
@@ -114,11 +114,12 @@ const styles = StyleSheet.create({
     paddingRight: 16,
   },
   topTab: {
+    minHeight: 44,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     borderWidth: 1,
-    borderColor: '#dedad0',
+    borderColor: '#e3dfd2',
     borderRadius: 999,
     paddingVertical: 8,
     paddingHorizontal: 14,
@@ -139,7 +140,7 @@ const styles = StyleSheet.create({
   sidebar: {
     width: 280,
     borderRightWidth: 1,
-    borderRightColor: '#dedad0',
+    borderRightColor: '#e3dfd2',
     backgroundColor: '#fff',
     padding: 22,
   },
@@ -162,7 +163,7 @@ const styles = StyleSheet.create({
   navItem: {
     minHeight: 74,
     borderWidth: 1,
-    borderColor: '#dedad0',
+    borderColor: '#e3dfd2',
     borderRadius: 8,
     padding: 12,
     flexDirection: 'row',

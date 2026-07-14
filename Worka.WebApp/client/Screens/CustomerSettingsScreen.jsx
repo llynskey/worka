@@ -42,7 +42,7 @@ const CustomerSettingsScreen = ({ navigation }) => {
 
       <View style={styles.card}>
         <Text style={styles.settingTitle}>Support</Text>
-        <Text style={styles.settingText}>support@worka.local</Text>
+        <Text style={styles.settingText}>support@worka-uk.online</Text>
         <Text style={styles.settingText}>Typical response time: one business day.</Text>
       </View>
     </ScrollView>

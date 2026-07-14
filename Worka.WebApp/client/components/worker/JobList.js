@@ -1,7 +1,6 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   ImageBackground,
   KeyboardAvoidingView,
@@ -14,6 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import notify from '../../Utils/notify';
 import { useFocusEffect } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { api, formatDate, formatMoney, getErrorMessage, unwrap } from '../../api/workaApi';
@@ -118,11 +118,11 @@ const WorkerJobList = () => {
     const amount = Number(quoteForm.price);
     if (!selectedJob || !account?.professionalId) return;
     if (!Number.isFinite(amount) || amount <= 0) {
-      Alert.alert('Add a price', 'Enter a valid quote amount.');
+      notify('Add a price', 'Enter a valid quote amount.');
       return;
     }
     if (!quoteForm.description.trim()) {
-      Alert.alert('Add a note', 'Tell the customer what is included.');
+      notify('Add a note', 'Tell the customer what is included.');
       return;
     }
 
@@ -135,9 +135,9 @@ const WorkerJobList = () => {
       });
       setSelectedJob(null);
       await refresh();
-      Alert.alert('Quote sent', 'The customer can now review your quote.');
+      notify('Quote sent', 'The customer can now review your quote.');
     } catch (err) {
-      Alert.alert('Could not send quote', getErrorMessage(err, 'Try again in a moment.'));
+      notify('Could not send quote', getErrorMessage(err, 'Try again in a moment.'));
     } finally {
       setSubmitting(false);
     }
@@ -169,7 +169,7 @@ const WorkerJobList = () => {
     <>
       <FlatList
         data={openJobs}
-        keyExtractor={(item) => item.jobId}
+        keyExtractor={(item) => String(item.jobId)}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} />}
         contentContainerStyle={styles.listContent}
         ListHeaderComponent={

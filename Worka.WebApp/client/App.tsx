@@ -13,8 +13,6 @@ import CustomerAccountScreen from './Screens/CustomerAccountScreen';
 import WorkerSettingsScreen from './Screens/WorkerSettingsScreen';
 import WorkerAccountScreen from './Screens/WorkerAccountScreen';
 import JobTypeScreen from './Screens/JobTypeScreen';
-import JobDetailsScreen from './Screens/JobDetailsScreen';
-import JobAddressScreen from './Screens/JobAddressScreen';
 import LoadingScreen from './Screens/LoadingScreen';
 
 import SharedDrawerContent from './components/SharedDrawerContent';
@@ -30,8 +28,6 @@ export type CustomerDrawerParamList = {
   Account: undefined;
   Settings: undefined;
   JobType: undefined;
-  JobDetails: undefined;
-  JobAddress: undefined;
 };
 
 export type WorkerDrawerParamList = {
@@ -53,7 +49,7 @@ const WorkerDrawerScreen = WorkerDrawerNav.Screen as unknown as React.ComponentT
 
 const NeutralScreen: React.FC = () => (
   <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-    <Text>Account type not set. Please contact Worka support.</Text>
+    <Text>Account type not set. Sign out and back in, or email support@worka-uk.online.</Text>
   </View>
 );
 
@@ -85,8 +81,6 @@ const CustomerDrawer: React.FC<{ onLogout: () => void }> = ({ onLogout }) => (
     <CustomerDrawerScreen name="Account" component={CustomerAccountScreen} />
     <CustomerDrawerScreen name="Settings" component={CustomerSettingsScreen} />
     <CustomerDrawerScreen name="JobType" component={JobTypeScreen} options={hiddenDrawerRoute} />
-    <CustomerDrawerScreen name="JobDetails" component={JobDetailsScreen} options={hiddenDrawerRoute} />
-    <CustomerDrawerScreen name="JobAddress" component={JobAddressScreen} options={hiddenDrawerRoute} />
   </CustomerDrawerNavigator>
 );
 

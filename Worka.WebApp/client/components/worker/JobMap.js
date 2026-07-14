@@ -232,7 +232,7 @@ const JobMap = () => {
                     <Text style={[styles.jobCategory, active && styles.jobCategoryActive]}>
                       {job.category || 'Home services'}
                     </Text>
-                    <TouchableOpacity style={styles.openMapButton} onPress={() => openExternalMap(job, currentLocation)}>
+                    <TouchableOpacity style={styles.openMapButton} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} onPress={() => openExternalMap(job, currentLocation)}>
                       <MaterialCommunityIcons name="open-in-new" size={15} color={active ? '#fff' : '#111'} />
                       <Text style={[styles.openMapText, active && styles.openMapTextActive]}>
                         {currentLocation ? 'Directions' : 'Open'}

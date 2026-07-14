@@ -288,13 +288,21 @@ const AuthScreen: React.FC = () => {
   const webPageStyle =
     Platform.OS === "web" ? ({ minHeight: "100vh" } as any) : null;
 
+  // The app root is pinned to the viewport with overflow hidden, so on web the
+  // ScrollView must own an explicit viewport-bounded height or it silently
+  // clips instead of scrolling.
+  const webScrollStyle =
+    Platform.OS === "web"
+      ? ({ height: "100vh", maxHeight: "100vh" } as any)
+      : null;
+
   return (
     <KeyboardAvoidingView
       style={styles.screen}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <ScrollView
-        style={styles.scroll}
+        style={[styles.scroll, webScrollStyle]}
         contentContainerStyle={[
           styles.page,
           webPageStyle,

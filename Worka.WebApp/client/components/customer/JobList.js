@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   Linking,
   Platform,
@@ -11,6 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import notify from '../../Utils/notify';
 import { useFocusEffect } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { api, formatMoney, unwrap, getErrorMessage } from '../../api/workaApi';
@@ -127,7 +127,7 @@ const CustomerJobList = ({ navigation }) => {
         });
         const checkout = unwrap(response.data);
         if (!checkout?.checkoutUrl) {
-          Alert.alert('Could not start payment', 'No checkout link was returned.');
+          notify('Could not start payment', 'No checkout link was returned.');
           return;
         }
 
@@ -138,7 +138,7 @@ const CustomerJobList = ({ navigation }) => {
 
         await Linking.openURL(checkout.checkoutUrl);
       } catch (err) {
-        Alert.alert('Could not start payment', getErrorMessage(err, 'Try again in a moment.'));
+        notify('Could not start payment', getErrorMessage(err, 'Try again in a moment.'));
       }
     },
     []
@@ -169,7 +169,7 @@ const CustomerJobList = ({ navigation }) => {
   return (
     <FlatList
       data={jobs}
-      keyExtractor={(item) => item.jobId}
+      keyExtractor={(item) => String(item.jobId)}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} />}
       contentContainerStyle={styles.listContent}
       ListHeaderComponent={
@@ -185,7 +185,7 @@ const CustomerJobList = ({ navigation }) => {
                 <Text style={styles.checkoutBannerTitle}>{checkoutMessage.title}</Text>
                 <Text style={styles.checkoutBannerText}>{checkoutMessage.text}</Text>
               </View>
-              <TouchableOpacity style={styles.bannerClose} onPress={() => setCheckoutMessage(null)}>
+              <TouchableOpacity style={styles.bannerClose} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} onPress={() => setCheckoutMessage(null)}>
                 <MaterialCommunityIcons name="close" size={18} color="#111" />
               </TouchableOpacity>
             </View>

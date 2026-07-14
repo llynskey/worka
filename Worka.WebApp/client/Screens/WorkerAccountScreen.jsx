@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Linking,
   Platform,
   ScrollView,
@@ -11,6 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import notify from '../Utils/notify';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { api, getErrorMessage, unwrap } from '../api/workaApi';
 
@@ -50,7 +50,7 @@ const WorkerAccountScreen = () => {
         readyForPayments: !!account.stripeChargesEnabled && !!account.stripePayoutsEnabled,
       });
     } catch (error) {
-      Alert.alert('Could not load account', getErrorMessage(error));
+      notify('Could not load account', getErrorMessage(error));
     } finally {
       setLoading(false);
     }
@@ -111,7 +111,7 @@ const WorkerAccountScreen = () => {
 
   const save = async () => {
     if (!form.firstName.trim() || !form.lastName.trim() || !form.email.trim()) {
-      Alert.alert('Missing details', 'Name and email are required.');
+      notify('Missing details', 'Name and email are required.');
       return;
     }
 
@@ -127,9 +127,9 @@ const WorkerAccountScreen = () => {
         serviceArea: account.serviceArea ?? '',
         bio: account.bio ?? '',
       });
-      Alert.alert('Account saved', 'Your professional profile is up to date.');
+      notify('Account saved', 'Your professional profile is up to date.');
     } catch (error) {
-      Alert.alert('Could not save account', getErrorMessage(error));
+      notify('Could not save account', getErrorMessage(error));
     } finally {
       setSaving(false);
     }
@@ -200,6 +200,8 @@ const WorkerAccountScreen = () => {
           value={form.firstName}
           onChangeText={(firstName) => setForm((current) => ({ ...current, firstName }))}
           placeholder="First name"
+          autoCapitalize="words"
+          autoCorrect={false}
           placeholderTextColor="#686b64"
         />
         <TextInput
@@ -207,6 +209,8 @@ const WorkerAccountScreen = () => {
           value={form.lastName}
           onChangeText={(lastName) => setForm((current) => ({ ...current, lastName }))}
           placeholder="Last name"
+          autoCapitalize="words"
+          autoCorrect={false}
           placeholderTextColor="#686b64"
         />
         <TextInput

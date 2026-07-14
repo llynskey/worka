@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   ScrollView,
   StyleSheet,
   Text,
@@ -9,6 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import notify from '../Utils/notify';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { api, getErrorMessage, unwrap } from '../api/workaApi';
 
@@ -28,7 +28,7 @@ const CustomerAccountScreen = () => {
         email: account.email ?? '',
       });
     } catch (error) {
-      Alert.alert('Could not load account', getErrorMessage(error));
+      notify('Could not load account', getErrorMessage(error));
     } finally {
       setLoading(false);
     }
@@ -40,7 +40,7 @@ const CustomerAccountScreen = () => {
 
   const save = async () => {
     if (!form.firstName.trim() || !form.lastName.trim() || !form.email.trim()) {
-      Alert.alert('Missing details', 'Name and email are required.');
+      notify('Missing details', 'Name and email are required.');
       return;
     }
 
@@ -53,9 +53,9 @@ const CustomerAccountScreen = () => {
         lastName: account.lastName ?? '',
         email: account.email ?? '',
       });
-      Alert.alert('Account saved', 'Your customer profile is up to date.');
+      notify('Account saved', 'Your customer profile is up to date.');
     } catch (error) {
-      Alert.alert('Could not save account', getErrorMessage(error));
+      notify('Could not save account', getErrorMessage(error));
     } finally {
       setSaving(false);
     }
@@ -86,6 +86,8 @@ const CustomerAccountScreen = () => {
           value={form.firstName}
           onChangeText={(firstName) => setForm((current) => ({ ...current, firstName }))}
           placeholder="First name"
+          autoCapitalize="words"
+          autoCorrect={false}
           placeholderTextColor="#686b64"
         />
         <TextInput
@@ -93,6 +95,8 @@ const CustomerAccountScreen = () => {
           value={form.lastName}
           onChangeText={(lastName) => setForm((current) => ({ ...current, lastName }))}
           placeholder="Last name"
+          autoCapitalize="words"
+          autoCorrect={false}
           placeholderTextColor="#686b64"
         />
         <TextInput

@@ -32,7 +32,9 @@ export const formatDistance = (distanceKm) => {
 export const requestCurrentLocation = () =>
   new Promise((resolve, reject) => {
     if (typeof navigator === 'undefined' || !navigator.geolocation) {
-      reject(new Error('Current location is not available in this browser.'));
+      // navigator.geolocation exists in browsers only; native builds don't
+      // ship a location module yet, so fail with an honest message.
+      reject(new Error('Location is not available on this device yet. Jobs are shown newest first instead.'));
       return;
     }
 

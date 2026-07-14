@@ -320,7 +320,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   detailsButton: {
-    minHeight: 38,
+    minHeight: 44,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#111',
@@ -407,6 +407,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   acceptButton: {
+    minHeight: 44,
     backgroundColor: '#111',
     borderRadius: 8,
     paddingHorizontal: 12,

@@ -1,7 +1,6 @@
 import React, { useCallback, useContext, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   SafeAreaView,
@@ -104,7 +103,11 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
         style={{ flex: 1 }}
         behavior={Platform.select({ ios: 'padding', android: undefined })}
       >
-        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.screenScroll}>
+        <ScrollView
+          style={Platform.OS === 'web' ? ({ height: '100vh', maxHeight: '100vh' } as any) : undefined}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={styles.screenScroll}
+        >
           <View style={styles.headerRow}>
             <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconButton}>
               <MaterialCommunityIcons name="arrow-left" size={24} color="#111" />
