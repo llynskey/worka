@@ -16,7 +16,7 @@
         "resourceClass": "m-medium"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://api.woka.site"
+        "EXPO_PUBLIC_API_URL": "https://api.worka.site"
       }
     },
     "production": {
@@ -25,7 +25,7 @@
         "resourceClass": "m-medium"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://api.woka.site"
+        "EXPO_PUBLIC_API_URL": "https://api.worka.site"
       }
     }
   },

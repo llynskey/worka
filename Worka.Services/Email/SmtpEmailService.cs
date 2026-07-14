@@ -7,7 +7,7 @@ namespace Worka.Services.Email
     /// <summary>
     /// Generic SMTP email sender. Configure via:
     /// Smtp:Host, Smtp:Port (default 587), Smtp:Username, Smtp:Password,
-    /// Smtp:From (default no-reply@woka.site), Smtp:UseSsl (default true).
+    /// Smtp:From (default no-reply@worka.site), Smtp:UseSsl (default true).
     /// When Smtp:Host is not configured, IsConfigured is false and sends are skipped.
     /// </summary>
     public class SmtpEmailService : IEmailService
@@ -25,7 +25,7 @@ namespace Worka.Services.Email
             _port = int.TryParse(configuration["Smtp:Port"], out var port) ? port : 587;
             _username = configuration["Smtp:Username"] ?? string.Empty;
             _password = configuration["Smtp:Password"] ?? string.Empty;
-            _from = configuration["Smtp:From"] ?? "no-reply@woka.site";
+            _from = configuration["Smtp:From"] ?? "no-reply@worka.site";
             _useSsl = !string.Equals(configuration["Smtp:UseSsl"], "false", StringComparison.OrdinalIgnoreCase);
         }
 

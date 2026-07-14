@@ -1,4 +1,4 @@
-woka.site {
+worka.site {
 	encode zstd gzip
 
 	header {
@@ -18,11 +18,11 @@ woka.site {
 	}
 }
 
-www.woka.site {
-	redir https://woka.site{uri} permanent
+www.worka.site {
+	redir https://worka.site{uri} permanent
 }
 
-api.woka.site {
+api.worka.site {
 	encode zstd gzip
 
 	header {

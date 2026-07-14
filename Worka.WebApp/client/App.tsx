@@ -50,7 +50,7 @@ const WorkerDrawerScreen = WorkerDrawerNav.Screen as unknown as React.ComponentT
 
 const NeutralScreen: React.FC = () => (
   <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-    <Text>Account type not set. Sign out and back in, or email support@woka.site.</Text>
+    <Text>Account type not set. Sign out and back in, or email support@worka.site.</Text>
   </View>
 );
 
