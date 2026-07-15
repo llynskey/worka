@@ -273,7 +273,8 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
-    paddingBottom: 96,
+    paddingBottom: 28,
+    flexGrow: 1,
     width: '100%',
     maxWidth: 720,
     alignSelf: 'center',

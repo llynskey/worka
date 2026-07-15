@@ -488,7 +488,8 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: 16,
-    paddingBottom: 96,
+    paddingBottom: 28,
+    flexGrow: 1,
     backgroundColor: '#f7f5ef',
     width: '100%',
     maxWidth: 880,

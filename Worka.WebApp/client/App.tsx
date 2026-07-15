@@ -179,6 +179,8 @@ const AppInner: React.FC = () => {
       width: element.style.width,
       overflow: element.style.overflow,
       margin: element.style.margin,
+      position: element.style.position,
+      inset: element.style.inset,
     }));
 
     targets.forEach((element) => {
@@ -187,15 +189,23 @@ const AppInner: React.FC = () => {
       element.style.overflow = 'hidden';
       if (element === document.body) {
         element.style.margin = '0';
+        // iOS Safari ignores overflow:hidden for touch panning — a fixed,
+        // viewport-pinned body is the only reliable way to stop the page
+        // being dragged sideways. All scrolling happens inside the app's
+        // own ScrollViews, so pinning the body loses nothing.
+        element.style.position = 'fixed';
+        element.style.inset = '0';
       }
     });
 
     return () => {
-      previous.forEach(({ element, height, width, overflow, margin }) => {
+      previous.forEach(({ element, height, width, overflow, margin, position, inset }) => {
         element.style.height = height;
         element.style.width = width;
         element.style.overflow = overflow;
         element.style.margin = margin;
+        element.style.position = position;
+        element.style.inset = inset;
       });
     };
   }, []);

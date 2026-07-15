@@ -342,7 +342,8 @@ const styles = StyleSheet.create({
   },
   narrowContent: {
     padding: 16,
-    paddingBottom: 96,
+    paddingBottom: 28,
+    flexGrow: 1,
     width: '100%',
   },
   headerCopy: {

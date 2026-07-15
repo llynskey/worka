@@ -10,22 +10,30 @@ const AppFooter = () => {
   const { t } = useI18n();
 
   return (
-    <View style={styles.footer}>
-      <View style={styles.links}>
-        <TouchableOpacity onPress={() => Linking.openURL('https://worka.site/privacy.html')}>
-          <Text style={styles.link}>{t('landing.privacy')}</Text>
-        </TouchableOpacity>
-        <Text style={styles.dot}>·</Text>
-        <TouchableOpacity onPress={() => Linking.openURL('https://worka.site/terms.html')}>
-          <Text style={styles.link}>{t('landing.terms')}</Text>
-        </TouchableOpacity>
+    // marginTop 'auto' pushes the footer to the bottom of the viewport on
+    // short pages (the scroll container must have flexGrow: 1); on long
+    // pages it simply follows the content.
+    <View style={styles.wrap}>
+      <View style={styles.footer}>
+        <View style={styles.links}>
+          <TouchableOpacity onPress={() => Linking.openURL('https://worka.site/privacy.html')}>
+            <Text style={styles.link}>{t('landing.privacy')}</Text>
+          </TouchableOpacity>
+          <Text style={styles.dot}>·</Text>
+          <TouchableOpacity onPress={() => Linking.openURL('https://worka.site/terms.html')}>
+            <Text style={styles.link}>{t('landing.terms')}</Text>
+          </TouchableOpacity>
+        </View>
+        <Text style={styles.mark}>LSL</Text>
       </View>
-      <Text style={styles.mark}>LSL</Text>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  wrap: {
+    marginTop: 'auto',
+  },
   footer: {
     flexDirection: 'row',
     alignItems: 'center',

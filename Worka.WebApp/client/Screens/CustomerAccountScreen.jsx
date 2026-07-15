@@ -280,7 +280,7 @@ const CustomerAccountScreen = () => {
 const styles = StyleSheet.create({
   content: {
     padding: 16,
-    paddingBottom: 96,
+    paddingBottom: 28,
     backgroundColor: '#f7f5ef',
     flexGrow: 1,
     width: '100%',
