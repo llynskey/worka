@@ -20,7 +20,7 @@ import { api, getErrorMessage } from "../api/workaApi";
 import { useI18n } from "../i18n/I18nContext";
 import { translations } from "../i18n/translations";
 import LanguageCycler from "../components/LanguageCycler";
-import LanguageWheel from "../components/LanguageWheel";
+import LanguageMarquee from "../components/LanguageMarquee";
 import Reveal from "../components/Reveal";
 
 // Stable English `value` strings are sent to the API; the labels shown to
@@ -497,7 +497,7 @@ const AuthScreen: React.FC = () => {
 
               {!isStacked && renderBenefits()}
 
-              <LanguageWheel
+              <LanguageMarquee
                 languages={languages}
                 activeCode={language}
                 onSelect={setLanguage}
