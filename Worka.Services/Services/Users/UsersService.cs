@@ -219,14 +219,9 @@ namespace Worka.Services.Users
                 await _dbContext.SaveChangesAsync();
 
                 var resetLink = $"{_publicUrl}/?reset={token}";
-                await _emailService.SendAsync(
-                    user.Email,
-                    "Reset your Worka password",
-                    $"Hi {user.FirstName},\n\n" +
-                    $"Someone asked to reset the password for this Worka account. " +
-                    $"If that was you, open the link below within one hour:\n\n{resetLink}\n\n" +
-                    "If you didn't ask for this, you can ignore this email — your password is unchanged.\n\n" +
-                    "— Worka");
+                var (subject, body) = Email.EmailTemplates.PasswordReset(
+                    request.Language, user.FirstName, resetLink);
+                await _emailService.SendAsync(user.Email, subject, body);
 
                 return new WorkaResponse<bool>(true, message: neutralMessage);
             }

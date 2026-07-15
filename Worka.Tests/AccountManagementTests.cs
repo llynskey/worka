@@ -141,6 +141,38 @@ namespace Worka.Tests
         }
 
         [Fact]
+        public async Task ForgotPassword_email_is_localized_by_request_language()
+        {
+            using var db = TestHelpers.CreateDbContext();
+            var email = new FakeEmailService();
+            var service = CreateService(db, email);
+            await service.CreateUserAsync(Registration());
+
+            var de = await service.ForgotPasswordAsync(new ForgotPasswordDTO
+            {
+                Email = "user@example.com",
+                Language = "de"
+            });
+            Assert.True(de.Success);
+            var german = Assert.Single(email.Sent);
+            Assert.Equal("Setze dein Worka-Passwort zurück", german.Subject);
+            Assert.Contains("innerhalb einer Stunde", german.Body);
+            Assert.Contains("?reset=", german.Body);
+
+            email.Sent.Clear();
+
+            // No/unknown language falls back to English.
+            var en = await service.ForgotPasswordAsync(new ForgotPasswordDTO
+            {
+                Email = "user@example.com",
+                Language = ""
+            });
+            Assert.True(en.Success);
+            var english = Assert.Single(email.Sent);
+            Assert.Equal("Reset your Worka password", english.Subject);
+        }
+
+        [Fact]
         public async Task ForgotPassword_does_not_reveal_unknown_emails()
         {
             using var db = TestHelpers.CreateDbContext();

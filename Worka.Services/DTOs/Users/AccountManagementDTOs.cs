@@ -15,6 +15,9 @@ namespace Worka.Services.DTOs.Users
     public class ForgotPasswordDTO
     {
         public string Email { get; set; } = string.Empty;
+
+        /// <summary>Two-letter UI language of the requester, for the email copy.</summary>
+        public string Language { get; set; } = string.Empty;
     }
 
     public class ResetPasswordDTO

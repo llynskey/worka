@@ -6,12 +6,20 @@ const STORAGE_KEY = 'worka.language';
 
 const detectDeviceLanguage = () => {
   try {
-    const locale =
-      (typeof navigator !== 'undefined' && navigator.language) ||
-      Intl.DateTimeFormat().resolvedOptions().locale ||
-      'en';
-    const code = String(locale).slice(0, 2).toLowerCase();
-    return translations[code] ? code : 'en';
+    // Prefer the device's ordered language list, so a user whose primary
+    // language we don't have yet still lands on their next best supported one.
+    const candidates = [];
+    if (typeof navigator !== 'undefined') {
+      if (Array.isArray(navigator.languages)) candidates.push(...navigator.languages);
+      if (navigator.language) candidates.push(navigator.language);
+    }
+    candidates.push(Intl.DateTimeFormat().resolvedOptions().locale || 'en');
+
+    for (const locale of candidates) {
+      const code = String(locale).slice(0, 2).toLowerCase();
+      if (translations[code]) return code;
+    }
+    return 'en';
   } catch {
     return 'en';
   }

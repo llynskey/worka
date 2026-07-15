@@ -305,7 +305,7 @@ const AuthScreen: React.FC = () => {
 
     try {
       setForgotLoading(true);
-      const response = await api.post("/forgotPassword", { email: forgotEmail.trim() });
+      const response = await api.post("/forgotPassword", { email: forgotEmail.trim(), language });
       setAuthInfo(response?.data?.message ?? t("auth.infoResetSent"));
     } catch (error) {
       setAuthError(getErrorMessage(error, t("auth.errForgot")));
