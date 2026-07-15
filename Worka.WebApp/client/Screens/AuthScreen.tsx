@@ -1258,12 +1258,6 @@ const AuthScreen: React.FC = () => {
               </View>
               <Text style={styles.footerMark}>LSL</Text>
             </View>
-
-            <Text style={styles.footerStatutory}>
-              Worka is operated by Lynskey Software Limited, registered in
-              England &amp; Wales (Company No. 17337667). Registered office: 4–6
-              Greatorex Street, London, E1 5NF.
-            </Text>
           </View>
         </View>
       </ScrollView>
@@ -1932,13 +1926,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "800",
     textDecorationLine: "underline",
-  },
-  footerStatutory: {
-    marginTop: 12,
-    color: "#a9aba2",
-    fontSize: 11,
-    lineHeight: 17,
-    fontWeight: "600",
   },
 });
 

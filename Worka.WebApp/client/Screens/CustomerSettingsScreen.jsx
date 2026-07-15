@@ -203,9 +203,6 @@ const CustomerSettingsScreen = ({ navigation }) => {
             <Text style={styles.legalLink}>Terms of Service</Text>
           </TouchableOpacity>
         </View>
-        <Text style={styles.operatedByText}>
-          Worka is operated by Lynskey Software Limited (Company No. 17337667).
-        </Text>
       </View>
 
       <TouchableOpacity style={styles.signOutButton} onPress={signOut}>
@@ -230,13 +227,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '800',
     textDecorationLine: 'underline',
-  },
-  operatedByText: {
-    marginTop: 10,
-    color: '#a9aba2',
-    fontSize: 11,
-    lineHeight: 16,
-    fontWeight: '600',
   },
   signOutButton: {
     minHeight: 48,
