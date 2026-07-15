@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -43,6 +43,12 @@ const WorkerJobList = () => {
   const [currentLocation, setCurrentLocation] = useState(null);
   const [locating, setLocating] = useState(false);
   const [locationError, setLocationError] = useState('');
+
+  // Ask for location automatically; the manual button only appears if the
+  // silent attempt fails (e.g. permission not yet granted).
+  useEffect(() => {
+    requestCurrentLocation().then(setCurrentLocation).catch(() => {});
+  }, []);
 
   const loadMarketplace = useCallback(async () => {
     setError(null);
@@ -207,23 +213,22 @@ const WorkerJobList = () => {
                 <Text style={styles.statLabel}>Booked value</Text>
               </View>
             </View>
-            <TouchableOpacity style={styles.locationButton} onPress={useCurrentLocation} disabled={locating}>
-              {locating ? (
-                <ActivityIndicator color="#111" />
-              ) : (
-                <>
-                  <MaterialCommunityIcons name="crosshairs-gps" size={18} color="#111" />
-                  <Text style={styles.locationButtonText}>
-                    {currentLocation ? 'Update current location' : 'Use current location'}
-                  </Text>
-                </>
-              )}
-            </TouchableOpacity>
             {currentLocation ? (
               <Text style={styles.locationStatus}>
                 Current location set. Jobs are sorted by distance where available.
               </Text>
-            ) : null}
+            ) : (
+              <TouchableOpacity style={styles.locationButton} onPress={useCurrentLocation} disabled={locating}>
+                {locating ? (
+                  <ActivityIndicator color="#111" />
+                ) : (
+                  <>
+                    <MaterialCommunityIcons name="crosshairs-gps" size={18} color="#111" />
+                    <Text style={styles.locationButtonText}>Use current location</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            )}
             {locationError ? <Text style={styles.locationError}>{locationError}</Text> : null}
           </View>
         }

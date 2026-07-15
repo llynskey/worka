@@ -37,6 +37,10 @@ export const translations = {
     'waitlist.join': 'Join the list',
     'settings.language': 'Language',
     'settings.languageHint': 'Choose the language Worka uses for you.',
+    'quote.feeLine': 'Worka fee {fee}. You pay {total}. The professional receives {price}.',
+    'quote.detailFeeLine': 'You pay {total}. The professional receives {price}. Worka earns {fee}.',
+    'quote.securePayment': 'Secure checkout supports wallets and cards where enabled in Stripe. Professional payouts are handled through Stripe Connect.',
+    'quote.by': 'Quote from {name}',
   },
   es: {
     'landing.eyebrow': 'Worka para expats',
@@ -57,6 +61,10 @@ export const translations = {
     'waitlist.join': 'Unirme a la lista',
     'settings.language': 'Idioma',
     'settings.languageHint': 'Elige el idioma que Worka usa contigo.',
+    'quote.feeLine': 'Comisión de Worka {fee}. Pagas {total}. El profesional recibe {price}.',
+    'quote.detailFeeLine': 'Pagas {total}. El profesional recibe {price}. Worka gana {fee}.',
+    'quote.securePayment': 'El pago seguro admite carteras y tarjetas según Stripe. Los pagos al profesional se gestionan con Stripe Connect.',
+    'quote.by': 'Presupuesto de {name}',
   },
   fr: {
     'landing.eyebrow': 'Worka pour les expats',
@@ -77,6 +85,10 @@ export const translations = {
     'waitlist.join': 'Rejoindre la liste',
     'settings.language': 'Langue',
     'settings.languageHint': 'Choisissez la langue que Worka utilise avec vous.',
+    'quote.feeLine': 'Frais Worka {fee}. Vous payez {total}. Le professionnel reçoit {price}.',
+    'quote.detailFeeLine': 'Vous payez {total}. Le professionnel reçoit {price}. Worka gagne {fee}.',
+    'quote.securePayment': 'Le paiement sécurisé accepte cartes et portefeuilles selon Stripe. Les versements au professionnel passent par Stripe Connect.',
+    'quote.by': 'Devis de {name}',
   },
   ro: {
     'landing.eyebrow': 'Worka pentru expați',
@@ -97,5 +109,9 @@ export const translations = {
     'waitlist.join': 'Intră pe listă',
     'settings.language': 'Limbă',
     'settings.languageHint': 'Alege limba în care Worka vorbește cu tine.',
+    'quote.feeLine': 'Comision Worka {fee}. Plătești {total}. Profesionistul primește {price}.',
+    'quote.detailFeeLine': 'Plătești {total}. Profesionistul primește {price}. Worka câștigă {fee}.',
+    'quote.securePayment': 'Plata securizată acceptă carduri și portofele conform Stripe. Plățile către profesionist trec prin Stripe Connect.',
+    'quote.by': 'Ofertă de la {name}',
   },
 };

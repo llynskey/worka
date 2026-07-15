@@ -50,7 +50,15 @@ export const I18nProvider = ({ children }) => {
   }, []);
 
   const t = useCallback(
-    (key) => translations[language]?.[key] ?? translations.en[key] ?? key,
+    (key, params) => {
+      let text = translations[language]?.[key] ?? translations.en[key] ?? key;
+      if (params) {
+        Object.keys(params).forEach((name) => {
+          text = text.split(`{${name}}`).join(String(params[name]));
+        });
+      }
+      return text;
+    },
     [language]
   );
 

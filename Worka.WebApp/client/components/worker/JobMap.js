@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Linking,
@@ -130,6 +130,12 @@ const JobMap = () => {
     }, [refresh])
   );
 
+  // Ask for location automatically; the manual button only appears if the
+  // silent attempt fails (e.g. permission not yet granted).
+  useEffect(() => {
+    requestCurrentLocation().then(setCurrentLocation).catch(() => {});
+  }, []);
+
   const locatedJobs = useMemo(() => {
     const nextJobs = jobs.filter(hasCoordinates);
     if (!currentLocation) return nextJobs;
@@ -208,16 +214,18 @@ const JobMap = () => {
         </Text>
         {locationError ? <Text style={styles.locationError}>{locationError}</Text> : null}
       </View>
-      <TouchableOpacity style={styles.locationButton} onPress={useCurrentLocation} disabled={locating}>
-        {locating ? (
-          <ActivityIndicator color="#111" />
-        ) : (
-          <>
-            <MaterialCommunityIcons name="crosshairs-gps" size={18} color="#111" />
-            <Text style={styles.locationButtonText}>{currentLocation ? 'Update' : 'Use location'}</Text>
-          </>
-        )}
-      </TouchableOpacity>
+      {currentLocation ? null : (
+        <TouchableOpacity style={styles.locationButton} onPress={useCurrentLocation} disabled={locating}>
+          {locating ? (
+            <ActivityIndicator color="#111" />
+          ) : (
+            <>
+              <MaterialCommunityIcons name="crosshairs-gps" size={18} color="#111" />
+              <Text style={styles.locationButtonText}>Use location</Text>
+            </>
+          )}
+        </TouchableOpacity>
+      )}
     </View>
   );
 

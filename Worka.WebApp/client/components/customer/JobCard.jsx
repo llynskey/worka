@@ -3,6 +3,9 @@ import { ImageBackground, Modal, ScrollView, StyleSheet, Text, TouchableOpacity,
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { formatDate, formatMoney, resolveUploadUrl } from '../../api/workaApi';
 import { requestCurrentLocation } from '../../Utils/locationUtils';
+import { useI18n } from '../../i18n/I18nContext';
+import Avatar from '../Avatar';
+import Stars from '../Stars';
 import MapPreview from '../MapPreview';
 
 const WORKA_SERVICE_FEE_RATE = 0.10;
@@ -38,6 +41,7 @@ const statusLabel = (status) => {
 };
 
 const JobCard = ({ job, quotes = [], onAcceptQuote, onEditJob, onDeleteJob, onCompleteJob, onReviewJob }) => {
+  const { t } = useI18n();
   const [detailsVisible, setDetailsVisible] = useState(false);
   const [userLocation, setUserLocation] = useState(null);
 
@@ -138,10 +142,30 @@ const JobCard = ({ job, quotes = [], onAcceptQuote, onEditJob, onDeleteJob, onCo
                 return (
                   <View key={quote.quoteId} style={styles.quoteRow}>
                     <View style={styles.quoteCopy}>
+                      <View style={styles.quoteProRow}>
+                        <Avatar
+                          photoUrl={quote.professionalPhotoUrl}
+                          firstName={quote.professionalFirstName}
+                          lastName={quote.professionalLastName}
+                          size={34}
+                        />
+                        <View style={styles.quoteProCopy}>
+                          <Text style={styles.quoteProName} numberOfLines={1}>
+                            {quote.professionalFirstName
+                              ? `${quote.professionalFirstName} ${quote.professionalLastName ?? ''}`.trim()
+                              : 'Worka professional'}
+                          </Text>
+                          <Stars value={quote.professionalRating} count={quote.professionalReviewCount} size={13} />
+                        </View>
+                      </View>
                       <Text style={styles.quotePrice}>{formatMoney(quote.price)}</Text>
                       <Text style={styles.quoteDescription}>{quote.description || 'No note provided.'}</Text>
                       <Text style={styles.quoteFee}>
-                        Worka fee {formatMoney(serviceFee)}. You pay {formatMoney(total)}. Worker receives {formatMoney(quote.price)}.
+                        {t('quote.feeLine', {
+                          fee: formatMoney(serviceFee),
+                          total: formatMoney(total),
+                          price: formatMoney(quote.price),
+                        })}
                       </Text>
                       <View style={styles.walletRow}>
                         <MaterialCommunityIcons name="apple" size={15} color="#111" />
@@ -227,7 +251,7 @@ const JobCard = ({ job, quotes = [], onAcceptQuote, onEditJob, onDeleteJob, onCo
               <View style={styles.detailSection}>
                 <Text style={styles.detailLabel}>Quotes and payment</Text>
                 {quotes.length === 0 ? (
-                  <Text style={styles.detailText}>No quotes yet. Once a worker quotes, you can review their note and pay securely in-app.</Text>
+                  <Text style={styles.detailText}>No quotes yet. Once a professional quotes, you can review their note and pay securely in-app.</Text>
                 ) : (
                   quotes.map((quote) => {
                     const accepted = quote.quoteId === job.acceptedQuoteId;
@@ -236,10 +260,30 @@ const JobCard = ({ job, quotes = [], onAcceptQuote, onEditJob, onDeleteJob, onCo
                     return (
                       <View key={`detail-${quote.quoteId}`} style={styles.modalQuoteRow}>
                         <View style={{ flex: 1 }}>
+                          <View style={styles.quoteProRow}>
+                            <Avatar
+                              photoUrl={quote.professionalPhotoUrl}
+                              firstName={quote.professionalFirstName}
+                              lastName={quote.professionalLastName}
+                              size={34}
+                            />
+                            <View style={styles.quoteProCopy}>
+                              <Text style={styles.quoteProName} numberOfLines={1}>
+                                {quote.professionalFirstName
+                                  ? `${quote.professionalFirstName} ${quote.professionalLastName ?? ''}`.trim()
+                                  : 'Worka professional'}
+                              </Text>
+                              <Stars value={quote.professionalRating} count={quote.professionalReviewCount} size={13} />
+                            </View>
+                          </View>
                           <Text style={styles.quotePrice}>{formatMoney(quote.price)}</Text>
                           <Text style={styles.quoteDescription}>{quote.description || 'No note provided.'}</Text>
                           <Text style={styles.quoteFee}>
-                            Customer pays {formatMoney(total)}. Worker receives {formatMoney(quote.price)}. Worka earns {formatMoney(serviceFee)}.
+                            {t('quote.detailFeeLine', {
+                              total: formatMoney(total),
+                              price: formatMoney(quote.price),
+                              fee: formatMoney(serviceFee),
+                            })}
                           </Text>
                         </View>
                         {accepted ? (
@@ -265,7 +309,7 @@ const JobCard = ({ job, quotes = [], onAcceptQuote, onEditJob, onDeleteJob, onCo
                 <View style={styles.securePaymentBox}>
                   <MaterialCommunityIcons name="shield-check-outline" size={18} color="#111" />
                   <Text style={styles.securePaymentText}>
-                    Secure checkout supports wallets and cards where enabled in Stripe. Worker payouts are handled through Stripe Connect.
+                    {t('quote.securePayment')}
                   </Text>
                 </View>
               </View>
@@ -456,6 +500,21 @@ const styles = StyleSheet.create({
   },
   quoteCopy: {
     flex: 1,
+  },
+  quoteProRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 9,
+    marginBottom: 7,
+  },
+  quoteProCopy: {
+    flex: 1,
+    minWidth: 0,
+  },
+  quoteProName: {
+    color: '#111',
+    fontWeight: '900',
+    fontSize: 14,
   },
   quotePrice: {
     color: '#111',

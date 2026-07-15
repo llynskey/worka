@@ -182,12 +182,60 @@ namespace Worka.Services.Quotes
                     .OrderByDescending(quote => quote.CreatedAt)
                     .ToListAsync();
 
-                return new WorkaResponse<List<QuoteResponseDTO>>(quotes.Select(q => new QuoteResponseDTO(q)).ToList());
+                var enriched = await EnrichWithProfessionalsAsync(quotes);
+                return new WorkaResponse<List<QuoteResponseDTO>>(enriched);
             }
             catch (Exception ex)
             {
                 return WorkaResponse<List<QuoteResponseDTO>>.Fail(ex, "An error occurred while retrieving the quotes.");
             }
+        }
+
+        /// <summary>
+        /// Attaches the quoting professional's name, photo, and rating so
+        /// customers can judge who is behind each price.
+        /// </summary>
+        private async Task<List<QuoteResponseDTO>> EnrichWithProfessionalsAsync(List<Quote> quotes)
+        {
+            var professionalIds = quotes.Select(q => q.ProfessionalId).Distinct().ToList();
+
+            var professionals = await _dbContext.Professionals
+                .Where(p => professionalIds.Contains(p.ProfessionalId))
+                .ToDictionaryAsync(p => p.ProfessionalId);
+
+            var reviewStats = await _dbContext.Reviews
+                .Where(r => professionalIds.Contains(r.ProfessionalId))
+                .GroupBy(r => r.ProfessionalId)
+                .Select(g => new
+                {
+                    ProfessionalId = g.Key,
+                    Count = g.Count(),
+                    Average = g.Average(r => (double)r.Rating)
+                })
+                .ToListAsync();
+            var reviewsById = reviewStats.ToDictionary(s => s.ProfessionalId);
+
+            return quotes
+                .Select(quote =>
+                {
+                    var dto = new QuoteResponseDTO(quote);
+                    if (professionals.TryGetValue(quote.ProfessionalId, out var professional))
+                    {
+                        dto.ProfessionalFirstName = professional.FirstName;
+                        dto.ProfessionalLastName = professional.LastName;
+                        dto.ProfessionalPhotoUrl = professional.PhotoUrl;
+                        dto.ProfessionalSpecialty = professional.Specialty;
+                    }
+
+                    if (reviewsById.TryGetValue(quote.ProfessionalId, out var reviews))
+                    {
+                        dto.ProfessionalRating = Math.Round(reviews.Average, 1);
+                        dto.ProfessionalReviewCount = reviews.Count;
+                    }
+
+                    return dto;
+                })
+                .ToList();
         }
 
         public async Task<WorkaResponse<List<QuoteResponseDTO>>> GetQuotesForProfessionalUserAsync(string userId)
@@ -233,7 +281,8 @@ namespace Worka.Services.Quotes
                     .OrderByDescending(quote => quote.CreatedAt)
                     .ToListAsync();
 
-                return new WorkaResponse<List<QuoteResponseDTO>>(quotes.Select(quote => new QuoteResponseDTO(quote)).ToList());
+                var enriched = await EnrichWithProfessionalsAsync(quotes);
+                return new WorkaResponse<List<QuoteResponseDTO>>(enriched);
             }
             catch (Exception ex)
             {
