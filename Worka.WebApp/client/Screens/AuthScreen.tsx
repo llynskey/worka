@@ -20,6 +20,7 @@ import { api, getErrorMessage } from "../api/workaApi";
 import { useI18n } from "../i18n/I18nContext";
 import { translations } from "../i18n/translations";
 import LanguageCycler from "../components/LanguageCycler";
+import LanguageBubbles from "../components/LanguageBubbles";
 import Reveal from "../components/Reveal";
 
 // Stable English `value` strings are sent to the API; the labels shown to
@@ -338,33 +339,6 @@ const AuthScreen: React.FC = () => {
     }
   };
 
-  const renderLanguageChips = () =>
-    languages.map((lang) => {
-      const active = lang.code === language;
-      return (
-        <Pressable
-          key={lang.code}
-          accessibilityRole="button"
-          accessibilityLabel={`Switch language to ${lang.label}`}
-          onPress={() => setLanguage(lang.code)}
-          style={({ pressed }) => [
-            styles.languageChip,
-            active && styles.languageChipActive,
-            pressed && styles.pressed,
-          ]}
-        >
-          <Text
-            style={[
-              styles.languageChipText,
-              active && styles.languageChipTextActive,
-            ]}
-          >
-            {lang.code.toUpperCase()}
-          </Text>
-        </Pressable>
-      );
-    });
-
   const renderBenefits = (stacked = false) => (
     <View style={[styles.benefitList, stacked && styles.benefitListStacked]}>
       {[1, 2, 3].map((n) => (
@@ -442,9 +416,11 @@ const AuthScreen: React.FC = () => {
           {
             paddingHorizontal: horizontalGutter,
             paddingTop: isPhone ? 18 : 24,
-            // Phones get extra clearance so the footer never hides behind
-            // Safari's floating bottom toolbar (100vh includes that zone).
-            paddingBottom: isPhone ? 60 : 32,
+            // The scroll area is already sized to the *visible* viewport
+            // (measured height, not 100vh), so Safari's toolbar is accounted
+            // for — a large bottom pad here just leaves the footer hovering
+            // above the page end. Keep a small, even gap.
+            paddingBottom: isPhone ? 24 : 32,
           },
         ]}
         keyboardShouldPersistTaps="handled"
@@ -463,10 +439,6 @@ const AuthScreen: React.FC = () => {
               />
 
               <View style={styles.navRight}>
-                {!isPhone && (
-                  <View style={styles.navLangs}>{renderLanguageChips()}</View>
-                )}
-
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel={
@@ -489,13 +461,6 @@ const AuthScreen: React.FC = () => {
                 </Pressable>
               </View>
             </View>
-
-            {isPhone && (
-              <View style={styles.languageRow}>
-                <MaterialCommunityIcons name="web" size={16} color="#555" />
-                {renderLanguageChips()}
-              </View>
-            )}
           </View>
 
           <View
@@ -531,6 +496,14 @@ const AuthScreen: React.FC = () => {
               </Text>
 
               {!isStacked && renderBenefits()}
+
+              <LanguageBubbles
+                languages={languages}
+                activeCode={language}
+                onSelect={setLanguage}
+                isPhone={isPhone}
+                style={styles.bubbles}
+              />
             </View>
 
             <View
@@ -1396,6 +1369,9 @@ const styles = StyleSheet.create({
   },
   heroDesktop: {
     paddingTop: 20,
+  },
+  bubbles: {
+    marginTop: 34,
   },
   eyebrowRow: {
     flexDirection: "row",

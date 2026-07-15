@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "worka-web",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "Worka.WebApp/client", "run", "web"],
+      "port": 8081
+    }
+  ]
+}
