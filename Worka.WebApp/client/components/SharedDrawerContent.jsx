@@ -28,10 +28,7 @@ export default function SharedDrawerContent(props) {
           <Text style={styles.logoutText}>Logout</Text>
         </Pressable>
 
-        <Text style={styles.legalText}>
-          Worka <Text style={styles.legalDot}>·</Text> an{' '}
-          <Text style={styles.legalStrong}>LSL</Text> product
-        </Text>
+        <Text style={styles.legalText}>LSL</Text>
       </View>
     </DrawerContentScrollView>
   );
@@ -85,19 +82,11 @@ const styles = StyleSheet.create({
   },
   legalText: {
     textAlign: 'center',
-    color: '#a9aba2',
+    color: '#b0b2a9',
     fontSize: 11,
-    fontWeight: '600',
-    letterSpacing: 0.3,
-    marginBottom: 18,
-  },
-  legalDot: {
-    color: '#c9cbc2',
-  },
-  legalStrong: {
-    color: '#8a8d84',
     fontWeight: '900',
-    letterSpacing: 0.6,
+    letterSpacing: 4,
+    marginBottom: 18,
   },
   logoutText: {
     color: '#fff',

@@ -1210,9 +1210,8 @@ const AuthScreen: React.FC = () => {
             <View style={styles.footerLegal}>
               <Text style={styles.footerLegalText}>
                 © {new Date().getFullYear()} Worka
-                <Text style={styles.footerLegalDot}>{"  ·  "}</Text>
-                an <Text style={styles.footerLegalStrong}>LSL</Text> product
               </Text>
+              <Text style={styles.footerMark}>LSL</Text>
             </View>
           </View>
         </View>
@@ -1273,6 +1272,7 @@ const styles = StyleSheet.create({
   logo: {
     width: 150,
     height: 60,
+    flexShrink: 0,
   },
   logoPhone: {
     width: 116,
@@ -1281,7 +1281,9 @@ const styles = StyleSheet.create({
   navButton: {
     ...webPressTransition,
     minHeight: 44,
-    maxWidth: "55%",
+    flexGrow: 0,
+    flexShrink: 0,
+    flexBasis: "auto",
     borderWidth: 1,
     borderColor: "#111",
     borderRadius: 999,
@@ -1294,8 +1296,6 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   navButtonText: {
-    minWidth: 0,
-    flexShrink: 1,
     color: "#fff",
     fontSize: 14,
     fontWeight: "800",
@@ -1854,6 +1854,10 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     borderTopWidth: 1,
     borderTopColor: "#f1ede4",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
   },
   footerLegalText: {
     color: "#8a8d84",
@@ -1861,13 +1865,11 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     letterSpacing: 0.2,
   },
-  footerLegalDot: {
-    color: "#c9cbc2",
-  },
-  footerLegalStrong: {
-    color: "#62645c",
+  footerMark: {
+    color: "#b0b2a9",
+    fontSize: 11,
     fontWeight: "900",
-    letterSpacing: 0.6,
+    letterSpacing: 4,
   },
 });
 
