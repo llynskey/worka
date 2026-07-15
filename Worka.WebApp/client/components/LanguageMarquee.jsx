@@ -52,6 +52,11 @@ const LanguageMarquee = ({ languages = [], activeCode, onSelect, isPhone = false
 
   useEffect(() => {
     velocity.current = baseVel;
+    // On web onLayout is unreliable here, so measure the doubled track's DOM
+    // width directly; one copy is half of it.
+    if (IS_WEB && trackRef.current) {
+      copyW.current = trackRef.current.scrollWidth / 2;
+    }
     let raf;
     let last = 0;
     const tick = (t) => {
@@ -68,7 +73,7 @@ const LanguageMarquee = ({ languages = [], activeCode, onSelect, isPhone = false
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [baseVel]);
+  }, [baseVel, languages]);
 
   const pan = useRef(
     PanResponder.create({

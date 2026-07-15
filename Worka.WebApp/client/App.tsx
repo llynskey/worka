@@ -107,6 +107,7 @@ const CustomerDrawer: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
         swipeEnabled: false,
         headerShown: true,
         headerTitle: () => <HeaderLogo />,
+        drawerStyle: { width: 300, backgroundColor: '#fff', borderRightColor: '#ece7dc', borderRightWidth: 1 },
       }}
     >
       <CustomerDrawerScreen
@@ -141,6 +142,7 @@ const WorkerDrawer: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
         swipeEnabled: false,
         headerShown: true,
         headerTitle: () => <HeaderLogo badge={t('drawer.professionalBadge')} />,
+        drawerStyle: { width: 300, backgroundColor: '#fff', borderRightColor: '#ece7dc', borderRightWidth: 1 },
       }}
     >
       <WorkerDrawerScreen
