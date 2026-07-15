@@ -198,7 +198,7 @@ const JobMap = () => {
     <View style={styles.header}>
       <View style={styles.headerCopy}>
         <Text style={styles.eyebrow}>{t('map.eyebrow')}</Text>
-        <Text style={styles.title}>{t('map.title')}</Text>
+        <Text style={[styles.title, isNarrow && styles.titleNarrow]}>{t('map.title')}</Text>
         <Text style={styles.subtitle}>
           {t('map.subtitle', { located: locatedJobs.length, unlocated: unlocatedJobs.length })}
         </Text>
@@ -214,8 +214,8 @@ const JobMap = () => {
   );
 
   const locationBarBlock = (
-    <View style={styles.locationBar}>
-      <View style={{ flex: 1 }}>
+    <View style={[styles.locationBar, isNarrow && styles.locationBarNarrow]}>
+      <View style={isNarrow ? styles.locationBarCopyNarrow : styles.locationBarCopy}>
         <Text style={styles.locationBarTitle}>
           {currentLocation ? t('map.locationSetTitle') : t('map.locationNotSetTitle')}
         </Text>
@@ -225,7 +225,11 @@ const JobMap = () => {
         {locationError ? <Text style={styles.locationError}>{locationError}</Text> : null}
       </View>
       {currentLocation ? null : (
-        <TouchableOpacity style={styles.locationButton} onPress={useCurrentLocation} disabled={locating}>
+        <TouchableOpacity
+          style={[styles.locationButton, isNarrow && styles.locationButtonFull]}
+          onPress={useCurrentLocation}
+          disabled={locating}
+        >
           {locating ? (
             <ActivityIndicator color="#111" />
           ) : (
@@ -385,6 +389,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
   },
+  locationBarNarrow: {
+    flexDirection: 'column',
+    alignItems: 'stretch',
+  },
+  locationBarCopy: {
+    flex: 1,
+    minWidth: 0,
+  },
+  locationBarCopyNarrow: {
+    width: '100%',
+  },
+  locationButtonFull: {
+    alignSelf: 'stretch',
+  },
   locationBarTitle: {
     color: '#111',
     fontWeight: '900',
@@ -427,6 +445,9 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '900',
   },
+  titleNarrow: {
+    fontSize: 20,
+  },
   subtitle: {
     color: '#62645c',
     lineHeight: 20,
@@ -450,7 +471,8 @@ const styles = StyleSheet.create({
   },
   mapPane: {
     flex: 1.25,
-    minHeight: 320,
+    minHeight: 240,
+    minWidth: 0,
     borderRadius: 8,
     overflow: 'hidden',
     backgroundColor: '#fff',
@@ -460,6 +482,7 @@ const styles = StyleSheet.create({
   listPane: {
     flex: 0.8,
     minHeight: 0,
+    minWidth: 0,
   },
   listContent: {
     gap: 10,
@@ -530,10 +553,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 10,
+    flexWrap: 'wrap',
+    gap: 8,
+    rowGap: 6,
     marginTop: 10,
   },
   jobCategory: {
+    flexShrink: 1,
     color: '#111',
     fontWeight: '900',
     fontSize: 12,
