@@ -109,6 +109,8 @@ export default {
   'tabs.bidsDesc': 'Suivez les devis envoyés',
   'tabs.calendar': 'Calendrier',
   'tabs.calendarDesc': 'Vos missions réservées',
+  'tabs.messages': 'Messages',
+  'tabs.messagesDesc': 'Vos conversations',
 
   // Drawer
   'drawer.home': 'Accueil',
@@ -521,4 +523,10 @@ export default {
   'chat.loadError': 'Impossible de charger les messages',
   'chat.sendError': 'Message non envoyé',
   'chat.hiddenNotice': 'Les coordonnées sont masquées jusqu\'à ce que la mission soit réservée et payée.',
+
+  // Boîte de réception des messages
+  'messages.empty': 'Aucun message pour le moment',
+  'messages.emptyHint': 'Vos conversations avec les professionnels et les clients apparaîtront ici.',
+  'messages.you': 'Vous :',
+  'messages.loadError': 'Impossible de charger les messages',
 };

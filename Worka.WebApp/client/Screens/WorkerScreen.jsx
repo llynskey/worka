@@ -6,6 +6,7 @@ import JobList from '../components/worker/JobList';
 import BidList from '../components/worker/BidList';
 import JobMap from '../components/worker/JobMap';
 import BookingsCalendar from '../components/worker/BookingsCalendar';
+import MessagesInbox from '../components/MessagesInbox';
 import WorkspaceShell from '../components/WorkspaceShell';
 import { useI18n } from '../i18n/I18nContext';
 
@@ -37,6 +38,12 @@ const webTabs = [
     icon: 'calendar-month-outline',
     descriptionKey: 'tabs.calendarDesc',
   },
+  {
+    key: 'messages',
+    labelKey: 'tabs.messages',
+    icon: 'message-text-outline',
+    descriptionKey: 'tabs.messagesDesc',
+  },
 ];
 
 const tabIcons = {
@@ -44,6 +51,7 @@ const tabIcons = {
   Map: 'map-marker-radius-outline',
   'My Bids': 'file-document-edit-outline',
   Calendar: 'calendar-month-outline',
+  Messages: 'message-text-outline',
 };
 
 const WorkerWebWorkspace = () => {
@@ -73,6 +81,8 @@ const WorkerWebWorkspace = () => {
         <JobMap />
       ) : activeTab === 'bids' ? (
         <BidList />
+      ) : activeTab === 'messages' ? (
+        <MessagesInbox role="professional" />
       ) : (
         <BookingsCalendar />
       )}
@@ -130,6 +140,12 @@ const WorkerScreen = () => {
         component={BookingsCalendar}
         options={{ title: t('tabs.calendar'), tabBarLabel: t('tabs.calendar') }}
       />
+      <Tab.Screen
+        name="Messages"
+        options={{ title: t('tabs.messages'), tabBarLabel: t('tabs.messages') }}
+      >
+        {() => <MessagesInbox role="professional" />}
+      </Tab.Screen>
     </Tab.Navigator>
   );
 };

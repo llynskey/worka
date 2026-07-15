@@ -280,6 +280,15 @@ namespace Worka.WebApp
                 );
                 CREATE INDEX IF NOT EXISTS "IX_job_messages_JobId_ProfessionalId"
                     ON job_messages("JobId", "ProfessionalId");
+                CREATE TABLE IF NOT EXISTS message_reads (
+                    "MessageReadId" uuid PRIMARY KEY,
+                    "UserId" uuid NOT NULL,
+                    "JobId" uuid NOT NULL REFERENCES jobs("JobId") ON DELETE CASCADE,
+                    "ProfessionalId" uuid NOT NULL REFERENCES professionals("ProfessionalId") ON DELETE CASCADE,
+                    "LastReadAt" timestamp with time zone NOT NULL
+                );
+                CREATE UNIQUE INDEX IF NOT EXISTS "IX_message_reads_UserId_JobId_ProfessionalId"
+                    ON message_reads("UserId", "JobId", "ProfessionalId");
                 """);
         }
     }

@@ -31,6 +31,8 @@ namespace Worka.Services.Database
 
         public DbSet<JobMessage> JobMessages => Set<JobMessage>();
 
+        public DbSet<MessageRead> MessageReads => Set<MessageRead>();
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<User>(entity =>
@@ -183,6 +185,21 @@ namespace Worka.Services.Database
                 entity.HasOne<Professional>()
                     .WithMany()
                     .HasForeignKey(message => message.ProfessionalId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<MessageRead>(entity =>
+            {
+                entity.ToTable("message_reads");
+                entity.HasKey(read => read.MessageReadId);
+                entity.HasIndex(read => new { read.UserId, read.JobId, read.ProfessionalId }).IsUnique();
+                entity.HasOne<Job>()
+                    .WithMany()
+                    .HasForeignKey(read => read.JobId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne<Professional>()
+                    .WithMany()
+                    .HasForeignKey(read => read.ProfessionalId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
 

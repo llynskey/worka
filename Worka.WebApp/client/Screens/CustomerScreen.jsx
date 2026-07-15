@@ -4,6 +4,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import JobList from '../components/customer/JobList';
 import ProDirectory from '../components/customer/ProDirectory';
+import MessagesInbox from '../components/MessagesInbox';
 import JobTypeScreen from './JobTypeScreen';
 import WorkspaceShell from '../components/WorkspaceShell';
 import { useI18n } from '../i18n/I18nContext';
@@ -29,6 +30,12 @@ const webTabs = [
     labelKey: 'tabs.pros',
     icon: 'account-search-outline',
     descriptionKey: 'tabs.prosDesc',
+  },
+  {
+    key: 'messages',
+    labelKey: 'tabs.messages',
+    icon: 'message-text-outline',
+    descriptionKey: 'tabs.messagesDesc',
   },
 ];
 
@@ -69,6 +76,8 @@ const CustomerWebWorkspace = () => {
         <JobList navigation={navigation} />
       ) : activeTab === 'post' ? (
         <JobTypeScreen navigation={navigation} />
+      ) : activeTab === 'messages' ? (
+        <MessagesInbox role="customer" />
       ) : (
         <ProDirectory />
       )}
@@ -93,7 +102,9 @@ const CustomerScreen = () => {
               ? 'clipboard-list-outline'
               : route.name === 'Find Pros'
                 ? 'account-search-outline'
-                : 'plus-circle-outline';
+                : route.name === 'Messages'
+                  ? 'message-text-outline'
+                  : 'plus-circle-outline';
           return <MaterialCommunityIcons name={iconName} size={size ?? 22} color={color} />;
         },
         tabBarActiveTintColor: '#111',
@@ -128,6 +139,12 @@ const CustomerScreen = () => {
         component={ProDirectory}
         options={{ title: t('tabs.pros'), tabBarLabel: t('tabs.pros') }}
       />
+      <Tab.Screen
+        name="Messages"
+        options={{ title: t('tabs.messages'), tabBarLabel: t('tabs.messages') }}
+      >
+        {() => <MessagesInbox role="customer" />}
+      </Tab.Screen>
     </Tab.Navigator>
   );
 };

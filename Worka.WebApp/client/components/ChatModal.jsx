@@ -56,6 +56,9 @@ const ChatModal = ({ visible, onClose, jobId, professionalId, title, subtitle, r
     if (!visible || !jobId || !professionalId) return undefined;
     let mounted = true;
     setLoading(true);
+    // Opening the thread counts as reading it, so the inbox badge clears.
+    // Fire-and-forget: a failure just leaves the unread count for next poll.
+    api.post(`/Jobs/${jobId}/messages/read`, { professionalId }).catch(() => {});
     api
       .get(`/Jobs/${jobId}/messages`, { params: { professionalId } })
       .then((response) => {

@@ -5,6 +5,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="Worka.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Remove="DTOs\JobTypes\**" />
     <EmbeddedResource Remove="DTOs\JobTypes\**" />
     <None Remove="DTOs\JobTypes\**" />

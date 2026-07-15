@@ -105,6 +105,185 @@ namespace Worka.Services.Messages
             }
         }
 
+        /// <summary>
+        /// Every (job, professional) thread the caller takes part in, newest
+        /// activity first, with a preview of the latest message and a count of
+        /// what the other party has sent since the caller last read it. The
+        /// caller may sit on the customer side (jobs they own) or the
+        /// professional side (their own quotes/questions), or both.
+        /// </summary>
+        public async Task<WorkaResponse<List<ConversationSummaryDTO>>> ListConversationsAsync(string userId)
+        {
+            try
+            {
+                if (!Guid.TryParse(userId, out var userGuid))
+                {
+                    return new WorkaResponse<List<ConversationSummaryDTO>>("Invalid user identity.");
+                }
+
+                var customer = await _dbContext.Customers.FirstOrDefaultAsync(c => c.UserId == userGuid);
+                var professional = await _dbContext.Professionals.FirstOrDefaultAsync(p => p.UserId == userGuid);
+
+                if (customer == null && professional == null)
+                {
+                    return new WorkaResponse<List<ConversationSummaryDTO>>(new List<ConversationSummaryDTO>());
+                }
+
+                var customerJobIds = customer == null
+                    ? new List<Guid>()
+                    : await _dbContext.Jobs
+                        .Where(j => j.CustomerId == customer.CustomerId)
+                        .Select(j => j.JobId)
+                        .ToListAsync();
+
+                var professionalId = professional?.ProfessionalId;
+
+                // Pull every message the caller can see, then group in memory so
+                // the (job, professional) threading stays provider-agnostic.
+                var messages = await _dbContext.JobMessages
+                    .Where(m => customerJobIds.Contains(m.JobId)
+                        || (professionalId != null && m.ProfessionalId == professionalId.Value))
+                    .ToListAsync();
+
+                if (messages.Count == 0)
+                {
+                    return new WorkaResponse<List<ConversationSummaryDTO>>(new List<ConversationSummaryDTO>());
+                }
+
+                var threads = messages
+                    .GroupBy(m => new { m.JobId, m.ProfessionalId })
+                    .ToList();
+
+                var jobIds = threads.Select(t => t.Key.JobId).Distinct().ToList();
+                var proIds = threads.Select(t => t.Key.ProfessionalId).Distinct().ToList();
+
+                var jobs = await _dbContext.Jobs
+                    .Where(j => jobIds.Contains(j.JobId))
+                    .ToListAsync();
+                var pros = await _dbContext.Professionals
+                    .Where(p => proIds.Contains(p.ProfessionalId))
+                    .ToListAsync();
+                var jobCustomerIds = jobs.Select(j => j.CustomerId).Distinct().ToList();
+                var jobCustomers = await _dbContext.Customers
+                    .Where(c => jobCustomerIds.Contains(c.CustomerId))
+                    .ToListAsync();
+                var reads = await _dbContext.MessageReads
+                    .Where(r => r.UserId == userGuid)
+                    .ToListAsync();
+
+                var summaries = new List<ConversationSummaryDTO>();
+
+                foreach (var thread in threads)
+                {
+                    var job = jobs.FirstOrDefault(j => j.JobId == thread.Key.JobId);
+                    var threadPro = pros.FirstOrDefault(p => p.ProfessionalId == thread.Key.ProfessionalId);
+                    if (job == null || threadPro == null)
+                    {
+                        continue;
+                    }
+
+                    // The caller sees a thread on their own job as the customer;
+                    // otherwise they are the professional on someone else's job.
+                    var viewerIsCustomer = customer != null && job.CustomerId == customer.CustomerId;
+                    var viewerRole = viewerIsCustomer ? "customer" : "professional";
+
+                    var latest = thread.OrderByDescending(m => m.CreatedAt).First();
+                    var booked = await IsBookedWithProfessionalAsync(job, threadPro.ProfessionalId);
+
+                    var lastReadAt = reads
+                        .FirstOrDefault(r => r.JobId == thread.Key.JobId && r.ProfessionalId == thread.Key.ProfessionalId)
+                        ?.LastReadAt ?? DateTimeOffset.MinValue;
+
+                    var unread = thread.Count(m => m.CreatedAt > lastReadAt && m.SenderUserId != userGuid);
+
+                    string counterpartName;
+                    string counterpartPhoto;
+                    if (viewerIsCustomer)
+                    {
+                        counterpartName = $"{threadPro.FirstName} {threadPro.LastName}".Trim();
+                        counterpartPhoto = threadPro.PhotoUrl;
+                    }
+                    else
+                    {
+                        var jobCustomer = jobCustomers.FirstOrDefault(c => c.CustomerId == job.CustomerId);
+                        counterpartName = jobCustomer == null
+                            ? string.Empty
+                            : $"{jobCustomer.FirstName} {jobCustomer.LastName}".Trim();
+                        counterpartPhoto = jobCustomer?.PhotoUrl ?? string.Empty;
+                    }
+
+                    summaries.Add(new ConversationSummaryDTO
+                    {
+                        JobId = job.JobId.ToString(),
+                        JobName = job.Name,
+                        ProfessionalId = threadPro.ProfessionalId.ToString(),
+                        CounterpartName = counterpartName,
+                        CounterpartPhotoUrl = counterpartPhoto,
+                        Role = viewerRole,
+                        LastMessageBody = booked ? latest.Body : ContactRedaction.Redact(latest.Body),
+                        LastSenderRole = latest.SenderUserId == threadPro.UserId ? "professional" : "customer",
+                        LastMessageAt = latest.CreatedAt,
+                        UnreadCount = unread,
+                        Booked = booked,
+                    });
+                }
+
+                var ordered = summaries
+                    .OrderByDescending(s => s.LastMessageAt)
+                    .ToList();
+
+                return new WorkaResponse<List<ConversationSummaryDTO>>(ordered);
+            }
+            catch (Exception ex)
+            {
+                return WorkaResponse<List<ConversationSummaryDTO>>.Fail(ex, "An error occurred while loading conversations.");
+            }
+        }
+
+        /// <summary>
+        /// Marks a thread read up to now for the caller, so its unread count in
+        /// the inbox clears. Only a participant of the thread may do this.
+        /// </summary>
+        public async Task<WorkaResponse<bool>> MarkReadAsync(string userId, string jobId, string professionalId)
+        {
+            try
+            {
+                var (thread, error) = await ResolveThreadAsync(userId, jobId, professionalId);
+                if (error != null)
+                {
+                    return new WorkaResponse<bool>(error);
+                }
+
+                var userGuid = Guid.Parse(userId);
+                var existing = await _dbContext.MessageReads.FirstOrDefaultAsync(r =>
+                    r.UserId == userGuid
+                    && r.JobId == thread.Job.JobId
+                    && r.ProfessionalId == thread.Professional.ProfessionalId);
+
+                if (existing == null)
+                {
+                    _dbContext.MessageReads.Add(new MessageRead
+                    {
+                        UserId = userGuid,
+                        JobId = thread.Job.JobId,
+                        ProfessionalId = thread.Professional.ProfessionalId,
+                        LastReadAt = DateTimeOffset.UtcNow,
+                    });
+                }
+                else
+                {
+                    existing.LastReadAt = DateTimeOffset.UtcNow;
+                }
+
+                await _dbContext.SaveChangesAsync();
+                return new WorkaResponse<bool>(true);
+            }
+            catch (Exception ex)
+            {
+                return WorkaResponse<bool>.Fail(ex, "An error occurred while updating the conversation.");
+            }
+        }
+
         private sealed class ThreadContext
         {
             public Job Job { get; init; }

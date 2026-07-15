@@ -109,6 +109,8 @@ export default {
   'tabs.bidsDesc': 'Sigue los presupuestos enviados',
   'tabs.calendar': 'Calendario',
   'tabs.calendarDesc': 'Tus trabajos reservados',
+  'tabs.messages': 'Mensajes',
+  'tabs.messagesDesc': 'Tus conversaciones',
 
   // Drawer
   'drawer.home': 'Inicio',
@@ -521,4 +523,10 @@ export default {
   'chat.loadError': 'No se pudieron cargar los mensajes',
   'chat.sendError': 'Mensaje no enviado',
   'chat.hiddenNotice': 'Los datos de contacto están ocultos hasta que el trabajo se reserve y se pague.',
+
+  // Bandeja de mensajes
+  'messages.empty': 'Aún no hay mensajes',
+  'messages.emptyHint': 'Tus conversaciones con profesionales y clientes aparecerán aquí.',
+  'messages.you': 'Tú:',
+  'messages.loadError': 'No se pudieron cargar los mensajes',
 };

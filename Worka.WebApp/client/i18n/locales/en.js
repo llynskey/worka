@@ -109,6 +109,8 @@ export default {
   'tabs.bidsDesc': 'Track sent quotes',
   'tabs.calendar': 'Calendar',
   'tabs.calendarDesc': 'Your booked work',
+  'tabs.messages': 'Messages',
+  'tabs.messagesDesc': 'Your conversations',
 
   // Drawer
   'drawer.home': 'Home',
@@ -521,4 +523,10 @@ export default {
   'chat.loadError': 'Could not load messages',
   'chat.sendError': 'Message not sent',
   'chat.hiddenNotice': 'Contact details are hidden until the job is booked and paid.',
+
+  // Messages inbox
+  'messages.empty': 'No messages yet',
+  'messages.emptyHint': 'Your conversations with professionals and customers will appear here.',
+  'messages.you': 'You:',
+  'messages.loadError': 'Could not load messages',
 };

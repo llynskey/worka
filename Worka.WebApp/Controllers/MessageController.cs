@@ -16,6 +16,32 @@ namespace Worka.WebApp.Controllers
             _messagesService = messagesService ?? throw new ArgumentNullException(nameof(messagesService));
         }
 
+        [HttpGet("messages")]
+        public async Task<IActionResult> ListConversations()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Unauthorized();
+            }
+
+            var result = await _messagesService.ListConversationsAsync(userId);
+            return result.Success ? Ok(result) : BadRequest(result);
+        }
+
+        [HttpPost("Jobs/{jobId}/messages/read")]
+        public async Task<IActionResult> MarkRead(string jobId, [FromBody] MarkThreadReadDTO request)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Unauthorized();
+            }
+
+            var result = await _messagesService.MarkReadAsync(userId, jobId, request?.ProfessionalId);
+            return result.Success ? Ok(result) : BadRequest(result);
+        }
+
         [HttpGet("Jobs/{jobId}/messages")]
         public async Task<IActionResult> GetThread(string jobId, [FromQuery] string professionalId = null)
         {

@@ -109,6 +109,8 @@ export default {
   'tabs.bidsDesc': 'Urmărește ofertele trimise',
   'tabs.calendar': 'Calendar',
   'tabs.calendarDesc': 'Lucrările tale rezervate',
+  'tabs.messages': 'Mesaje',
+  'tabs.messagesDesc': 'Conversațiile tale',
 
   // Drawer
   'drawer.home': 'Acasă',
@@ -521,4 +523,10 @@ export default {
   'chat.loadError': 'Mesajele nu au putut fi încărcate',
   'chat.sendError': 'Mesajul nu a fost trimis',
   'chat.hiddenNotice': 'Datele de contact sunt ascunse până când lucrarea este rezervată și plătită.',
+
+  // Căsuța de mesaje
+  'messages.empty': 'Încă nu ai mesaje',
+  'messages.emptyHint': 'Conversațiile tale cu profesioniști și clienți vor apărea aici.',
+  'messages.you': 'Tu:',
+  'messages.loadError': 'Nu s-au putut încărca mesajele',
 };
