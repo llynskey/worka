@@ -529,4 +529,5 @@ export default {
   'messages.emptyHint': 'Conversațiile tale cu profesioniști și clienți vor apărea aici.',
   'messages.you': 'Tu:',
   'messages.loadError': 'Nu s-au putut încărca mesajele',
+  'messages.unreadCount': '{count} necitite',
 };

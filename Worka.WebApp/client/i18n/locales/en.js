@@ -529,4 +529,5 @@ export default {
   'messages.emptyHint': 'Your conversations with professionals and customers will appear here.',
   'messages.you': 'You:',
   'messages.loadError': 'Could not load messages',
+  'messages.unreadCount': '{count} unread',
 };

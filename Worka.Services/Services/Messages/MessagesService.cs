@@ -106,13 +106,15 @@ namespace Worka.Services.Messages
         }
 
         /// <summary>
-        /// Every (job, professional) thread the caller takes part in, newest
-        /// activity first, with a preview of the latest message and a count of
-        /// what the other party has sent since the caller last read it. The
-        /// caller may sit on the customer side (jobs they own) or the
-        /// professional side (their own quotes/questions), or both.
+        /// The (job, professional) threads the caller takes part in for a single
+        /// side of the marketplace, newest activity first, with a preview of the
+        /// latest message and a count of what the other party has sent since the
+        /// caller last read it. <paramref name="role"/> is the caller's active
+        /// account type: a customer sees only threads on jobs they own, a
+        /// professional only their own quotes/questions. This keeps the two
+        /// inboxes separate for anyone who happens to hold both profiles.
         /// </summary>
-        public async Task<WorkaResponse<List<ConversationSummaryDTO>>> ListConversationsAsync(string userId)
+        public async Task<WorkaResponse<List<ConversationSummaryDTO>>> ListConversationsAsync(string userId, string role)
         {
             try
             {
@@ -121,14 +123,23 @@ namespace Worka.Services.Messages
                     return new WorkaResponse<List<ConversationSummaryDTO>>("Invalid user identity.");
                 }
 
-                var customer = await _dbContext.Customers.FirstOrDefaultAsync(c => c.UserId == userGuid);
-                var professional = await _dbContext.Professionals.FirstOrDefaultAsync(p => p.UserId == userGuid);
+                var empty = new WorkaResponse<List<ConversationSummaryDTO>>(new List<ConversationSummaryDTO>());
+                var viewerIsProfessional = string.Equals(role, "professional", StringComparison.OrdinalIgnoreCase);
 
-                if (customer == null && professional == null)
+                var customer = viewerIsProfessional
+                    ? null
+                    : await _dbContext.Customers.FirstOrDefaultAsync(c => c.UserId == userGuid);
+                var professional = viewerIsProfessional
+                    ? await _dbContext.Professionals.FirstOrDefaultAsync(p => p.UserId == userGuid)
+                    : null;
+
+                if (viewerIsProfessional ? professional == null : customer == null)
                 {
-                    return new WorkaResponse<List<ConversationSummaryDTO>>(new List<ConversationSummaryDTO>());
+                    return empty;
                 }
 
+                // Scope strictly to the active side so a user's professional
+                // conversations never leak into their customer inbox and vice versa.
                 var customerJobIds = customer == null
                     ? new List<Guid>()
                     : await _dbContext.Jobs
@@ -138,8 +149,8 @@ namespace Worka.Services.Messages
 
                 var professionalId = professional?.ProfessionalId;
 
-                // Pull every message the caller can see, then group in memory so
-                // the (job, professional) threading stays provider-agnostic.
+                // Pull the messages for this side, then group in memory so the
+                // (job, professional) threading stays provider-agnostic.
                 var messages = await _dbContext.JobMessages
                     .Where(m => customerJobIds.Contains(m.JobId)
                         || (professionalId != null && m.ProfessionalId == professionalId.Value))

@@ -25,7 +25,10 @@ namespace Worka.WebApp.Controllers
                 return Unauthorized();
             }
 
-            var result = await _messagesService.ListConversationsAsync(userId);
+            // The inbox is scoped to the active session's role so a user who holds
+            // both profiles never sees their professional threads as a customer.
+            var role = User.FindFirstValue(ClaimTypes.Role);
+            var result = await _messagesService.ListConversationsAsync(userId, role);
             return result.Success ? Ok(result) : BadRequest(result);
         }
 

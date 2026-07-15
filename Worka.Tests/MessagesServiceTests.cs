@@ -117,7 +117,7 @@ namespace Worka.Tests
 
             // The customer's inbox shows the pro as the counterpart, the preview
             // redacted (not booked), and one unread from the professional.
-            var customerInbox = await messages.ListConversationsAsync(customerUserId.ToString());
+            var customerInbox = await messages.ListConversationsAsync(customerUserId.ToString(), "customer");
             Assert.True(customerInbox.Success);
             var customerThread = Assert.Single(customerInbox.Data);
             Assert.Equal(jobId, customerThread.JobId);
@@ -129,7 +129,7 @@ namespace Worka.Tests
             Assert.Equal(1, customerThread.UnreadCount);
 
             // The professional's own message is not unread to them.
-            var proInbox = await messages.ListConversationsAsync(professionalUserId.ToString());
+            var proInbox = await messages.ListConversationsAsync(professionalUserId.ToString(), "professional");
             var proThread = Assert.Single(proInbox.Data);
             Assert.Equal("professional", proThread.Role);
             Assert.Equal("Cara Customer", proThread.CounterpartName);
@@ -138,13 +138,56 @@ namespace Worka.Tests
             // Marking the thread read clears the customer's unread count.
             var marked = await messages.MarkReadAsync(customerUserId.ToString(), jobId, professionalId);
             Assert.True(marked.Success);
-            var afterRead = await messages.ListConversationsAsync(customerUserId.ToString());
+            var afterRead = await messages.ListConversationsAsync(customerUserId.ToString(), "customer");
             Assert.Equal(0, Assert.Single(afterRead.Data).UnreadCount);
 
             // A new reply from the pro makes it unread again.
             await messages.SendAsync(professionalUserId.ToString(), jobId, professionalId, "Any update?");
-            var afterReply = await messages.ListConversationsAsync(customerUserId.ToString());
+            var afterReply = await messages.ListConversationsAsync(customerUserId.ToString(), "customer");
             Assert.Equal(1, Assert.Single(afterReply.Data).UnreadCount);
+        }
+
+        [Fact]
+        public async Task Inbox_keeps_a_dual_role_users_customer_and_professional_threads_apart()
+        {
+            using var db = TestHelpers.CreateDbContext();
+            var (customerUserId, professionalUserId, _) = Seed(db);
+
+            // Give the customer a professional profile too, so the same UserId
+            // sits on both sides of the marketplace.
+            db.Professionals.Add(new Professional
+            {
+                UserId = customerUserId,
+                FirstName = "Cara",
+                LastName = "Customer",
+                Email = "cara@example.com",
+                ServiceArea = "Leeds",
+                Specialty = "Cleaning",
+            });
+            db.SaveChanges();
+            var caraProId = db.Professionals.Single(p => p.UserId == customerUserId).ProfessionalId.ToString();
+            var paulProId = db.Professionals.Single(p => p.UserId == professionalUserId).ProfessionalId.ToString();
+            var messages = new MessagesService(db);
+
+            // As a customer: Cara owns a job and Paul messages her about it.
+            var caraJobId = await CreateJob(db, customerUserId);
+            await messages.SendAsync(professionalUserId.ToString(), caraJobId, paulProId, "About your tap");
+
+            // As a professional: Cara messages someone else about their job.
+            var samsJobId = await CreateJob(db, db.Customers.Single(c => c.Email == "sam@example.com").UserId);
+            await messages.SendAsync(customerUserId.ToString(), samsJobId, caraProId, "I can take this on");
+
+            // The customer inbox shows only the job she owns.
+            var asCustomer = await messages.ListConversationsAsync(customerUserId.ToString(), "customer");
+            var customerThread = Assert.Single(asCustomer.Data);
+            Assert.Equal(caraJobId, customerThread.JobId);
+            Assert.Equal("customer", customerThread.Role);
+
+            // The professional inbox shows only the thread where she quoted.
+            var asProfessional = await messages.ListConversationsAsync(customerUserId.ToString(), "professional");
+            var proThread = Assert.Single(asProfessional.Data);
+            Assert.Equal(samsJobId, proThread.JobId);
+            Assert.Equal("professional", proThread.Role);
         }
 
         [Fact]
@@ -157,14 +200,14 @@ namespace Worka.Tests
             var messages = new MessagesService(db);
 
             // No messages yet: everyone's inbox is empty.
-            var empty = await messages.ListConversationsAsync(customerUserId.ToString());
+            var empty = await messages.ListConversationsAsync(customerUserId.ToString(), "customer");
             Assert.True(empty.Success);
             Assert.Empty(empty.Data);
 
             await messages.SendAsync(professionalUserId.ToString(), jobId, professionalId, "Hello");
 
             // A non-participant sees nothing and cannot mark the thread read.
-            var strangerInbox = await messages.ListConversationsAsync(strangerUserId.ToString());
+            var strangerInbox = await messages.ListConversationsAsync(strangerUserId.ToString(), "customer");
             Assert.Empty(strangerInbox.Data);
             var strangerMark = await messages.MarkReadAsync(strangerUserId.ToString(), jobId, professionalId);
             Assert.False(strangerMark.Success);

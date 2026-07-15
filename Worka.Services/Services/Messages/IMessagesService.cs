@@ -7,7 +7,7 @@ namespace Worka.Services.Messages
     {
         Task<WorkaResponse<List<JobMessageDTO>>> GetThreadAsync(string userId, string jobId, string professionalId = null);
         Task<WorkaResponse<JobMessageDTO>> SendAsync(string userId, string jobId, string professionalId, string body);
-        Task<WorkaResponse<List<ConversationSummaryDTO>>> ListConversationsAsync(string userId);
+        Task<WorkaResponse<List<ConversationSummaryDTO>>> ListConversationsAsync(string userId, string role);
         Task<WorkaResponse<bool>> MarkReadAsync(string userId, string jobId, string professionalId);
     }
 }

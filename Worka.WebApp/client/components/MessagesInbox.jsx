@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  Platform,
   RefreshControl,
   StyleSheet,
   Text,
@@ -108,6 +109,8 @@ const MessagesInbox = ({ role = 'customer' }) => {
     loadQuietly().catch(() => {});
   }, [loadQuietly]);
 
+  const totalUnread = conversations.reduce((sum, c) => sum + (c.unreadCount || 0), 0);
+
   const renderItem = ({ item }) => {
     const { first, last } = splitName(item.counterpartName);
     const unread = item.unreadCount > 0;
@@ -122,7 +125,7 @@ const MessagesInbox = ({ role = 'customer' }) => {
         activeOpacity={0.85}
         onPress={() => openThread(item)}
       >
-        <Avatar photoUrl={item.counterpartPhotoUrl} firstName={first} lastName={last} size={46} />
+        <Avatar photoUrl={item.counterpartPhotoUrl} firstName={first} lastName={last} size={52} />
         <View style={styles.rowBody}>
           <View style={styles.rowTop}>
             <Text style={[styles.counterpart, unread && styles.counterpartUnread]} numberOfLines={1}>
@@ -144,17 +147,38 @@ const MessagesInbox = ({ role = 'customer' }) => {
               <View style={styles.badge}>
                 <Text style={styles.badgeText}>{item.unreadCount}</Text>
               </View>
-            ) : null}
+            ) : (
+              <MaterialCommunityIcons name="chevron-right" size={22} color="#c4c1b6" />
+            )}
           </View>
         </View>
       </TouchableOpacity>
     );
   };
 
+  const header = (
+    <View style={styles.hero}>
+      <View style={styles.heroCopy}>
+        <Text style={styles.eyebrow}>{t('tabs.messages')}</Text>
+        <Text style={styles.heroTitle}>{t('tabs.messagesDesc')}</Text>
+      </View>
+      {totalUnread > 0 ? (
+        <View style={styles.heroBadge}>
+          <Text style={styles.heroBadgeText}>{t('messages.unreadCount', { count: totalUnread })}</Text>
+        </View>
+      ) : null}
+    </View>
+  );
+
   if (loading && conversations.length === 0) {
     return (
-      <View style={styles.centerState}>
-        <ActivityIndicator color="#111" />
+      <View style={styles.loadingWrap}>
+        <View style={styles.column}>
+          {header}
+          <View style={styles.centerState}>
+            <ActivityIndicator color="#111" />
+          </View>
+        </View>
       </View>
     );
   }
@@ -165,12 +189,12 @@ const MessagesInbox = ({ role = 'customer' }) => {
         data={conversations}
         keyExtractor={(item) => `${item.jobId}:${item.professionalId}`}
         renderItem={renderItem}
-        contentContainerStyle={
-          conversations.length === 0 ? styles.emptyContainer : styles.listContent
-        }
+        ListHeaderComponent={header}
+        contentContainerStyle={styles.listContent}
+        ItemSeparatorComponent={() => <View style={styles.separator} />}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor="#111" />}
         ListEmptyComponent={
-          <View style={styles.centerState}>
+          <View style={styles.emptyCard}>
             <MaterialCommunityIcons name="chat-outline" size={34} color="#62645c" />
             <Text style={styles.emptyTitle}>{t('messages.empty')}</Text>
             <Text style={styles.emptyHint}>{t('messages.emptyHint')}</Text>
@@ -192,19 +216,81 @@ const MessagesInbox = ({ role = 'customer' }) => {
 };
 
 const styles = StyleSheet.create({
+  loadingWrap: {
+    flex: 1,
+    backgroundColor: '#f7f5ef',
+  },
+  // Centred, width-capped column so rows stay readable on wide desktops
+  // instead of stretching across the whole workspace.
   listContent: {
     padding: 16,
-    gap: 10,
-  },
-  emptyContainer: {
+    paddingBottom: 28,
     flexGrow: 1,
+    backgroundColor: '#f7f5ef',
+    width: '100%',
+    maxWidth: 760,
+    alignSelf: 'center',
+  },
+  column: {
+    padding: 16,
+    width: '100%',
+    maxWidth: 760,
+    alignSelf: 'center',
+  },
+  separator: {
+    height: 10,
+  },
+  hero: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: '#18201d',
+    borderRadius: 8,
+    padding: 18,
+    marginBottom: 14,
+  },
+  heroCopy: {
+    flex: 1,
+    minWidth: 0,
+  },
+  eyebrow: {
+    color: '#d6f36a',
+    fontSize: 12,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+    marginBottom: 6,
+  },
+  heroTitle: {
+    color: '#fff',
+    fontSize: 22,
+    fontWeight: '900',
+  },
+  heroBadge: {
+    backgroundColor: '#d6f36a',
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  heroBadgeText: {
+    color: '#18201d',
+    fontSize: 13,
+    fontWeight: '900',
+  },
+  emptyCard: {
+    alignItems: 'center',
     justifyContent: 'center',
+    paddingVertical: 44,
+    paddingHorizontal: 24,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#e3dfd2',
+    borderRadius: 8,
   },
   centerState: {
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 48,
-    paddingHorizontal: 24,
   },
   emptyTitle: {
     marginTop: 12,
@@ -218,16 +304,18 @@ const styles = StyleSheet.create({
     color: '#62645c',
     textAlign: 'center',
     lineHeight: 20,
+    maxWidth: 340,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 14,
     backgroundColor: '#fff',
     borderWidth: 1,
     borderColor: '#e3dfd2',
     borderRadius: 8,
-    padding: 12,
+    padding: 14,
+    ...(Platform.OS === 'web' ? { cursor: 'pointer' } : null),
   },
   rowUnread: {
     borderColor: '#111',
@@ -246,7 +334,7 @@ const styles = StyleSheet.create({
   counterpart: {
     flex: 1,
     color: '#111',
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '800',
   },
   counterpartUnread: {
@@ -258,7 +346,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   job: {
-    marginTop: 2,
+    marginTop: 3,
     color: '#62645c',
     fontSize: 12,
     fontWeight: '700',
@@ -266,7 +354,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
   rowBottom: {
-    marginTop: 5,
+    marginTop: 6,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
@@ -274,17 +362,18 @@ const styles = StyleSheet.create({
   preview: {
     flex: 1,
     color: '#64675f',
-    fontSize: 13,
+    fontSize: 14,
+    lineHeight: 19,
   },
   previewUnread: {
     color: '#111',
     fontWeight: '700',
   },
   badge: {
-    minWidth: 22,
-    height: 22,
-    borderRadius: 11,
-    paddingHorizontal: 6,
+    minWidth: 24,
+    height: 24,
+    borderRadius: 12,
+    paddingHorizontal: 7,
     backgroundColor: '#111',
     alignItems: 'center',
     justifyContent: 'center',
