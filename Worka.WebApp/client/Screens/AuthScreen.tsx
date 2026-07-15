@@ -478,6 +478,14 @@ const AuthScreen: React.FC = () => {
                 <Text style={styles.eyebrow}>{t("landing.eyebrow")}</Text>
               </View>
 
+              <LanguageMarquee
+                languages={languages}
+                activeCode={language}
+                onSelect={setLanguage}
+                isPhone={isPhone}
+                style={styles.bubbles}
+              />
+
               <LanguageCycler
                 items={heroTitles}
                 containerStyle={{ minHeight: isPhone ? 130 : isStacked ? 165 : 230 }}
@@ -496,14 +504,6 @@ const AuthScreen: React.FC = () => {
               </Text>
 
               {!isStacked && renderBenefits()}
-
-              <LanguageMarquee
-                languages={languages}
-                activeCode={language}
-                onSelect={setLanguage}
-                isPhone={isPhone}
-                style={styles.bubbles}
-              />
             </View>
 
             <View
@@ -1371,7 +1371,7 @@ const styles = StyleSheet.create({
     paddingTop: 20,
   },
   bubbles: {
-    marginTop: 34,
+    marginBottom: 22,
   },
   eyebrowRow: {
     flexDirection: "row",
