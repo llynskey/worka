@@ -114,7 +114,11 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
             // Measured height, not 100vh — keeps the bottom of the form
             // clear of iPhone Safari's floating toolbar.
             Platform.OS === 'web'
-              ? ({ height: viewportHeight, maxHeight: viewportHeight } as any)
+              ? ({
+                  height: viewportHeight,
+                  maxHeight: viewportHeight,
+                  overflowX: 'hidden',
+                } as any)
               : undefined
           }
           keyboardShouldPersistTaps="handled"

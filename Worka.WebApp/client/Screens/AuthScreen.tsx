@@ -414,7 +414,13 @@ const AuthScreen: React.FC = () => {
   // Safari's floating toolbar never covers the bottom of the page.
   const webScrollStyle =
     Platform.OS === "web"
-      ? ({ height: viewportHeight, maxHeight: viewportHeight } as any)
+      ? ({
+          height: viewportHeight,
+          maxHeight: viewportHeight,
+          // Never allow sideways panning on devices — anything wider than
+          // the viewport is clipped instead of stretching the page.
+          overflowX: "hidden",
+        } as any)
       : null;
 
   return (
@@ -1317,7 +1323,10 @@ const styles = StyleSheet.create({
     ...webPressTransition,
     minHeight: 44,
     flexGrow: 0,
-    flexShrink: 0,
+    // Must be allowed to shrink: with longer translations a rigid pill
+    // pushes the whole nav row wider than the phone viewport.
+    flexShrink: 1,
+    minWidth: 0,
     flexBasis: "auto",
     borderWidth: 1,
     borderColor: "#111",
@@ -1336,6 +1345,8 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     letterSpacing: 0.2,
     textAlign: "center",
+    flexShrink: 1,
+    minWidth: 0,
   },
   languageRow: {
     flexDirection: "row",

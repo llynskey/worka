@@ -17,6 +17,7 @@ import { api, formatDate, getErrorMessage, unwrap } from '../../api/workaApi';
 import { formatDistance, getDistanceKm, requestCurrentLocation } from '../../Utils/locationUtils';
 import { useI18n } from '../../i18n/I18nContext';
 import { categoryLabel } from '../../i18n/categories';
+import AppFooter from '../AppFooter';
 import MapPreview from '../MapPreview';
 
 const hasCoordinates = (job) => Number.isFinite(Number(job.latitude)) && Number.isFinite(Number(job.longitude));
@@ -303,6 +304,7 @@ const JobMap = () => {
           <WebMapFrame job={selectedJob} minHeight={mapHeight} userLocation={currentLocation} />
         </View>
         <View style={styles.narrowList}>{listBody}</View>
+        <AppFooter />
       </ScrollView>
     );
   }
@@ -319,6 +321,7 @@ const JobMap = () => {
 
         <ScrollView style={styles.listPane} contentContainerStyle={styles.listContent}>
           {listBody}
+          <AppFooter />
         </ScrollView>
       </View>
     </View>
