@@ -27,6 +27,11 @@ export default function SharedDrawerContent(props) {
           <MaterialCommunityIcons name="logout" size={20} color="#fff" />
           <Text style={styles.logoutText}>Logout</Text>
         </Pressable>
+
+        <Text style={styles.legalText}>
+          Worka <Text style={styles.legalDot}>·</Text> an{' '}
+          <Text style={styles.legalStrong}>LSL</Text> product
+        </Text>
       </View>
     </DrawerContentScrollView>
   );
@@ -74,9 +79,25 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 30,
+    marginBottom: 14,
     flexDirection: 'row',
     gap: 8,
+  },
+  legalText: {
+    textAlign: 'center',
+    color: '#a9aba2',
+    fontSize: 11,
+    fontWeight: '600',
+    letterSpacing: 0.3,
+    marginBottom: 18,
+  },
+  legalDot: {
+    color: '#c9cbc2',
+  },
+  legalStrong: {
+    color: '#8a8d84',
+    fontWeight: '900',
+    letterSpacing: 0.6,
   },
   logoutText: {
     color: '#fff',

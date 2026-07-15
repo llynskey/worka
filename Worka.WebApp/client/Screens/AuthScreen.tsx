@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Image,
   KeyboardAvoidingView,
+  Linking,
   Platform,
   Pressable,
   ScrollView,
@@ -323,6 +324,33 @@ const AuthScreen: React.FC = () => {
     }
   };
 
+  const renderLanguageChips = () =>
+    languages.map((lang) => {
+      const active = lang.code === language;
+      return (
+        <Pressable
+          key={lang.code}
+          accessibilityRole="button"
+          accessibilityLabel={`Switch language to ${lang.label}`}
+          onPress={() => setLanguage(lang.code)}
+          style={({ pressed }) => [
+            styles.languageChip,
+            active && styles.languageChipActive,
+            pressed && styles.pressed,
+          ]}
+        >
+          <Text
+            style={[
+              styles.languageChipText,
+              active && styles.languageChipTextActive,
+            ]}
+          >
+            {lang.code.toUpperCase()}
+          </Text>
+        </Pressable>
+      );
+    });
+
   const renderBenefits = (stacked = false) => (
     <View style={[styles.benefitList, stacked && styles.benefitListStacked]}>
       {[1, 2, 3].map((n) => (
@@ -401,63 +429,49 @@ const AuthScreen: React.FC = () => {
         showsVerticalScrollIndicator
       >
         <View style={styles.shell}>
-          <View style={[styles.nav, isPhone && styles.navPhone]}>
-            <Image
-              source={require("../assets/logo.png")}
-              style={[styles.logo, isPhone && styles.logoPhone]}
-              resizeMode="contain"
-              accessibilityLabel="Worka"
-            />
-
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={
-                showLogin ? "Open waitlist form" : "Open sign in form"
-              }
-              onPress={showLogin ? openWaitlist : () => openAuth("login")}
-              style={({ pressed }) => [
-                styles.navButton,
-                pressed && styles.pressed,
-              ]}
-            >
-              <MaterialCommunityIcons
-                name={showLogin ? "arrow-left" : "lock-outline"}
-                size={17}
-                color="#111"
+          <View style={[styles.header, isPhone && styles.headerPhone]}>
+            <View style={styles.nav}>
+              <Image
+                source={require("../assets/logo.png")}
+                style={[styles.logo, isPhone && styles.logoPhone]}
+                resizeMode="contain"
+                accessibilityLabel="Worka"
               />
-              <Text style={styles.navButtonText}>
-                {showLogin ? t("landing.joinWaitlist") : t("landing.signIn")}
-              </Text>
-            </Pressable>
-          </View>
 
-          <View style={styles.languageRow}>
-            <MaterialCommunityIcons name="web" size={16} color="#555" />
-            {languages.map((lang) => {
-              const active = lang.code === language;
-              return (
+              <View style={styles.navRight}>
+                {!isPhone && (
+                  <View style={styles.navLangs}>{renderLanguageChips()}</View>
+                )}
+
                 <Pressable
-                  key={lang.code}
                   accessibilityRole="button"
-                  accessibilityLabel={`Switch language to ${lang.label}`}
-                  onPress={() => setLanguage(lang.code)}
+                  accessibilityLabel={
+                    showLogin ? "Open waitlist form" : "Open sign in form"
+                  }
+                  onPress={showLogin ? openWaitlist : () => openAuth("login")}
                   style={({ pressed }) => [
-                    styles.languageChip,
-                    active && styles.languageChipActive,
+                    styles.navButton,
                     pressed && styles.pressed,
                   ]}
                 >
-                  <Text
-                    style={[
-                      styles.languageChipText,
-                      active && styles.languageChipTextActive,
-                    ]}
-                  >
-                    {lang.code.toUpperCase()}
+                  <MaterialCommunityIcons
+                    name={showLogin ? "arrow-left" : "lock-outline"}
+                    size={17}
+                    color="#fff"
+                  />
+                  <Text style={styles.navButtonText}>
+                    {showLogin ? t("landing.joinWaitlist") : t("landing.signIn")}
                   </Text>
                 </Pressable>
-              );
-            })}
+              </View>
+            </View>
+
+            {isPhone && (
+              <View style={styles.languageRow}>
+                <MaterialCommunityIcons name="web" size={16} color="#555" />
+                {renderLanguageChips()}
+              </View>
+            )}
           </View>
 
           <View
@@ -1144,16 +1158,62 @@ const AuthScreen: React.FC = () => {
             ) : null}
           </View>
 
-          <View
-            style={[
-              styles.footer,
-              isPhone ? styles.footerPhone : styles.footerDesktop,
-            ]}
-          >
-            <Text style={styles.footerText}>
-              Built for expats, language communities, and trusted local helpers.
-            </Text>
-            <Text style={styles.footerText}>Black. White. Clear.</Text>
+          <View style={styles.footer}>
+            <View
+              style={[
+                styles.footerTop,
+                isPhone ? styles.footerTopPhone : null,
+              ]}
+            >
+              <View style={styles.footerBrand}>
+                <Image
+                  source={require("../assets/logo.png")}
+                  style={styles.footerLogo}
+                  resizeMode="contain"
+                  accessibilityLabel="Worka"
+                />
+                <Text style={styles.footerTagline}>
+                  Built for expats, language communities, and trusted local
+                  helpers.
+                </Text>
+              </View>
+
+              <View style={styles.footerContact}>
+                <Pressable
+                  accessibilityRole="link"
+                  onPress={() => Linking.openURL("mailto:support@worka.site")}
+                  style={({ pressed }) => [
+                    styles.footerLink,
+                    pressed && styles.pressed,
+                  ]}
+                >
+                  <MaterialCommunityIcons
+                    name="email-outline"
+                    size={16}
+                    color="#111"
+                  />
+                  <Text style={styles.footerLinkText}>support@worka.site</Text>
+                </Pressable>
+                <View style={styles.footerLink}>
+                  <MaterialCommunityIcons
+                    name="shield-check-outline"
+                    size={16}
+                    color="#111"
+                  />
+                  <Text style={styles.footerLinkText}>
+                    Payments secured by Stripe
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            <View style={styles.footerLegal}>
+              <Text style={styles.footerLegalText}>
+                © {new Date().getFullYear()} Worka
+                <Text style={styles.footerLegalDot}>{"  ·  "}</Text>
+                an <Text style={styles.footerLegalStrong}>LSL</Text> product
+              </Text>
+            </View>
           </View>
         </View>
       </ScrollView>
@@ -1179,15 +1239,36 @@ const styles = StyleSheet.create({
     maxWidth: 1180,
     alignSelf: "center",
   },
+  header: {
+    width: "100%",
+    borderBottomWidth: 1,
+    borderBottomColor: "#ece7dc",
+    paddingBottom: 18,
+    marginBottom: 44,
+    gap: 14,
+  },
+  headerPhone: {
+    paddingBottom: 14,
+    marginBottom: 30,
+  },
   nav: {
     width: "100%",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 14,
+    gap: 12,
   },
-  navPhone: {
-    marginBottom: 10,
+  navRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
+    flexShrink: 1,
+    minWidth: 0,
+  },
+  navLangs: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
   },
   logo: {
     width: 150,
@@ -1204,9 +1285,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#111",
     borderRadius: 999,
-    paddingHorizontal: 16,
+    paddingHorizontal: 18,
     paddingVertical: 10,
-    backgroundColor: "#fff",
+    backgroundColor: "#111",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
@@ -1215,9 +1296,10 @@ const styles = StyleSheet.create({
   navButtonText: {
     minWidth: 0,
     flexShrink: 1,
-    color: "#111",
+    color: "#fff",
     fontSize: 14,
     fontWeight: "800",
+    letterSpacing: 0.2,
     textAlign: "center",
   },
   languageRow: {
@@ -1225,8 +1307,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flexWrap: "wrap",
     gap: 8,
-    marginTop: 0,
-    marginBottom: 40,
   },
   languageChip: {
     ...webPressTransition,
@@ -1721,26 +1801,73 @@ const styles = StyleSheet.create({
   footer: {
     width: "100%",
     borderTopWidth: 1,
-    borderTopColor: "#bbb",
-    marginTop: 52,
-    paddingTop: 20,
-    gap: 8,
+    borderTopColor: "#ece7dc",
+    marginTop: 60,
+    paddingTop: 28,
   },
-  footerDesktop: {
+  footerTop: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     justifyContent: "space-between",
+    gap: 24,
   },
-  footerPhone: {
+  footerTopPhone: {
     flexDirection: "column",
     alignItems: "flex-start",
+    gap: 18,
   },
-  footerText: {
-    minWidth: 0,
+  footerBrand: {
     flexShrink: 1,
-    color: "#555",
+    minWidth: 0,
+    maxWidth: 420,
+    gap: 10,
+  },
+  footerLogo: {
+    width: 96,
+    height: 38,
+    marginLeft: -4,
+  },
+  footerTagline: {
+    color: "#62645c",
     fontSize: 13,
-    fontWeight: "700",
+    lineHeight: 20,
+    fontWeight: "600",
+  },
+  footerContact: {
+    gap: 10,
+    alignItems: "flex-start",
+  },
+  footerLink: {
+    ...webPressTransition,
+    minHeight: 32,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
+  },
+  footerLinkText: {
+    color: "#111",
+    fontSize: 13,
+    fontWeight: "800",
+  },
+  footerLegal: {
+    marginTop: 26,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: "#f1ede4",
+  },
+  footerLegalText: {
+    color: "#8a8d84",
+    fontSize: 12,
+    fontWeight: "600",
+    letterSpacing: 0.2,
+  },
+  footerLegalDot: {
+    color: "#c9cbc2",
+  },
+  footerLegalStrong: {
+    color: "#62645c",
+    fontWeight: "900",
+    letterSpacing: 0.6,
   },
 });
 
