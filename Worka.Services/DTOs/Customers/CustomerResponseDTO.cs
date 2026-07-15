@@ -22,6 +22,8 @@ namespace Worka.Services.DTOs.Customers
 
         public string PhotoUrl { get; set; }
 
+        public string PreferredCurrency { get; set; }
+
         public CustomerResponseDTO(Customer customer)
         {
             CustomerId = customer.CustomerId.ToString();
@@ -33,6 +35,7 @@ namespace Worka.Services.DTOs.Customers
             Address = customer.Address;
             Languages = customer.Languages;
             PhotoUrl = customer.PhotoUrl;
+            PreferredCurrency = customer.PreferredCurrency;
         }
     }
 }

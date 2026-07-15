@@ -14,8 +14,11 @@ import { useFocusEffect } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { api, formatDate, formatMoney, getErrorMessage, unwrap } from '../../api/workaApi';
 import notify, { confirmAction } from '../../Utils/notify';
+import { useI18n } from '../../i18n/I18nContext';
+import { categoryLabel } from '../../i18n/categories';
 
 const BidList = () => {
+  const { t } = useI18n();
   const [account, setAccount] = useState(null);
   const [quotes, setQuotes] = useState([]);
   const [jobs, setJobs] = useState([]);
@@ -46,12 +49,12 @@ const BidList = () => {
       setRefreshing(true);
       await loadBids();
     } catch (err) {
-      setError(getErrorMessage(err, 'Unable to load your bids.'));
+      setError(getErrorMessage(err, t('bids.loadError')));
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [loadBids]);
+  }, [loadBids, t]);
 
   useFocusEffect(
     useCallback(() => {
@@ -79,7 +82,7 @@ const BidList = () => {
     if (!editQuote) return;
     const amount = Number(editForm.price);
     if (!Number.isFinite(amount) || amount <= 0) {
-      notify('Add a price', 'Enter a valid quote amount.');
+      notify(t('quotes.addPriceTitle'), t('quotes.addPriceText'));
       return;
     }
 
@@ -91,39 +94,40 @@ const BidList = () => {
       });
       setEditQuote(null);
       await refresh();
-      notify('Quote updated', 'The customer will see your new price.');
+      notify(t('quotes.updatedTitle'), t('quotes.updatedText'));
     } catch (err) {
-      notify('Could not update quote', getErrorMessage(err, 'Try again in a moment.'));
+      notify(t('quotes.updateErrorTitle'), getErrorMessage(err, t('common.tryAgain')));
     } finally {
       setSavingEdit(false);
     }
-  }, [editForm, editQuote, refresh]);
+  }, [editForm, editQuote, refresh, t]);
 
   const withdrawQuote = useCallback(
     async (quote) => {
       const confirmed = await confirmAction(
-        'Withdraw this quote?',
-        `Your ${formatMoney(quote.price)} quote will be removed from the job.`,
-        'Withdraw'
+        t('bids.withdrawConfirmTitle'),
+        t('bids.withdrawConfirmText', { amount: formatMoney(quote.price) }),
+        t('bids.withdraw'),
+        t('common.cancel')
       );
       if (!confirmed) return;
 
       try {
         await api.delete(`/Quotes/${quote.quoteId}`);
         await refresh();
-        notify('Quote withdrawn', 'You can send a new quote any time.');
+        notify(t('bids.withdrawnTitle'), t('bids.withdrawnText'));
       } catch (err) {
-        notify('Could not withdraw quote', getErrorMessage(err, 'Try again in a moment.'));
+        notify(t('bids.withdrawErrorTitle'), getErrorMessage(err, t('common.tryAgain')));
       }
     },
-    [refresh]
+    [refresh, t]
   );
 
   if (loading && !refreshing) {
     return (
       <View style={styles.centerState}>
         <ActivityIndicator color="#111" />
-        <Text style={styles.mutedText}>Loading your bids...</Text>
+        <Text style={styles.mutedText}>{t('bids.loading')}</Text>
       </View>
     );
   }
@@ -132,10 +136,10 @@ const BidList = () => {
     return (
       <View style={styles.centerState}>
         <MaterialCommunityIcons name="cloud-alert-outline" size={34} color="#111" />
-        <Text style={styles.errorTitle}>Could not load bids</Text>
+        <Text style={styles.errorTitle}>{t('bids.couldNotLoad')}</Text>
         <Text style={styles.mutedText}>{error}</Text>
         <TouchableOpacity style={styles.primaryButton} onPress={refresh}>
-          <Text style={styles.primaryButtonText}>Retry</Text>
+          <Text style={styles.primaryButtonText}>{t('common.retry')}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -150,17 +154,19 @@ const BidList = () => {
       contentContainerStyle={styles.listContent}
       ListHeaderComponent={
         <View style={styles.hero}>
-          <Text style={styles.eyebrow}>Bid desk</Text>
-          <Text style={styles.heroTitle}>{account ? `${account.firstName}'s quotes` : 'Your quotes'}</Text>
-          <Text style={styles.heroText}>Track submitted prices and see which jobs have been booked.</Text>
+          <Text style={styles.eyebrow}>{t('bids.eyebrow')}</Text>
+          <Text style={styles.heroTitle}>
+            {account ? t('bids.heroTitleNamed', { name: account.firstName }) : t('bids.heroTitle')}
+          </Text>
+          <Text style={styles.heroText}>{t('bids.heroText')}</Text>
           <View style={styles.statsRow}>
             <View style={styles.statChip}>
               <Text style={styles.statValue}>{quotes.length}</Text>
-              <Text style={styles.statLabel}>Sent</Text>
+              <Text style={styles.statLabel}>{t('bids.sent')}</Text>
             </View>
             <View style={styles.statChip}>
               <Text style={styles.statValue}>{acceptedCount}</Text>
-              <Text style={styles.statLabel}>Accepted</Text>
+              <Text style={styles.statLabel}>{t('status.accepted')}</Text>
             </View>
           </View>
         </View>
@@ -168,8 +174,8 @@ const BidList = () => {
       ListEmptyComponent={
         <View style={styles.emptyState}>
           <MaterialCommunityIcons name="file-document-edit-outline" size={40} color="#111" />
-          <Text style={styles.emptyTitle}>No bids yet</Text>
-          <Text style={styles.mutedText}>Send a quote from Available Jobs to build your bid pipeline.</Text>
+          <Text style={styles.emptyTitle}>{t('bids.emptyTitle')}</Text>
+          <Text style={styles.mutedText}>{t('bids.emptyText')}</Text>
         </View>
       }
       renderItem={({ item }) => {
@@ -181,40 +187,40 @@ const BidList = () => {
           <View style={styles.card}>
             <View style={styles.cardHeader}>
               <View>
-                <Text style={styles.cardTitle}>{job?.jobName ?? 'Job unavailable'}</Text>
-                <Text style={styles.cardMeta}>{job?.category ?? 'Home services'} - {formatDate(item.createdAt)}</Text>
+                <Text style={styles.cardTitle}>{job?.jobName ?? t('bids.jobUnavailable')}</Text>
+                <Text style={styles.cardMeta}>{categoryLabel(t, job?.category)} - {formatDate(item.createdAt)}</Text>
               </View>
               <View style={[styles.statusPill, accepted && styles.statusAccepted, bookedElsewhere && styles.statusClosed]}>
                 <Text style={[styles.statusText, accepted && styles.statusTextAccepted]}>
-                  {accepted ? 'Accepted' : bookedElsewhere ? 'Booked' : 'Pending'}
+                  {accepted ? t('status.accepted') : bookedElsewhere ? t('status.booked') : t('status.pending')}
                 </Text>
               </View>
             </View>
 
             <Text style={styles.amount}>{formatMoney(item.price, job?.currency)}</Text>
-            <Text style={styles.description}>{item.description || 'No quote note provided.'}</Text>
+            <Text style={styles.description}>{item.description || t('quotes.noNote')}</Text>
             {accepted ? (
               <View style={styles.payoutBox}>
                 <MaterialCommunityIcons name="cash-fast" size={18} color="#24513b" />
                 <Text style={styles.payoutText}>
-                  Customer booked this quote. Your share is {formatMoney(item.price, job?.currency)} and is paid out through Stripe Connect once your payout account is ready.
+                  {t('bids.payoutText', { amount: formatMoney(item.price, job?.currency) })}
                 </Text>
               </View>
             ) : (
               <>
                 <View style={styles.pendingBox}>
                   <MaterialCommunityIcons name="clock-outline" size={18} color="#111" />
-                  <Text style={styles.pendingText}>The customer can review this quote and pay securely through Worka.</Text>
+                  <Text style={styles.pendingText}>{t('bids.pendingText')}</Text>
                 </View>
                 {!bookedElsewhere && (
                   <View style={styles.quoteActions}>
                     <TouchableOpacity style={styles.quoteActionButton} onPress={() => openEditQuote(item)}>
                       <MaterialCommunityIcons name="pencil-outline" size={17} color="#111" />
-                      <Text style={styles.quoteActionText}>Edit</Text>
+                      <Text style={styles.quoteActionText}>{t('common.edit')}</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.quoteActionButton} onPress={() => withdrawQuote(item)}>
                       <MaterialCommunityIcons name="trash-can-outline" size={17} color="#8c2f2f" />
-                      <Text style={[styles.quoteActionText, styles.quoteActionDanger]}>Withdraw</Text>
+                      <Text style={[styles.quoteActionText, styles.quoteActionDanger]}>{t('bids.withdraw')}</Text>
                     </TouchableOpacity>
                   </View>
                 )}
@@ -229,7 +235,7 @@ const BidList = () => {
       <View style={styles.editBackdrop}>
         <View style={styles.editCard}>
           <View style={styles.editHeader}>
-            <Text style={styles.editTitle}>Edit quote</Text>
+            <Text style={styles.editTitle}>{t('bids.editQuote')}</Text>
             <TouchableOpacity
               style={styles.editClose}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -243,7 +249,7 @@ const BidList = () => {
             style={styles.editInput}
             value={editForm.price}
             onChangeText={(price) => setEditForm((current) => ({ ...current, price }))}
-            placeholder="Price (GBP)"
+            placeholder={t('quotes.pricePlaceholder', { currency: 'GBP' })}
             placeholderTextColor="#686b64"
             keyboardType="decimal-pad"
           />
@@ -251,13 +257,13 @@ const BidList = () => {
             style={[styles.editInput, styles.editTextArea]}
             value={editForm.description}
             onChangeText={(description) => setEditForm((current) => ({ ...current, description }))}
-            placeholder="What's included"
+            placeholder={t('quotes.includedPlaceholder')}
             placeholderTextColor="#686b64"
             multiline
           />
 
           <TouchableOpacity style={styles.editSaveButton} onPress={saveQuoteEdit} disabled={savingEdit}>
-            {savingEdit ? <ActivityIndicator color="#fff" /> : <Text style={styles.editSaveText}>Save changes</Text>}
+            {savingEdit ? <ActivityIndicator color="#fff" /> : <Text style={styles.editSaveText}>{t('common.saveChanges')}</Text>}
           </TouchableOpacity>
         </View>
       </View>

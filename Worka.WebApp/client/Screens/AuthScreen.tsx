@@ -22,31 +22,35 @@ import { translations } from "../i18n/translations";
 import LanguageCycler from "../components/LanguageCycler";
 import Reveal from "../components/Reveal";
 
+// Stable English `value` strings are sent to the API; the labels shown to
+// the user resolve through t(option.key) at render time.
 const audienceOptions = [
-  "I need help in my language",
-  "I can work for expats",
-  "I want updates",
+  { value: "I need help in my language", key: "waitlist.optNeedHelp" },
+  { value: "I can work for expats", key: "waitlist.optCanWork" },
+  { value: "I want updates", key: "waitlist.optUpdates" },
 ];
 
+// `value` 0/1 is the API account type — never translated. Labels and
+// descriptions resolve through t() at render time.
 const accountTypes = [
   {
-    label: "Customer",
+    labelKey: "workspace.customer",
     value: 0,
     icon: "home-search-outline",
-    description: "Post jobs and compare quotes.",
+    descriptionKey: "auth.customerDesc",
   },
   {
-    label: "Professional",
+    labelKey: "workspace.professional",
     value: 1,
     icon: "briefcase-check-outline",
-    description: "Find work and send quotes.",
+    descriptionKey: "auth.professionalDesc",
   },
 ] as const;
 
 const emptyInterestForm = {
   name: "",
   email: "",
-  role: audienceOptions[0],
+  role: audienceOptions[0].value,
   language: "",
   location: "",
   message: "",
@@ -168,17 +172,17 @@ const AuthScreen: React.FC = () => {
     setInterestError("");
 
     if (!interestForm.name.trim()) {
-      setInterestError("Add your name so we know who to contact.");
+      setInterestError(t("waitlist.errName"));
       return;
     }
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(interestForm.email.trim())) {
-      setInterestError("Enter a valid email address.");
+      setInterestError(t("waitlist.errEmail"));
       return;
     }
 
     if (!interestForm.language.trim()) {
-      setInterestError("Tell us which language you need or can offer.");
+      setInterestError(t("waitlist.errLanguage"));
       return;
     }
 
@@ -194,12 +198,7 @@ const AuthScreen: React.FC = () => {
       });
       setRegistered(true);
     } catch (error) {
-      setInterestError(
-        getErrorMessage(
-          error,
-          "Could not register your interest. Please try again.",
-        ),
-      );
+      setInterestError(getErrorMessage(error, t("waitlist.errSubmit")));
     } finally {
       setInterestLoading(false);
     }
@@ -209,7 +208,7 @@ const AuthScreen: React.FC = () => {
     setAuthError("");
 
     if (!loginEmail.trim() || !password) {
-      setAuthError("Enter your email and password.");
+      setAuthError(t("auth.errCredentials"));
       return;
     }
 
@@ -222,26 +221,26 @@ const AuthScreen: React.FC = () => {
 
       const token = response?.data?.token;
       if (!token) {
-        setAuthError("No session token was returned.");
+        setAuthError(t("auth.errNoToken"));
         return;
       }
 
       await signInWithToken(token);
     } catch (error) {
-      setAuthError(getErrorMessage(error, "Unable to log in right now."));
+      setAuthError(getErrorMessage(error, t("auth.errLogin")));
     } finally {
       setLoginLoading(false);
     }
   };
 
   const validateSignup = () => {
-    if (!signupForm.firstName.trim()) return "First name is required.";
-    if (!signupForm.lastName.trim()) return "Last name is required.";
+    if (!signupForm.firstName.trim()) return t("auth.errFirstName");
+    if (!signupForm.lastName.trim()) return t("auth.errLastName");
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(signupForm.email.trim())) {
-      return "Enter a valid email address.";
+      return t("auth.errEmail");
     }
     if (signupForm.password.length < 6) {
-      return "Password must be at least 6 characters.";
+      return t("auth.errPassword");
     }
     return "";
   };
@@ -267,15 +266,13 @@ const AuthScreen: React.FC = () => {
 
       const token = response?.data?.token;
       if (!token) {
-        setAuthError("No session token was returned.");
+        setAuthError(t("auth.errNoToken"));
         return;
       }
 
       await signInWithToken(token);
     } catch (error) {
-      setAuthError(
-        getErrorMessage(error, "Unable to create your account right now."),
-      );
+      setAuthError(getErrorMessage(error, t("auth.errSignup")));
     } finally {
       setSignupLoading(false);
     }
@@ -301,18 +298,16 @@ const AuthScreen: React.FC = () => {
     setAuthInfo("");
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(forgotEmail.trim())) {
-      setAuthError("Enter a valid email address.");
+      setAuthError(t("auth.errEmail"));
       return;
     }
 
     try {
       setForgotLoading(true);
       const response = await api.post("/forgotPassword", { email: forgotEmail.trim() });
-      setAuthInfo(
-        response?.data?.message ?? "If that email is registered, a reset link is on its way."
-      );
+      setAuthInfo(response?.data?.message ?? t("auth.infoResetSent"));
     } catch (error) {
-      setAuthError(getErrorMessage(error, "Could not send the reset email right now."));
+      setAuthError(getErrorMessage(error, t("auth.errForgot")));
     } finally {
       setForgotLoading(false);
     }
@@ -323,7 +318,7 @@ const AuthScreen: React.FC = () => {
     setAuthInfo("");
 
     if (resetNewPassword.length < 6) {
-      setAuthError("Password must be at least 6 characters.");
+      setAuthError(t("auth.errPassword"));
       return;
     }
 
@@ -335,9 +330,9 @@ const AuthScreen: React.FC = () => {
       });
       setResetNewPassword("");
       setAuthMode("login");
-      setAuthInfo(response?.data?.message ?? "Password reset. You can now log in.");
+      setAuthInfo(response?.data?.message ?? t("auth.infoResetDone"));
     } catch (error) {
-      setAuthError(getErrorMessage(error, "Could not reset the password."));
+      setAuthError(getErrorMessage(error, t("auth.errReset")));
     } finally {
       setResetLoading(false);
     }
@@ -545,7 +540,7 @@ const AuthScreen: React.FC = () => {
               {showLogin ? (
                 <View>
                   <View style={styles.panelHeader}>
-                    <Text style={styles.panelKicker}>Worka account</Text>
+                    <Text style={styles.panelKicker}>{t("auth.accountKicker")}</Text>
                     <Text
                       style={[
                         styles.panelTitle,
@@ -553,21 +548,21 @@ const AuthScreen: React.FC = () => {
                       ]}
                     >
                       {authMode === "login"
-                        ? "Welcome back."
+                        ? t("auth.welcomeBack")
                         : authMode === "signup"
-                          ? "Create your account."
+                          ? t("auth.createTitle")
                           : authMode === "forgot"
-                            ? "Reset your password."
-                            : "Choose a new password."}
+                            ? t("auth.forgotTitle")
+                            : t("auth.newPasswordTitle")}
                     </Text>
                     <Text style={styles.panelText}>
                       {authMode === "login"
-                        ? "Sign in to continue to Worka."
+                        ? t("auth.loginText")
                         : authMode === "signup"
-                          ? "Choose how you will use Worka, then add your details."
+                          ? t("auth.signupText")
                           : authMode === "forgot"
-                            ? "Enter your email and we will send you a reset link."
-                            : "Enter the new password for your account."}
+                            ? t("auth.forgotText")
+                            : t("auth.resetText")}
                     </Text>
                   </View>
 
@@ -597,7 +592,7 @@ const AuthScreen: React.FC = () => {
                           authMode === "login" && styles.tabButtonTextActive,
                         ]}
                       >
-                        Log in
+                        {t("auth.login")}
                       </Text>
                     </Pressable>
 
@@ -620,7 +615,7 @@ const AuthScreen: React.FC = () => {
                           authMode === "signup" && styles.tabButtonTextActive,
                         ]}
                       >
-                        Create account
+                        {t("auth.createAccount")}
                       </Text>
                     </Pressable>
                   </View>
@@ -640,7 +635,7 @@ const AuthScreen: React.FC = () => {
 
                   {authMode === "forgot" ? (
                     <View>
-                      <FormField label="Email">
+                      <FormField label={t("account.email")}>
                         <TextInput
                           accessibilityLabel="Email for password reset"
                           style={styles.input}
@@ -671,7 +666,7 @@ const AuthScreen: React.FC = () => {
                         {forgotLoading ? (
                           <ActivityIndicator color="#fff" />
                         ) : (
-                          <Text style={styles.primaryButtonText}>Send reset link</Text>
+                          <Text style={styles.primaryButtonText}>{t("auth.sendResetLink")}</Text>
                         )}
                       </Pressable>
 
@@ -680,16 +675,16 @@ const AuthScreen: React.FC = () => {
                         onPress={() => openAuth("login")}
                         style={({ pressed }) => [styles.textButton, pressed && styles.pressed]}
                       >
-                        <Text style={styles.textButtonText}>Back to log in</Text>
+                        <Text style={styles.textButtonText}>{t("auth.backToLogin")}</Text>
                       </Pressable>
                     </View>
                   ) : authMode === "reset" ? (
                     <View>
-                      <FormField label="New password">
+                      <FormField label={t("auth.newPassword")}>
                         <TextInput
                           accessibilityLabel="New password"
                           style={styles.input}
-                          placeholder="At least 6 characters"
+                          placeholder={t("auth.min6")}
                           placeholderTextColor="#777"
                           value={resetNewPassword}
                           onChangeText={(value) => {
@@ -716,7 +711,7 @@ const AuthScreen: React.FC = () => {
                         {resetLoading ? (
                           <ActivityIndicator color="#fff" />
                         ) : (
-                          <Text style={styles.primaryButtonText}>Set new password</Text>
+                          <Text style={styles.primaryButtonText}>{t("auth.setNewPassword")}</Text>
                         )}
                       </Pressable>
 
@@ -725,12 +720,12 @@ const AuthScreen: React.FC = () => {
                         onPress={() => openAuth("login")}
                         style={({ pressed }) => [styles.textButton, pressed && styles.pressed]}
                       >
-                        <Text style={styles.textButtonText}>Back to log in</Text>
+                        <Text style={styles.textButtonText}>{t("auth.backToLogin")}</Text>
                       </Pressable>
                     </View>
                   ) : authMode === "login" ? (
                     <View>
-                      <FormField label="Email">
+                      <FormField label={t("account.email")}>
                         <TextInput
                           accessibilityLabel="Email"
                           style={styles.input}
@@ -747,11 +742,11 @@ const AuthScreen: React.FC = () => {
                         />
                       </FormField>
 
-                      <FormField label="Password">
+                      <FormField label={t("auth.password")}>
                         <TextInput
                           accessibilityLabel="Password"
                           style={styles.input}
-                          placeholder="Your password"
+                          placeholder={t("auth.passwordPlaceholder")}
                           placeholderTextColor="#777"
                           value={password}
                           onChangeText={(value) => {
@@ -786,7 +781,7 @@ const AuthScreen: React.FC = () => {
                               size={20}
                               color="#fff"
                             />
-                            <Text style={styles.primaryButtonText}>Log in</Text>
+                            <Text style={styles.primaryButtonText}>{t("auth.login")}</Text>
                           </>
                         )}
                       </Pressable>
@@ -796,12 +791,12 @@ const AuthScreen: React.FC = () => {
                         onPress={() => openAuth("forgot")}
                         style={({ pressed }) => [styles.textButton, pressed && styles.pressed]}
                       >
-                        <Text style={styles.textButtonText}>Forgot password?</Text>
+                        <Text style={styles.textButtonText}>{t("auth.forgotPassword")}</Text>
                       </Pressable>
                     </View>
                   ) : (
                     <View>
-                      <Text style={styles.sectionLabel}>I am joining as</Text>
+                      <Text style={styles.sectionLabel}>{t("auth.joiningAs")}</Text>
                       <View
                         style={[
                           styles.accountTypeList,
@@ -843,7 +838,7 @@ const AuthScreen: React.FC = () => {
                                     selected && styles.accountTypeTitleActive,
                                   ]}
                                 >
-                                  {type.label}
+                                  {t(type.labelKey)}
                                 </Text>
                                 <Text
                                   style={[
@@ -851,7 +846,7 @@ const AuthScreen: React.FC = () => {
                                     selected && styles.accountTypeTextActive,
                                   ]}
                                 >
-                                  {type.description}
+                                  {t(type.descriptionKey)}
                                 </Text>
                               </View>
                             </Pressable>
@@ -859,11 +854,11 @@ const AuthScreen: React.FC = () => {
                         })}
                       </View>
 
-                      <FormField label="First name">
+                      <FormField label={t("account.firstName")}>
                         <TextInput
                           accessibilityLabel="First name"
                           style={styles.input}
-                          placeholder="First name"
+                          placeholder={t("account.firstName")}
                           placeholderTextColor="#777"
                           value={signupForm.firstName}
                           onChangeText={(value) =>
@@ -873,11 +868,11 @@ const AuthScreen: React.FC = () => {
                         />
                       </FormField>
 
-                      <FormField label="Last name">
+                      <FormField label={t("account.lastName")}>
                         <TextInput
                           accessibilityLabel="Last name"
                           style={styles.input}
-                          placeholder="Last name"
+                          placeholder={t("account.lastName")}
                           placeholderTextColor="#777"
                           value={signupForm.lastName}
                           onChangeText={(value) =>
@@ -887,7 +882,7 @@ const AuthScreen: React.FC = () => {
                         />
                       </FormField>
 
-                      <FormField label="Email">
+                      <FormField label={t("account.email")}>
                         <TextInput
                           accessibilityLabel="Email"
                           style={styles.input}
@@ -903,11 +898,11 @@ const AuthScreen: React.FC = () => {
                         />
                       </FormField>
 
-                      <FormField label="Password">
+                      <FormField label={t("auth.password")}>
                         <TextInput
                           accessibilityLabel="Password"
                           style={styles.input}
-                          placeholder="At least 6 characters"
+                          placeholder={t("auth.min6")}
                           placeholderTextColor="#777"
                           value={signupForm.password}
                           onChangeText={(value) =>
@@ -942,7 +937,7 @@ const AuthScreen: React.FC = () => {
                               color="#fff"
                             />
                             <Text style={styles.primaryButtonText}>
-                              Create account
+                              {t("auth.createAccount")}
                             </Text>
                           </>
                         )}
@@ -959,19 +954,16 @@ const AuthScreen: React.FC = () => {
                       color="#fff"
                     />
                   </View>
-                  <Text style={styles.panelKicker}>Registration complete</Text>
+                  <Text style={styles.panelKicker}>{t("waitlist.doneKicker")}</Text>
                   <Text
                     style={[
                       styles.panelTitle,
                       isPhone && styles.panelTitlePhone,
                     ]}
                   >
-                    You are on the list.
+                    {t("waitlist.doneTitle")}
                   </Text>
-                  <Text style={styles.panelText}>
-                    Thanks. We will use your language and location to shape the
-                    first Worka launch areas.
-                  </Text>
+                  <Text style={styles.panelText}>{t("waitlist.doneText")}</Text>
 
                   <Pressable
                     accessibilityRole="button"
@@ -986,7 +978,7 @@ const AuthScreen: React.FC = () => {
                     ]}
                   >
                     <Text style={styles.secondaryButtonText}>
-                      Add another person
+                      {t("waitlist.addAnother")}
                     </Text>
                   </Pressable>
 
@@ -999,7 +991,7 @@ const AuthScreen: React.FC = () => {
                     ]}
                   >
                     <Text style={styles.textButtonText}>
-                      Create a Worka account
+                      {t("waitlist.createAccount")}
                     </Text>
                   </Pressable>
                 </View>
@@ -1022,11 +1014,11 @@ const AuthScreen: React.FC = () => {
 
                   {renderError(interestError)}
 
-                  <FormField label="Name">
+                  <FormField label={t("waitlist.name")}>
                     <TextInput
                       accessibilityLabel="Name"
                       style={styles.input}
-                      placeholder="Your name"
+                      placeholder={t("waitlist.namePlaceholder")}
                       placeholderTextColor="#777"
                       value={interestForm.name}
                       onChangeText={(value) =>
@@ -1036,7 +1028,7 @@ const AuthScreen: React.FC = () => {
                     />
                   </FormField>
 
-                  <FormField label="Email">
+                  <FormField label={t("account.email")}>
                     <TextInput
                       accessibilityLabel="Email"
                       style={styles.input}
@@ -1051,11 +1043,11 @@ const AuthScreen: React.FC = () => {
                     />
                   </FormField>
 
-                  <FormField label="Language">
+                  <FormField label={t("waitlist.languageLabel")}>
                     <TextInput
                       accessibilityLabel="Language needed or offered"
                       style={styles.input}
-                      placeholder="For example, Spanish or Arabic"
+                      placeholder={t("waitlist.languagePlaceholder")}
                       placeholderTextColor="#777"
                       value={interestForm.language}
                       onChangeText={(value) =>
@@ -1064,11 +1056,11 @@ const AuthScreen: React.FC = () => {
                     />
                   </FormField>
 
-                  <FormField label="Location">
+                  <FormField label={t("waitlist.locationLabel")}>
                     <TextInput
                       accessibilityLabel="City or country"
                       style={styles.input}
-                      placeholder="City / country"
+                      placeholder={t("waitlist.locationPlaceholder")}
                       placeholderTextColor="#777"
                       value={interestForm.location}
                       onChangeText={(value) =>
@@ -1078,17 +1070,17 @@ const AuthScreen: React.FC = () => {
                     />
                   </FormField>
 
-                  <Text style={styles.sectionLabel}>What brings you here?</Text>
+                  <Text style={styles.sectionLabel}>{t("waitlist.whatBrings")}</Text>
                   <View style={styles.choiceList}>
                     {audienceOptions.map((option) => {
-                      const selected = interestForm.role === option;
+                      const selected = interestForm.role === option.value;
 
                       return (
                         <Pressable
-                          key={option}
+                          key={option.value}
                           accessibilityRole="radio"
                           accessibilityState={{ selected }}
-                          onPress={() => updateInterestField("role", option)}
+                          onPress={() => updateInterestField("role", option.value)}
                           style={({ pressed }) => [
                             styles.choiceRow,
                             selected && styles.choiceRowActive,
@@ -1111,18 +1103,18 @@ const AuthScreen: React.FC = () => {
                               selected && styles.choiceTextActive,
                             ]}
                           >
-                            {option}
+                            {t(option.key)}
                           </Text>
                         </Pressable>
                       );
                     })}
                   </View>
 
-                  <FormField label="Anything else? (optional)">
+                  <FormField label={t("waitlist.anythingElse")}>
                     <TextInput
                       accessibilityLabel="Additional details"
                       style={[styles.input, styles.textArea]}
-                      placeholder="What work or language gap should Worka solve first?"
+                      placeholder={t("waitlist.messagePlaceholder")}
                       placeholderTextColor="#777"
                       value={interestForm.message}
                       onChangeText={(value) =>
@@ -1174,7 +1166,7 @@ const AuthScreen: React.FC = () => {
                       color="#111"
                     />
                     <Text style={styles.secondaryButtonText}>
-                      Create account now
+                      {t("waitlist.createAccountNow")}
                     </Text>
                   </Pressable>
                 </View>
@@ -1200,10 +1192,7 @@ const AuthScreen: React.FC = () => {
                   resizeMode="contain"
                   accessibilityLabel="Worka"
                 />
-                <Text style={styles.footerTagline}>
-                  Built for expats, language communities, and trusted local
-                  helpers.
-                </Text>
+                <Text style={styles.footerTagline}>{t("landing.footerTagline")}</Text>
               </View>
 
               <View style={styles.footerContact}>
@@ -1229,7 +1218,7 @@ const AuthScreen: React.FC = () => {
                     color="#111"
                   />
                   <Text style={styles.footerLinkText}>
-                    Payments secured by Stripe
+                    {t("landing.paymentsSecured")}
                   </Text>
                 </View>
               </View>
@@ -1245,7 +1234,7 @@ const AuthScreen: React.FC = () => {
                   onPress={() => Linking.openURL("https://worka.site/privacy.html")}
                   style={({ pressed }) => [pressed && styles.pressed]}
                 >
-                  <Text style={styles.footerLegalLink}>Privacy</Text>
+                  <Text style={styles.footerLegalLink}>{t("landing.privacy")}</Text>
                 </Pressable>
                 <Text style={styles.footerLegalText}>·</Text>
                 <Pressable
@@ -1253,7 +1242,7 @@ const AuthScreen: React.FC = () => {
                   onPress={() => Linking.openURL("https://worka.site/terms.html")}
                   style={({ pressed }) => [pressed && styles.pressed]}
                 >
-                  <Text style={styles.footerLegalLink}>Terms</Text>
+                  <Text style={styles.footerLegalLink}>{t("landing.terms")}</Text>
                 </Pressable>
               </View>
               <Text style={styles.footerMark}>LSL</Text>

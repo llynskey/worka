@@ -30,6 +30,8 @@ namespace Worka.WebApp.Controllers
             public string Languages { get; set; }
 
             public string PhotoUrl { get; set; }
+
+            public string PreferredCurrency { get; set; }
         }
 
         [HttpGet("account")]
@@ -62,7 +64,8 @@ namespace Worka.WebApp.Controllers
                 request.Phone,
                 request.Address,
                 request.Languages,
-                request.PhotoUrl);
+                request.PhotoUrl,
+                request.PreferredCurrency);
 
             return result.Success ? Ok(result) : BadRequest(result);
         }

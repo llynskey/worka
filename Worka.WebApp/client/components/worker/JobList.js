@@ -18,6 +18,8 @@ import { useFocusEffect } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { api, formatDate, formatMoney, getErrorMessage, resolveUploadUrl, unwrap } from '../../api/workaApi';
 import { formatDistance, getDistanceKm, requestCurrentLocation } from '../../Utils/locationUtils';
+import { useI18n } from '../../i18n/I18nContext';
+import { categoryLabel } from '../../i18n/categories';
 import JobDetailsModal from './JobDetailsModal';
 
 const categoryImages = {
@@ -30,6 +32,7 @@ const categoryImages = {
 };
 
 const WorkerJobList = () => {
+  const { t } = useI18n();
   const [account, setAccount] = useState(null);
   const [jobs, setJobs] = useState([]);
   const [quotes, setQuotes] = useState([]);
@@ -70,12 +73,12 @@ const WorkerJobList = () => {
       setRefreshing(true);
       await loadMarketplace();
     } catch (err) {
-      setError(getErrorMessage(err, 'Unable to load available jobs.'));
+      setError(getErrorMessage(err, t('work.loadError')));
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [loadMarketplace]);
+  }, [loadMarketplace, t]);
 
   useFocusEffect(
     useCallback(() => {
@@ -118,7 +121,7 @@ const WorkerJobList = () => {
       const location = await requestCurrentLocation();
       setCurrentLocation(location);
     } catch (error) {
-      setLocationError(error instanceof Error ? error.message : 'Could not get current location.');
+      setLocationError(error instanceof Error ? error.message : t('map.locationFailed'));
     } finally {
       setLocating(false);
     }
@@ -128,7 +131,7 @@ const WorkerJobList = () => {
     setSelectedJob(job);
     setQuoteForm({
       price: '',
-      description: `I can complete this ${job.category || 'job'} with clear pricing and tidy handover.`,
+      description: t('quotes.defaultNote'),
     });
   };
 
@@ -136,11 +139,11 @@ const WorkerJobList = () => {
     const amount = Number(quoteForm.price);
     if (!selectedJob || !account?.professionalId) return;
     if (!Number.isFinite(amount) || amount <= 0) {
-      notify('Add a price', 'Enter a valid quote amount.');
+      notify(t('quotes.addPriceTitle'), t('quotes.addPriceText'));
       return;
     }
     if (!quoteForm.description.trim()) {
-      notify('Add a note', 'Tell the customer what is included.');
+      notify(t('quotes.addNoteTitle'), t('quotes.addNoteText'));
       return;
     }
 
@@ -153,9 +156,9 @@ const WorkerJobList = () => {
       });
       setSelectedJob(null);
       await refresh();
-      notify('Quote sent', 'The customer can now review your quote.');
+      notify(t('quotes.sentTitle'), t('quotes.sentText'));
     } catch (err) {
-      notify('Could not send quote', getErrorMessage(err, 'Try again in a moment.'));
+      notify(t('quotes.sendErrorTitle'), getErrorMessage(err, t('common.tryAgain')));
     } finally {
       setSubmitting(false);
     }
@@ -165,7 +168,7 @@ const WorkerJobList = () => {
     return (
       <View style={styles.centerState}>
         <ActivityIndicator color="#111" />
-        <Text style={styles.mutedText}>Loading jobs near your marketplace...</Text>
+        <Text style={styles.mutedText}>{t('work.loading')}</Text>
       </View>
     );
   }
@@ -174,10 +177,10 @@ const WorkerJobList = () => {
     return (
       <View style={styles.centerState}>
         <MaterialCommunityIcons name="cloud-alert-outline" size={34} color="#111" />
-        <Text style={styles.errorTitle}>Could not load jobs</Text>
+        <Text style={styles.errorTitle}>{t('jobs.couldNotLoad')}</Text>
         <Text style={styles.mutedText}>{error}</Text>
         <TouchableOpacity style={styles.primaryButton} onPress={refresh}>
-          <Text style={styles.primaryButtonText}>Retry</Text>
+          <Text style={styles.primaryButtonText}>{t('common.retry')}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -192,31 +195,27 @@ const WorkerJobList = () => {
         contentContainerStyle={styles.listContent}
         ListHeaderComponent={
           <View style={styles.hero}>
-            <Text style={styles.eyebrow}>Professional marketplace</Text>
+            <Text style={styles.eyebrow}>{t('work.eyebrow')}</Text>
             <Text style={styles.heroTitle}>
-              {account ? `${account.firstName}, quote jobs that fit.` : 'Quote jobs that fit.'}
+              {account ? t('work.heroTitleNamed', { name: account.firstName }) : t('work.heroTitle')}
             </Text>
-            <Text style={styles.heroText}>
-              Review open customer jobs, send a clear price, and track every bid in one place.
-            </Text>
+            <Text style={styles.heroText}>{t('work.heroText')}</Text>
             <View style={styles.statsRow}>
               <View style={styles.statChip}>
                 <Text style={styles.statValue}>{openJobs.length}</Text>
-                <Text style={styles.statLabel}>Open jobs</Text>
+                <Text style={styles.statLabel}>{t('jobs.statOpen')}</Text>
               </View>
               <View style={styles.statChip}>
                 <Text style={styles.statValue}>{quotes.length}</Text>
-                <Text style={styles.statLabel}>Your bids</Text>
+                <Text style={styles.statLabel}>{t('work.statBids')}</Text>
               </View>
               <View style={styles.statChip}>
                 <Text style={styles.statValue}>{formatMoney(bookedValue)}</Text>
-                <Text style={styles.statLabel}>Booked value</Text>
+                <Text style={styles.statLabel}>{t('work.statBookedValue')}</Text>
               </View>
             </View>
             {currentLocation ? (
-              <Text style={styles.locationStatus}>
-                Current location set. Jobs are sorted by distance where available.
-              </Text>
+              <Text style={styles.locationStatus}>{t('map.locationSetSorted')}</Text>
             ) : (
               <TouchableOpacity style={styles.locationButton} onPress={useCurrentLocation} disabled={locating}>
                 {locating ? (
@@ -224,7 +223,7 @@ const WorkerJobList = () => {
                 ) : (
                   <>
                     <MaterialCommunityIcons name="crosshairs-gps" size={18} color="#111" />
-                    <Text style={styles.locationButtonText}>Use current location</Text>
+                    <Text style={styles.locationButtonText}>{t('map.useCurrentLocation')}</Text>
                   </>
                 )}
               </TouchableOpacity>
@@ -235,8 +234,8 @@ const WorkerJobList = () => {
         ListEmptyComponent={
           <View style={styles.emptyState}>
             <MaterialCommunityIcons name="briefcase-check-outline" size={40} color="#111" />
-            <Text style={styles.emptyTitle}>No open jobs right now</Text>
-            <Text style={styles.mutedText}>Pull to refresh and check back for new customer requests.</Text>
+            <Text style={styles.emptyTitle}>{t('work.emptyTitle')}</Text>
+            <Text style={styles.mutedText}>{t('work.emptyText')}</Text>
           </View>
         }
         renderItem={({ item }) => {
@@ -248,7 +247,9 @@ const WorkerJobList = () => {
             <View style={styles.card}>
               <ImageBackground source={{ uri: image }} style={styles.cardImage} imageStyle={styles.cardImageRadius}>
                 <View style={styles.cardImageOverlay}>
-                  <Text style={styles.cardImageText}>{item.photoUrl ? 'Customer photo' : item.category || 'Home services'}</Text>
+                  <Text style={styles.cardImageText}>
+                    {item.photoUrl ? t('work.customerPhoto') : categoryLabel(t, item.category)}
+                  </Text>
                   <Text style={styles.cardImageText}>{distanceLabel || formatDate(item.createdAt)}</Text>
                 </View>
               </ImageBackground>
@@ -260,7 +261,7 @@ const WorkerJobList = () => {
                 <View style={styles.cardTitleBlock}>
                   <Text style={styles.cardTitle}>{item.jobName}</Text>
                   <Text style={styles.cardMeta}>
-                    {item.category || 'Home services'} - {formatDate(item.createdAt)}
+                    {categoryLabel(t, item.category)} - {formatDate(item.createdAt)}
                     {distanceLabel ? ` - ${distanceLabel}` : ''}
                   </Text>
                 </View>
@@ -278,30 +279,34 @@ const WorkerJobList = () => {
               <View style={styles.detailStrip}>
                 <View style={styles.detailChip}>
                   <MaterialCommunityIcons name={item.photoUrl ? 'image-check-outline' : 'image-outline'} size={15} color="#111" />
-                  <Text style={styles.detailChipText}>{item.photoUrl ? 'Photo included' : 'Category image'}</Text>
+                  <Text style={styles.detailChipText}>
+                    {item.photoUrl ? t('work.photoIncluded') : t('work.categoryImage')}
+                  </Text>
                 </View>
                 <View style={styles.detailChip}>
                   <MaterialCommunityIcons name="map-marker-check-outline" size={15} color="#111" />
-                  <Text style={styles.detailChipText}>{Number.isFinite(Number(item.latitude)) ? 'Located' : 'Needs location'}</Text>
+                  <Text style={styles.detailChipText}>
+                    {Number.isFinite(Number(item.latitude)) ? t('work.located') : t('work.needsLocation')}
+                  </Text>
                 </View>
               </View>
 
               {existingQuote ? (
                 <View style={styles.quotedBox}>
-                  <Text style={styles.quotedLabel}>Your quote</Text>
+                  <Text style={styles.quotedLabel}>{t('work.yourQuote')}</Text>
                   <Text style={styles.quotedAmount}>{formatMoney(existingQuote.price, item.currency)}</Text>
                   <Text style={styles.quotedDescription}>{existingQuote.description}</Text>
                 </View>
               ) : (
                 <TouchableOpacity style={styles.primaryButton} onPress={() => openQuoteModal(item)}>
                   <MaterialCommunityIcons name="cash-plus" size={20} color="#fff" />
-                  <Text style={styles.primaryButtonText}>Send quote</Text>
+                  <Text style={styles.primaryButtonText}>{t('quotes.send')}</Text>
                 </TouchableOpacity>
               )}
 
               <TouchableOpacity style={styles.detailsButton} onPress={() => setSelectedDetailsJob(item)}>
                 <MaterialCommunityIcons name="file-search-outline" size={18} color="#111" />
-                <Text style={styles.detailsButtonText}>View details</Text>
+                <Text style={styles.detailsButtonText}>{t('common.viewDetails')}</Text>
               </TouchableOpacity>
             </View>
           );
@@ -330,7 +335,7 @@ const WorkerJobList = () => {
           <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.modalKeyboard}>
             <View style={styles.modalCard}>
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Send quote</Text>
+                <Text style={styles.modalTitle}>{t('quotes.send')}</Text>
                 <TouchableOpacity onPress={() => setSelectedJob(null)} style={styles.closeButton}>
                   <MaterialCommunityIcons name="close" size={22} color="#111" />
                 </TouchableOpacity>
@@ -344,7 +349,9 @@ const WorkerJobList = () => {
                   imageStyle={styles.modalJobImageRadius}
                 >
                   <View style={styles.modalJobImageOverlay}>
-                    <Text style={styles.modalJobImageText}>{selectedJob.photoUrl ? 'Customer reference photo' : selectedJob.category}</Text>
+                    <Text style={styles.modalJobImageText}>
+                      {selectedJob.photoUrl ? t('work.customerReferencePhoto') : categoryLabel(t, selectedJob.category)}
+                    </Text>
                   </View>
                 </ImageBackground>
               ) : null}
@@ -358,7 +365,7 @@ const WorkerJobList = () => {
                 style={styles.input}
                 value={quoteForm.price}
                 onChangeText={(price) => setQuoteForm((current) => ({ ...current, price }))}
-                placeholder={`Price (${(selectedJob?.currency || 'gbp').toUpperCase()})`}
+                placeholder={t('quotes.pricePlaceholder', { currency: (selectedJob?.currency || 'gbp').toUpperCase() })}
                 placeholderTextColor="#686b64"
                 keyboardType="decimal-pad"
               />
@@ -366,7 +373,7 @@ const WorkerJobList = () => {
                 style={[styles.input, styles.textArea]}
                 value={quoteForm.description}
                 onChangeText={(description) => setQuoteForm((current) => ({ ...current, description }))}
-                placeholder="What is included?"
+                placeholder={t('quotes.includedPlaceholder')}
                 placeholderTextColor="#686b64"
                 multiline
               />
@@ -377,7 +384,7 @@ const WorkerJobList = () => {
                 ) : (
                   <>
                     <MaterialCommunityIcons name="send-outline" size={20} color="#fff" />
-                    <Text style={styles.primaryButtonText}>Send quote</Text>
+                    <Text style={styles.primaryButtonText}>{t('quotes.send')}</Text>
                   </>
                 )}
               </TouchableOpacity>

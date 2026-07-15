@@ -1,12 +1,14 @@
 import React from 'react';
 import { ActivityIndicator, Image, StyleSheet, Text, View } from 'react-native';
+import { useI18n } from '../i18n/I18nContext';
 
 const LoadingScreen = () => {
+  const { t } = useI18n();
   return (
     <View style={styles.container}>
       <Image source={require('../assets/logo.png')} style={styles.logo} resizeMode="contain" />
       <ActivityIndicator size="large" color="#111" />
-      <Text style={styles.text}>Opening Worka...</Text>
+      <Text style={styles.text}>{t('app.opening')}</Text>
     </View>
   );
 };

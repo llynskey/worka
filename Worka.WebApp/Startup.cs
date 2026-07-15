@@ -267,6 +267,7 @@ namespace Worka.WebApp
                 UPDATE professionals SET "PhotoUrl" = regexp_replace("PhotoUrl", '^https?://[^/]+', '')
                     WHERE "PhotoUrl" LIKE 'http%' AND "PhotoUrl" LIKE '%/api/uploads/%';
                 ALTER TABLE jobs ADD COLUMN IF NOT EXISTS "Currency" character varying(8) NOT NULL DEFAULT 'gbp';
+                ALTER TABLE customers ADD COLUMN IF NOT EXISTS "PreferredCurrency" character varying(8) NOT NULL DEFAULT 'gbp';
                 """);
         }
     }

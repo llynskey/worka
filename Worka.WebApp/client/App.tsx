@@ -17,7 +17,7 @@ import LoadingScreen from './Screens/LoadingScreen';
 
 import SharedDrawerContent from './components/SharedDrawerContent';
 import { AuthContext, AuthProvider } from './auth/AuthContext';
-import { I18nProvider } from './i18n/I18nContext';
+import { I18nProvider, useI18n } from './i18n/I18nContext';
 
 export type RootStackParamList = {
   Login: undefined;
@@ -48,11 +48,14 @@ const CustomerDrawerScreen = CustomerDrawerNav.Screen as unknown as React.Compon
 const WorkerDrawerNavigator = WorkerDrawerNav.Navigator as unknown as React.ComponentType<any>;
 const WorkerDrawerScreen = WorkerDrawerNav.Screen as unknown as React.ComponentType<any>;
 
-const NeutralScreen: React.FC = () => (
-  <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-    <Text>Account type not set. Sign out and back in, or email support@worka.site.</Text>
-  </View>
-);
+const NeutralScreen: React.FC = () => {
+  const { t } = useI18n();
+  return (
+    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+      <Text>{t('app.accountTypeNotSet')}</Text>
+    </View>
+  );
+};
 
 const AuthStack: React.FC = () => (
   <StackNavigator screenOptions={{ headerShown: false }}>
@@ -66,42 +69,72 @@ const hiddenDrawerRoute = {
   headerShown: false,
 };
 
-const CustomerDrawer: React.FC<{ onLogout: () => void }> = ({ onLogout }) => (
-  <CustomerDrawerNavigator
-    initialRouteName="Home"
-    drawerContent={(props: DrawerContentComponentProps) => (
-      <SharedDrawerContent {...props} userType="Customer" logoutHandler={onLogout} />
-    )}
-    screenOptions={{
-      swipeEnabled: false,
-      headerShown: true,
-      headerTitle: 'Worka',
-    }}
-  >
-    <CustomerDrawerScreen name="Home" component={CustomerScreen} options={{ title: 'Customer workspace' }} />
-    <CustomerDrawerScreen name="Account" component={CustomerAccountScreen} />
-    <CustomerDrawerScreen name="Settings" component={CustomerSettingsScreen} />
-    <CustomerDrawerScreen name="JobType" component={JobTypeScreen} options={hiddenDrawerRoute} />
-  </CustomerDrawerNavigator>
-);
+const CustomerDrawer: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
+  const { t } = useI18n();
+  return (
+    <CustomerDrawerNavigator
+      initialRouteName="Home"
+      drawerContent={(props: DrawerContentComponentProps) => (
+        <SharedDrawerContent {...props} userType="Customer" logoutHandler={onLogout} />
+      )}
+      screenOptions={{
+        swipeEnabled: false,
+        headerShown: true,
+        headerTitle: 'Worka',
+      }}
+    >
+      <CustomerDrawerScreen
+        name="Home"
+        component={CustomerScreen}
+        options={{ title: t('drawer.customerWorkspace'), drawerLabel: t('drawer.home') }}
+      />
+      <CustomerDrawerScreen
+        name="Account"
+        component={CustomerAccountScreen}
+        options={{ title: t('drawer.account'), drawerLabel: t('drawer.account') }}
+      />
+      <CustomerDrawerScreen
+        name="Settings"
+        component={CustomerSettingsScreen}
+        options={{ title: t('drawer.settings'), drawerLabel: t('drawer.settings') }}
+      />
+      <CustomerDrawerScreen name="JobType" component={JobTypeScreen} options={hiddenDrawerRoute} />
+    </CustomerDrawerNavigator>
+  );
+};
 
-const WorkerDrawer: React.FC<{ onLogout: () => void }> = ({ onLogout }) => (
-  <WorkerDrawerNavigator
-    initialRouteName="Home"
-    drawerContent={(props: DrawerContentComponentProps) => (
-      <SharedDrawerContent {...props} userType="Professional" logoutHandler={onLogout} />
-    )}
-    screenOptions={{
-      swipeEnabled: false,
-      headerShown: true,
-      headerTitle: 'Worka Pro',
-    }}
-  >
-    <WorkerDrawerScreen name="Home" component={WorkerScreen} options={{ title: 'Professional workspace' }} />
-    <WorkerDrawerScreen name="Account" component={WorkerAccountScreen} />
-    <WorkerDrawerScreen name="Settings" component={WorkerSettingsScreen} />
-  </WorkerDrawerNavigator>
-);
+const WorkerDrawer: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
+  const { t } = useI18n();
+  return (
+    <WorkerDrawerNavigator
+      initialRouteName="Home"
+      drawerContent={(props: DrawerContentComponentProps) => (
+        <SharedDrawerContent {...props} userType="Professional" logoutHandler={onLogout} />
+      )}
+      screenOptions={{
+        swipeEnabled: false,
+        headerShown: true,
+        headerTitle: 'Worka Pro',
+      }}
+    >
+      <WorkerDrawerScreen
+        name="Home"
+        component={WorkerScreen}
+        options={{ title: t('drawer.professionalWorkspace'), drawerLabel: t('drawer.home') }}
+      />
+      <WorkerDrawerScreen
+        name="Account"
+        component={WorkerAccountScreen}
+        options={{ title: t('drawer.account'), drawerLabel: t('drawer.account') }}
+      />
+      <WorkerDrawerScreen
+        name="Settings"
+        component={WorkerSettingsScreen}
+        options={{ title: t('drawer.settings'), drawerLabel: t('drawer.settings') }}
+      />
+    </WorkerDrawerNavigator>
+  );
+};
 
 const AppInner: React.FC = () => {
   const { user, role, loading, signOut } = React.useContext(AuthContext);

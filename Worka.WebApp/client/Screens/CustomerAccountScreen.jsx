@@ -12,9 +12,10 @@ import {
 import notify from '../Utils/notify';
 import * as ImagePicker from 'expo-image-picker';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { api, getErrorMessage, unwrap } from '../api/workaApi';
+import { api, CURRENCIES, getErrorMessage, unwrap } from '../api/workaApi';
 import Avatar from '../components/Avatar';
 import LanguagePicker from '../components/LanguagePicker';
+import { useI18n } from '../i18n/I18nContext';
 
 const emptyForm = {
   firstName: '',
@@ -24,6 +25,7 @@ const emptyForm = {
   address: '',
   languages: '',
   photoUrl: '',
+  preferredCurrency: 'gbp',
 };
 
 const accountToForm = (account) => ({
@@ -34,6 +36,7 @@ const accountToForm = (account) => ({
   address: account.address ?? '',
   languages: account.languages ?? '',
   photoUrl: account.photoUrl ?? '',
+  preferredCurrency: (account.preferredCurrency || 'gbp').toLowerCase(),
 });
 
 const getAssetName = (asset) => {
@@ -69,6 +72,7 @@ const appendAssetToForm = async (upload, asset) => {
 };
 
 const CustomerAccountScreen = () => {
+  const { t } = useI18n();
   const [form, setForm] = useState(emptyForm);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -81,11 +85,11 @@ const CustomerAccountScreen = () => {
       const account = unwrap(response.data);
       setForm(accountToForm(account));
     } catch (error) {
-      notify('Could not load account', getErrorMessage(error));
+      notify(t('account.loadErrorTitle'), getErrorMessage(error));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     loadAccount();
@@ -95,7 +99,7 @@ const CustomerAccountScreen = () => {
     try {
       const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permission.granted) {
-        notify('Photo access needed', 'Allow photo library access to set a profile photo.');
+        notify(t('photo.accessTitle'), t('photo.accessProfileText'));
         return;
       }
 
@@ -110,12 +114,12 @@ const CustomerAccountScreen = () => {
 
       const asset = result.assets?.[0];
       if (!asset?.uri) {
-        notify('No photo selected', 'Choose an image and try again.');
+        notify(t('photo.noneTitle'), t('photo.noneText'));
         return;
       }
 
       if (asset.fileSize && asset.fileSize > 8 * 1024 * 1024) {
-        notify('Image too large', 'Use an image that is 8MB or smaller.');
+        notify(t('photo.tooLargeTitle'), t('photo.tooLargeText'));
         return;
       }
 
@@ -126,13 +130,13 @@ const CustomerAccountScreen = () => {
       const response = await api.post('/uploads/profile-photo', upload);
       const uploaded = unwrap(response.data);
       if (!uploaded?.url) {
-        notify('Upload failed', 'No image URL was returned.');
+        notify(t('photo.uploadFailedTitle'), t('photo.noUrl'));
         return;
       }
 
       setForm((current) => ({ ...current, photoUrl: uploaded.url }));
     } catch (error) {
-      notify('Could not upload photo', getErrorMessage(error, 'Try another image.'));
+      notify(t('photo.uploadErrorTitle'), getErrorMessage(error, t('photo.tryAnother')));
     } finally {
       setUploadingPhoto(false);
     }
@@ -140,7 +144,7 @@ const CustomerAccountScreen = () => {
 
   const save = async () => {
     if (!form.firstName.trim() || !form.lastName.trim() || !form.email.trim()) {
-      notify('Missing details', 'Name and email are required.');
+      notify(t('account.missingTitle'), t('account.missingText'));
       return;
     }
 
@@ -149,9 +153,9 @@ const CustomerAccountScreen = () => {
       const response = await api.put('/api/Customer/account', form);
       const account = unwrap(response.data);
       setForm(accountToForm(account));
-      notify('Account saved', 'Your customer profile is up to date.');
+      notify(t('account.savedTitle'), t('account.savedCustomerText'));
     } catch (error) {
-      notify('Could not save account', getErrorMessage(error));
+      notify(t('account.saveErrorTitle'), getErrorMessage(error));
     } finally {
       setSaving(false);
     }
@@ -161,7 +165,7 @@ const CustomerAccountScreen = () => {
     return (
       <View style={styles.centerState}>
         <ActivityIndicator color="#111" />
-        <Text style={styles.mutedText}>Loading account...</Text>
+        <Text style={styles.mutedText}>{t('account.loading')}</Text>
       </View>
     );
   }
@@ -171,8 +175,8 @@ const CustomerAccountScreen = () => {
       <View style={styles.headerCard}>
         <MaterialCommunityIcons name="account-circle-outline" size={34} color="#111" />
         <View style={{ flex: 1 }}>
-          <Text style={styles.title}>Customer account</Text>
-          <Text style={styles.subtitle}>Keep contact details current for quotes and bookings.</Text>
+          <Text style={styles.title}>{t('account.customerTitle')}</Text>
+          <Text style={styles.subtitle}>{t('account.customerSubtitle')}</Text>
         </View>
       </View>
 
@@ -189,7 +193,7 @@ const CustomerAccountScreen = () => {
             ) : (
               <>
                 <MaterialCommunityIcons name="camera-outline" size={18} color="#111" />
-                <Text style={styles.photoButtonText}>Change photo</Text>
+                <Text style={styles.photoButtonText}>{t('account.changePhoto')}</Text>
               </>
             )}
           </TouchableOpacity>
@@ -199,7 +203,7 @@ const CustomerAccountScreen = () => {
           style={styles.input}
           value={form.firstName}
           onChangeText={(firstName) => setForm((current) => ({ ...current, firstName }))}
-          placeholder="First name"
+          placeholder={t('account.firstName')}
           autoCapitalize="words"
           autoCorrect={false}
           placeholderTextColor="#686b64"
@@ -208,7 +212,7 @@ const CustomerAccountScreen = () => {
           style={styles.input}
           value={form.lastName}
           onChangeText={(lastName) => setForm((current) => ({ ...current, lastName }))}
-          placeholder="Last name"
+          placeholder={t('account.lastName')}
           autoCapitalize="words"
           autoCorrect={false}
           placeholderTextColor="#686b64"
@@ -217,7 +221,7 @@ const CustomerAccountScreen = () => {
           style={styles.input}
           value={form.email}
           onChangeText={(email) => setForm((current) => ({ ...current, email }))}
-          placeholder="Email"
+          placeholder={t('account.email')}
           placeholderTextColor="#686b64"
           autoCapitalize="none"
           keyboardType="email-address"
@@ -226,7 +230,7 @@ const CustomerAccountScreen = () => {
           style={styles.input}
           value={form.phone}
           onChangeText={(phone) => setForm((current) => ({ ...current, phone }))}
-          placeholder="Phone"
+          placeholder={t('account.phone')}
           placeholderTextColor="#686b64"
           keyboardType="phone-pad"
         />
@@ -234,15 +238,34 @@ const CustomerAccountScreen = () => {
           style={styles.input}
           value={form.address}
           onChangeText={(address) => setForm((current) => ({ ...current, address }))}
-          placeholder="Default address"
+          placeholder={t('account.address')}
           placeholderTextColor="#686b64"
         />
 
         <LanguagePicker
           value={form.languages}
           onChange={(languages) => setForm((current) => ({ ...current, languages }))}
-          label="Languages you speak"
+          label={t('account.languagesLabel')}
         />
+
+        <Text style={styles.currencyLabel}>{t('account.currencyLabel')}</Text>
+        <Text style={styles.currencyHint}>{t('account.currencyHint')}</Text>
+        <View style={styles.currencyRow}>
+          {CURRENCIES.map((option) => {
+            const active = form.preferredCurrency === option.code;
+            return (
+              <TouchableOpacity
+                key={option.code}
+                style={[styles.currencyChip, active && styles.currencyChipActive]}
+                onPress={() => setForm((current) => ({ ...current, preferredCurrency: option.code }))}
+              >
+                <Text style={[styles.currencyChipText, active && styles.currencyChipTextActive]}>
+                  {option.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
 
         <TouchableOpacity style={styles.button} onPress={save} disabled={saving}>
           {saving ? (
@@ -250,7 +273,7 @@ const CustomerAccountScreen = () => {
           ) : (
             <>
               <MaterialCommunityIcons name="content-save-outline" size={20} color="#fff" />
-              <Text style={styles.buttonText}>Save account</Text>
+              <Text style={styles.buttonText}>{t('account.save')}</Text>
             </>
           )}
         </TouchableOpacity>
@@ -328,6 +351,46 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     backgroundColor: '#fbfaf6',
     fontSize: 16,
+  },
+  currencyLabel: {
+    color: '#111',
+    fontWeight: '900',
+    fontSize: 14,
+    marginTop: 4,
+  },
+  currencyHint: {
+    color: '#62645c',
+    fontSize: 13,
+    lineHeight: 18,
+    marginTop: 3,
+    marginBottom: 9,
+  },
+  currencyRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 16,
+  },
+  currencyChip: {
+    minHeight: 44,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#d9d5ca',
+    paddingHorizontal: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fbfaf6',
+  },
+  currencyChipActive: {
+    backgroundColor: '#111',
+    borderColor: '#111',
+  },
+  currencyChipText: {
+    color: '#111',
+    fontWeight: '700',
+  },
+  currencyChipTextActive: {
+    color: '#fff',
   },
   button: {
     backgroundColor: '#111',

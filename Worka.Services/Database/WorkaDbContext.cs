@@ -55,6 +55,7 @@ namespace Worka.Services.Database
                 entity.Property(customer => customer.Address).HasMaxLength(500).IsRequired();
                 entity.Property(customer => customer.Languages).HasMaxLength(200).IsRequired();
                 entity.Property(customer => customer.PhotoUrl).HasMaxLength(1000).IsRequired();
+                entity.Property(customer => customer.PreferredCurrency).HasMaxLength(8).IsRequired();
                 entity.HasOne<User>()
                     .WithMany()
                     .HasForeignKey(customer => customer.UserId)

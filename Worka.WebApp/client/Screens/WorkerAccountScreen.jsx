@@ -16,6 +16,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { api, getErrorMessage, unwrap } from '../api/workaApi';
 import Avatar from '../components/Avatar';
 import LanguagePicker from '../components/LanguagePicker';
+import { useI18n } from '../i18n/I18nContext';
 
 const getAssetName = (asset) => {
   if (asset.fileName) return asset.fileName;
@@ -50,6 +51,7 @@ const appendAssetToForm = async (upload, asset) => {
 };
 
 const WorkerAccountScreen = () => {
+  const { t } = useI18n();
   const [form, setForm] = useState({
     firstName: '',
     lastName: '',
@@ -90,11 +92,11 @@ const WorkerAccountScreen = () => {
         readyForPayments: !!account.stripeChargesEnabled && !!account.stripePayoutsEnabled,
       });
     } catch (error) {
-      notify('Could not load account', getErrorMessage(error));
+      notify(t('account.loadErrorTitle'), getErrorMessage(error));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   const loadStripeStatus = useCallback(async () => {
     try {
@@ -102,9 +104,9 @@ const WorkerAccountScreen = () => {
       const response = await api.get('/payments/stripe/status');
       setStripeStatus(unwrap(response.data));
     } catch (error) {
-      setStripeError(getErrorMessage(error, 'Could not load payout status.'));
+      setStripeError(getErrorMessage(error, t('account.payoutStatusError')));
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     loadAccount();
@@ -132,7 +134,7 @@ const WorkerAccountScreen = () => {
 
       const onboarding = unwrap(response.data);
       if (!onboarding?.url) {
-        setStripeError('No onboarding link was returned.');
+        setStripeError(t('account.noOnboardingLink'));
         return;
       }
 
@@ -143,7 +145,7 @@ const WorkerAccountScreen = () => {
 
       await Linking.openURL(onboarding.url);
     } catch (error) {
-      setStripeError(getErrorMessage(error, 'Could not start payout setup.'));
+      setStripeError(getErrorMessage(error, t('account.payoutSetupError')));
     } finally {
       setStripeLoading(false);
     }
@@ -153,7 +155,7 @@ const WorkerAccountScreen = () => {
     try {
       const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permission.granted) {
-        notify('Photo access needed', 'Allow photo library access to set a profile photo.');
+        notify(t('photo.accessTitle'), t('photo.accessProfileText'));
         return;
       }
 
@@ -168,12 +170,12 @@ const WorkerAccountScreen = () => {
 
       const asset = result.assets?.[0];
       if (!asset?.uri) {
-        notify('No photo selected', 'Choose an image and try again.');
+        notify(t('photo.noneTitle'), t('photo.noneText'));
         return;
       }
 
       if (asset.fileSize && asset.fileSize > 8 * 1024 * 1024) {
-        notify('Image too large', 'Use an image that is 8MB or smaller.');
+        notify(t('photo.tooLargeTitle'), t('photo.tooLargeText'));
         return;
       }
 
@@ -184,13 +186,13 @@ const WorkerAccountScreen = () => {
       const response = await api.post('/uploads/profile-photo', upload);
       const uploaded = unwrap(response.data);
       if (!uploaded?.url) {
-        notify('Upload failed', 'No image URL was returned.');
+        notify(t('photo.uploadFailedTitle'), t('photo.noUrl'));
         return;
       }
 
       setForm((current) => ({ ...current, photoUrl: uploaded.url }));
     } catch (error) {
-      notify('Could not upload photo', getErrorMessage(error, 'Try another image.'));
+      notify(t('photo.uploadErrorTitle'), getErrorMessage(error, t('photo.tryAnother')));
     } finally {
       setUploadingPhoto(false);
     }
@@ -198,7 +200,7 @@ const WorkerAccountScreen = () => {
 
   const save = async () => {
     if (!form.firstName.trim() || !form.lastName.trim() || !form.email.trim()) {
-      notify('Missing details', 'Name and email are required.');
+      notify(t('account.missingTitle'), t('account.missingText'));
       return;
     }
 
@@ -216,9 +218,9 @@ const WorkerAccountScreen = () => {
         languages: account.languages ?? '',
         photoUrl: account.photoUrl ?? '',
       });
-      notify('Account saved', 'Your professional profile is up to date.');
+      notify(t('account.savedTitle'), t('account.savedProText'));
     } catch (error) {
-      notify('Could not save account', getErrorMessage(error));
+      notify(t('account.saveErrorTitle'), getErrorMessage(error));
     } finally {
       setSaving(false);
     }
@@ -239,18 +241,18 @@ const WorkerAccountScreen = () => {
   })();
 
   const strengthHint = !stripeStatus?.readyForPayments
-    ? 'Set up payouts to appear as "Payout ready" in the customer directory.'
+    ? t('account.hintPayouts')
     : form.bio.trim().length < 40
-      ? 'Add a longer bio — customers pick pros who explain their work.'
+      ? t('account.hintBio')
       : !form.serviceArea.trim()
-        ? 'Add your service area so nearby customers can find you.'
-        : 'Great profile — you show up strong in the directory.';
+        ? t('account.hintArea')
+        : t('account.hintGreat');
 
   if (loading) {
     return (
       <View style={styles.centerState}>
         <ActivityIndicator color="#111" />
-        <Text style={styles.mutedText}>Loading account...</Text>
+        <Text style={styles.mutedText}>{t('account.loading')}</Text>
       </View>
     );
   }
@@ -260,14 +262,14 @@ const WorkerAccountScreen = () => {
       <View style={styles.headerCard}>
         <MaterialCommunityIcons name="briefcase-account-outline" size={34} color="#111" />
         <View style={{ flex: 1 }}>
-          <Text style={styles.title}>Professional account</Text>
-          <Text style={styles.subtitle}>Help customers understand your trade, coverage, and approach.</Text>
+          <Text style={styles.title}>{t('account.professionalTitle')}</Text>
+          <Text style={styles.subtitle}>{t('account.professionalSubtitle')}</Text>
         </View>
       </View>
 
       <View style={styles.strengthCard}>
         <View style={styles.strengthHeader}>
-          <Text style={styles.strengthTitle}>Profile strength</Text>
+          <Text style={styles.strengthTitle}>{t('account.profileStrength')}</Text>
           <Text style={styles.strengthPercent}>{profileStrength.percent}%</Text>
         </View>
         <View style={styles.strengthTrack}>
@@ -280,24 +282,30 @@ const WorkerAccountScreen = () => {
         <View style={styles.payoutHeader}>
           <MaterialCommunityIcons name="bank-transfer" size={28} color="#111" />
           <View style={{ flex: 1 }}>
-            <Text style={styles.payoutTitle}>Payouts</Text>
+            <Text style={styles.payoutTitle}>{t('account.payouts')}</Text>
             <Text style={styles.payoutText}>
               {stripeStatus?.readyForPayments
-                ? 'Ready to receive your share when customers pay.'
-                : 'Set up Stripe payouts before customers can pay your quotes.'}
+                ? t('account.payoutsReadyText')
+                : t('account.payoutsSetupText')}
             </Text>
           </View>
           <View style={[styles.statusPill, stripeStatus?.readyForPayments && styles.statusPillReady]}>
             <Text style={[styles.statusText, stripeStatus?.readyForPayments && styles.statusTextReady]}>
-              {stripeStatus?.readyForPayments ? 'Ready' : 'Action needed'}
+              {stripeStatus?.readyForPayments ? t('account.ready') : t('account.actionNeeded')}
             </Text>
           </View>
         </View>
 
         <View style={styles.payoutChecklist}>
-          <Text style={styles.payoutCheck}>Account: {stripeStatus?.connected ? 'connected' : 'not connected'}</Text>
-          <Text style={styles.payoutCheck}>Charges: {stripeStatus?.chargesEnabled ? 'enabled' : 'pending'}</Text>
-          <Text style={styles.payoutCheck}>Payouts: {stripeStatus?.payoutsEnabled ? 'enabled' : 'pending'}</Text>
+          <Text style={styles.payoutCheck}>
+            {t('account.accountLabel')}: {stripeStatus?.connected ? t('account.connected') : t('account.notConnected')}
+          </Text>
+          <Text style={styles.payoutCheck}>
+            {t('account.chargesLabel')}: {stripeStatus?.chargesEnabled ? t('account.enabled') : t('account.pendingState')}
+          </Text>
+          <Text style={styles.payoutCheck}>
+            {t('account.payoutsLabel')}: {stripeStatus?.payoutsEnabled ? t('account.enabled') : t('account.pendingState')}
+          </Text>
         </View>
 
         {stripeError ? <Text style={styles.payoutError}>{stripeError}</Text> : null}
@@ -309,7 +317,7 @@ const WorkerAccountScreen = () => {
             <>
               <MaterialCommunityIcons name="open-in-new" size={19} color="#fff" />
               <Text style={styles.buttonText}>
-                {stripeStatus?.connected ? 'Continue payout setup' : 'Set up payouts'}
+                {stripeStatus?.connected ? t('account.continueSetup') : t('account.setupPayouts')}
               </Text>
             </>
           )}
@@ -329,7 +337,7 @@ const WorkerAccountScreen = () => {
             ) : (
               <>
                 <MaterialCommunityIcons name="camera-outline" size={18} color="#111" />
-                <Text style={styles.photoButtonText}>Change photo</Text>
+                <Text style={styles.photoButtonText}>{t('account.changePhoto')}</Text>
               </>
             )}
           </TouchableOpacity>
@@ -339,7 +347,7 @@ const WorkerAccountScreen = () => {
           style={styles.input}
           value={form.firstName}
           onChangeText={(firstName) => setForm((current) => ({ ...current, firstName }))}
-          placeholder="First name"
+          placeholder={t('account.firstName')}
           autoCapitalize="words"
           autoCorrect={false}
           placeholderTextColor="#686b64"
@@ -348,7 +356,7 @@ const WorkerAccountScreen = () => {
           style={styles.input}
           value={form.lastName}
           onChangeText={(lastName) => setForm((current) => ({ ...current, lastName }))}
-          placeholder="Last name"
+          placeholder={t('account.lastName')}
           autoCapitalize="words"
           autoCorrect={false}
           placeholderTextColor="#686b64"
@@ -357,7 +365,7 @@ const WorkerAccountScreen = () => {
           style={styles.input}
           value={form.email}
           onChangeText={(email) => setForm((current) => ({ ...current, email }))}
-          placeholder="Email"
+          placeholder={t('account.email')}
           placeholderTextColor="#686b64"
           autoCapitalize="none"
           keyboardType="email-address"
@@ -366,21 +374,21 @@ const WorkerAccountScreen = () => {
           style={styles.input}
           value={form.specialty}
           onChangeText={(specialty) => setForm((current) => ({ ...current, specialty }))}
-          placeholder="Specialty"
+          placeholder={t('account.specialty')}
           placeholderTextColor="#686b64"
         />
         <TextInput
           style={styles.input}
           value={form.serviceArea}
           onChangeText={(serviceArea) => setForm((current) => ({ ...current, serviceArea }))}
-          placeholder="Service area"
+          placeholder={t('account.serviceArea')}
           placeholderTextColor="#686b64"
         />
         <TextInput
           style={[styles.input, styles.textArea]}
           value={form.bio}
           onChangeText={(bio) => setForm((current) => ({ ...current, bio }))}
-          placeholder="Bio"
+          placeholder={t('account.bio')}
           placeholderTextColor="#686b64"
           multiline
         />
@@ -388,7 +396,7 @@ const WorkerAccountScreen = () => {
         <LanguagePicker
           value={form.languages}
           onChange={(languages) => setForm((current) => ({ ...current, languages }))}
-          label="Languages you speak"
+          label={t('account.languagesLabel')}
         />
 
         <TouchableOpacity style={styles.button} onPress={save} disabled={saving}>
@@ -397,7 +405,7 @@ const WorkerAccountScreen = () => {
           ) : (
             <>
               <MaterialCommunityIcons name="content-save-outline" size={20} color="#fff" />
-              <Text style={styles.buttonText}>Save profile</Text>
+              <Text style={styles.buttonText}>{t('account.saveProfile')}</Text>
             </>
           )}
         </TouchableOpacity>

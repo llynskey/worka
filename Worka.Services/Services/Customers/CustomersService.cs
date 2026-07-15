@@ -37,7 +37,8 @@ namespace Worka.Services.Customers
             string phone = null,
             string address = null,
             string languages = null,
-            string photoUrl = null)
+            string photoUrl = null,
+            string preferredCurrency = null)
         {
             if (!Guid.TryParse(userId, out var userGuid))
             {
@@ -57,6 +58,7 @@ namespace Worka.Services.Customers
             if (address != null) customer.Address = address.Trim();
             if (languages != null) customer.Languages = NormalizeLanguages(languages);
             if (photoUrl != null) customer.PhotoUrl = UploadPaths.SanitizeProfilePhoto(photoUrl);
+            if (preferredCurrency != null) customer.PreferredCurrency = Currencies.Sanitize(preferredCurrency);
             customer.UpdatedAt = DateTimeOffset.UtcNow;
 
             var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.UserId == userGuid);

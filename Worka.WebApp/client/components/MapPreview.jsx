@@ -2,6 +2,7 @@ import React from 'react';
 import { Image, Linking, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { formatDistance, getDistanceKm, hasCoordinates } from '../Utils/locationUtils';
+import { useI18n } from '../i18n/I18nContext';
 
 const MAPBOX_TOKEN = process.env.EXPO_PUBLIC_MAPBOX_TOKEN;
 
@@ -43,13 +44,15 @@ const openExternalMap = (latitude, longitude) => {
 const PlaceholderCard = ({ height, label }) => (
   <View style={[styles.placeholder, { height }]}>
     <MaterialCommunityIcons name="map-marker-outline" size={30} color="#111" />
-    <Text style={styles.placeholderText}>{label || 'Location not set'}</Text>
+    <Text style={styles.placeholderText}>{label}</Text>
   </View>
 );
 
 const MapPreview = ({ latitude, longitude, userLocation = null, height = 240, locationLabel = '' }) => {
+  const { t } = useI18n();
+
   if (!hasCoordinates({ latitude, longitude })) {
-    return <PlaceholderCard height={height} label="Location not set" />;
+    return <PlaceholderCard height={height} label={t('map.notSet')} />;
   }
 
   const lat = Number(latitude);
@@ -78,7 +81,7 @@ const MapPreview = ({ latitude, longitude, userLocation = null, height = 240, lo
       },
     });
   } else {
-    mapNode = <PlaceholderCard height={height} label={locationLabel || 'Map preview unavailable'} />;
+    mapNode = <PlaceholderCard height={height} label={locationLabel || t('map.previewUnavailable')} />;
   }
 
   const distanceLabel = validUserLocation
@@ -91,7 +94,7 @@ const MapPreview = ({ latitude, longitude, userLocation = null, height = 240, lo
       <View style={styles.metaRow}>
         <MaterialCommunityIcons name="map-marker-outline" size={17} color="#62645c" />
         <Text style={styles.metaText} numberOfLines={2}>
-          {locationLabel || 'Location pinned on map'}
+          {locationLabel || t('map.pinned')}
         </Text>
         {distanceLabel ? (
           <View style={styles.distanceChip}>
@@ -104,7 +107,7 @@ const MapPreview = ({ latitude, longitude, userLocation = null, height = 240, lo
           onPress={() => openExternalMap(lat, lng)}
         >
           <MaterialCommunityIcons name="open-in-new" size={15} color="#111" />
-          <Text style={styles.openButtonText}>Open in maps</Text>
+          <Text style={styles.openButtonText}>{t('map.openInMaps')}</Text>
         </TouchableOpacity>
       </View>
     </View>

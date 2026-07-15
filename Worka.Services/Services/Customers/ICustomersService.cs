@@ -15,7 +15,8 @@ namespace Worka.Services.Customers
             string phone = null,
             string address = null,
             string languages = null,
-            string photoUrl = null);
+            string photoUrl = null,
+            string preferredCurrency = null);
 
         Task<WorkaResponse<CustomerResponseDTO>> EnsureExistsAsync(
             string userId,

@@ -4,6 +4,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { formatDate, formatMoney, resolveUploadUrl } from '../../api/workaApi';
 import { requestCurrentLocation } from '../../Utils/locationUtils';
 import { useI18n } from '../../i18n/I18nContext';
+import { categoryLabel } from '../../i18n/categories';
 import Avatar from '../Avatar';
 import Stars from '../Stars';
 import MapPreview from '../MapPreview';
@@ -72,8 +73,8 @@ const JobCard = ({ job, quotes = [], onAcceptQuote, onEditJob, onDeleteJob, onCo
         <TouchableOpacity activeOpacity={0.9} onPress={() => setLightboxUri(image)}>
           <ImageBackground source={{ uri: image }} style={styles.image} imageStyle={styles.imageRadius}>
             <View style={styles.imageOverlay}>
-              <Text style={styles.category}>{job.category || 'Home services'}</Text>
-              <Text style={styles.date}>{job.photoUrl ? 'Photo attached' : formatDate(job.createdAt)}</Text>
+              <Text style={styles.category}>{categoryLabel(t, job.category)}</Text>
+              <Text style={styles.date}>{job.photoUrl ? t('jobs.photoAttached') : formatDate(job.createdAt)}</Text>
             </View>
           </ImageBackground>
         </TouchableOpacity>
@@ -82,7 +83,9 @@ const JobCard = ({ job, quotes = [], onAcceptQuote, onEditJob, onDeleteJob, onCo
           <View style={styles.titleRow}>
             <Text style={styles.title}>{job.jobName}</Text>
             <View style={[styles.statusPill, status === 'Booked' && styles.statusPillBooked]}>
-              <Text style={[styles.statusText, status === 'Booked' && styles.statusTextBooked]}>{status}</Text>
+              <Text style={[styles.statusText, status === 'Booked' && styles.statusTextBooked]}>
+                {t(`status.${status.toLowerCase()}`)}
+              </Text>
             </View>
           </View>
 
@@ -98,9 +101,13 @@ const JobCard = ({ job, quotes = [], onAcceptQuote, onEditJob, onDeleteJob, onCo
           <View style={styles.actionRow}>
             <TouchableOpacity style={styles.detailsButton} onPress={openDetails}>
               <MaterialCommunityIcons name="file-search-outline" size={18} color="#111" />
-              <Text style={styles.detailsButtonText}>View details</Text>
+              <Text style={styles.detailsButtonText}>{t('common.viewDetails')}</Text>
             </TouchableOpacity>
-            {bestQuote ? <Text style={styles.bestQuoteText}>Best quote {formatMoney(bestQuote.price, job.currency)}</Text> : null}
+            {bestQuote ? (
+              <Text style={styles.bestQuoteText}>
+                {t('jobs.bestQuote', { amount: formatMoney(bestQuote.price, job.currency) })}
+              </Text>
+            ) : null}
           </View>
 
           {(status === 'Open' || status === 'Booked' || status === 'Done') && (
@@ -109,22 +116,22 @@ const JobCard = ({ job, quotes = [], onAcceptQuote, onEditJob, onDeleteJob, onCo
                 <>
                   <TouchableOpacity style={styles.manageButton} onPress={() => onEditJob?.(job)}>
                     <MaterialCommunityIcons name="pencil-outline" size={17} color="#111" />
-                    <Text style={styles.manageButtonText}>Edit</Text>
+                    <Text style={styles.manageButtonText}>{t('common.edit')}</Text>
                   </TouchableOpacity>
                   <TouchableOpacity style={styles.manageButton} onPress={() => onDeleteJob?.(job)}>
                     <MaterialCommunityIcons name="trash-can-outline" size={17} color="#8c2f2f" />
-                    <Text style={[styles.manageButtonText, styles.manageButtonDanger]}>Delete</Text>
+                    <Text style={[styles.manageButtonText, styles.manageButtonDanger]}>{t('common.delete')}</Text>
                   </TouchableOpacity>
                 </>
               ) : status === 'Booked' ? (
                 <TouchableOpacity style={styles.manageButtonPrimary} onPress={() => onCompleteJob?.(job)}>
                   <MaterialCommunityIcons name="check-circle-outline" size={17} color="#fff" />
-                  <Text style={styles.manageButtonPrimaryText}>Mark complete</Text>
+                  <Text style={styles.manageButtonPrimaryText}>{t('jobs.markComplete')}</Text>
                 </TouchableOpacity>
               ) : (
                 <TouchableOpacity style={styles.manageButtonPrimary} onPress={() => onReviewJob?.(job)}>
                   <MaterialCommunityIcons name="star-outline" size={17} color="#fff" />
-                  <Text style={styles.manageButtonPrimaryText}>Leave a review</Text>
+                  <Text style={styles.manageButtonPrimaryText}>{t('reviews.leave')}</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -132,12 +139,18 @@ const JobCard = ({ job, quotes = [], onAcceptQuote, onEditJob, onDeleteJob, onCo
 
           <View style={styles.quoteBlock}>
             <View style={styles.quoteHeader}>
-              <Text style={styles.quoteTitle}>{quotes.length} quote{quotes.length === 1 ? '' : 's'}</Text>
-              {acceptedQuote && <Text style={styles.acceptedText}>Booked total {formatMoney(acceptedTotal, job.currency)}</Text>}
+              <Text style={styles.quoteTitle}>
+                {quotes.length === 1 ? t('quotes.one') : t('quotes.many', { count: quotes.length })}
+              </Text>
+              {acceptedQuote && (
+                <Text style={styles.acceptedText}>
+                  {t('quotes.bookedTotal', { amount: formatMoney(acceptedTotal, job.currency) })}
+                </Text>
+              )}
             </View>
 
             {quotes.length === 0 ? (
-              <Text style={styles.emptyQuotes}>Quotes from professionals will appear here.</Text>
+              <Text style={styles.emptyQuotes}>{t('quotes.empty')}</Text>
             ) : (
               quotes.map((quote) => {
                 const accepted = quote.quoteId === job.acceptedQuoteId;
@@ -157,13 +170,18 @@ const JobCard = ({ job, quotes = [], onAcceptQuote, onEditJob, onDeleteJob, onCo
                           <Text style={styles.quoteProName} numberOfLines={1}>
                             {quote.professionalFirstName
                               ? `${quote.professionalFirstName} ${quote.professionalLastName ?? ''}`.trim()
-                              : 'Worka professional'}
+                              : t('checkout.proFallback')}
                           </Text>
-                          <Stars value={quote.professionalRating} count={quote.professionalReviewCount} size={13} />
+                          <Stars
+                            value={quote.professionalRating}
+                            count={quote.professionalReviewCount}
+                            size={13}
+                            emptyLabel={t('reviews.none')}
+                          />
                         </View>
                       </View>
                       <Text style={styles.quotePrice}>{formatMoney(quote.price, job.currency)}</Text>
-                      <Text style={styles.quoteDescription}>{quote.description || 'No note provided.'}</Text>
+                      <Text style={styles.quoteDescription}>{quote.description || t('quotes.noNote')}</Text>
                       <Text style={styles.quoteFee}>
                         {t('quote.feeLine', {
                           fee: formatMoney(serviceFee, job.currency),
@@ -175,7 +193,7 @@ const JobCard = ({ job, quotes = [], onAcceptQuote, onEditJob, onDeleteJob, onCo
                         <MaterialCommunityIcons name="apple" size={15} color="#111" />
                         <MaterialCommunityIcons name="google" size={14} color="#111" />
                         <MaterialCommunityIcons name="credit-card-check-outline" size={15} color="#111" />
-                        <Text style={styles.walletText}>Apple Pay, Google Pay, Link, or card via Stripe Checkout.</Text>
+                        <Text style={styles.walletText}>{t('quotes.wallets')}</Text>
                       </View>
                     </View>
 
@@ -190,7 +208,7 @@ const JobCard = ({ job, quotes = [], onAcceptQuote, onEditJob, onDeleteJob, onCo
                         disabled={status === 'Booked'}
                       >
                         <MaterialCommunityIcons name="lock-check-outline" size={15} color="#fff" />
-                        <Text style={styles.acceptButtonText}>Pay & book</Text>
+                        <Text style={styles.acceptButtonText}>{t('quotes.payBook')}</Text>
                       </TouchableOpacity>
                     )}
                   </View>
@@ -208,14 +226,20 @@ const JobCard = ({ job, quotes = [], onAcceptQuote, onEditJob, onDeleteJob, onCo
               <TouchableOpacity activeOpacity={0.9} onPress={() => setLightboxUri(image)}>
                 <ImageBackground source={{ uri: image }} style={styles.modalImage} imageStyle={styles.modalImageRadius}>
                   <View style={styles.modalImageOverlay}>
-                    <Text style={styles.modalImageLabel}>{job.photoUrl ? 'Customer reference photo — tap to enlarge' : job.category || 'Job detail'}</Text>
+                    <Text style={styles.modalImageLabel}>
+                      {job.photoUrl
+                        ? t('jobs.referencePhotoTap')
+                        : job.category
+                          ? categoryLabel(t, job.category)
+                          : t('jobs.detailFallback')}
+                    </Text>
                   </View>
                 </ImageBackground>
               </TouchableOpacity>
 
               <View style={styles.modalHeader}>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.modalKicker}>{status}</Text>
+                  <Text style={styles.modalKicker}>{t(`status.${status.toLowerCase()}`)}</Text>
                   <Text style={styles.modalTitle}>{job.jobName}</Text>
                 </View>
                 <TouchableOpacity style={styles.closeButton} onPress={() => setDetailsVisible(false)}>
@@ -224,26 +248,26 @@ const JobCard = ({ job, quotes = [], onAcceptQuote, onEditJob, onDeleteJob, onCo
               </View>
 
               <View style={styles.detailSection}>
-                <Text style={styles.detailLabel}>Work needed</Text>
+                <Text style={styles.detailLabel}>{t('jobs.workNeeded')}</Text>
                 <Text style={styles.detailText}>{job.jobDescription}</Text>
               </View>
 
               <View style={styles.detailGrid}>
                 <View style={styles.detailTile}>
                   <MaterialCommunityIcons name="shape-outline" size={18} color="#111" />
-                  <Text style={styles.detailTileLabel}>Category</Text>
-                  <Text style={styles.detailTileValue}>{job.category || 'Home services'}</Text>
+                  <Text style={styles.detailTileLabel}>{t('jobs.category')}</Text>
+                  <Text style={styles.detailTileValue}>{categoryLabel(t, job.category)}</Text>
                 </View>
                 <View style={styles.detailTile}>
                   <MaterialCommunityIcons name="calendar-outline" size={18} color="#111" />
-                  <Text style={styles.detailTileLabel}>Posted</Text>
+                  <Text style={styles.detailTileLabel}>{t('jobs.posted')}</Text>
                   <Text style={styles.detailTileValue}>{formatDate(job.createdAt)}</Text>
                 </View>
               </View>
 
               {!!(job.locationLabel || job.address) && (
                 <View style={styles.detailSection}>
-                  <Text style={styles.detailLabel}>Location</Text>
+                  <Text style={styles.detailLabel}>{t('jobs.location')}</Text>
                   <MapPreview
                     latitude={job.latitude}
                     longitude={job.longitude}
@@ -255,9 +279,9 @@ const JobCard = ({ job, quotes = [], onAcceptQuote, onEditJob, onDeleteJob, onCo
               )}
 
               <View style={styles.detailSection}>
-                <Text style={styles.detailLabel}>Quotes and payment</Text>
+                <Text style={styles.detailLabel}>{t('quotes.andPayment')}</Text>
                 {quotes.length === 0 ? (
-                  <Text style={styles.detailText}>No quotes yet. Once a professional quotes, you can review their note and pay securely in-app.</Text>
+                  <Text style={styles.detailText}>{t('quotes.noneDetail')}</Text>
                 ) : (
                   quotes.map((quote) => {
                     const accepted = quote.quoteId === job.acceptedQuoteId;
@@ -277,13 +301,18 @@ const JobCard = ({ job, quotes = [], onAcceptQuote, onEditJob, onDeleteJob, onCo
                               <Text style={styles.quoteProName} numberOfLines={1}>
                                 {quote.professionalFirstName
                                   ? `${quote.professionalFirstName} ${quote.professionalLastName ?? ''}`.trim()
-                                  : 'Worka professional'}
+                                  : t('checkout.proFallback')}
                               </Text>
-                              <Stars value={quote.professionalRating} count={quote.professionalReviewCount} size={13} />
+                              <Stars
+                                value={quote.professionalRating}
+                                count={quote.professionalReviewCount}
+                                size={13}
+                                emptyLabel={t('reviews.none')}
+                              />
                             </View>
                           </View>
                           <Text style={styles.quotePrice}>{formatMoney(quote.price, job.currency)}</Text>
-                          <Text style={styles.quoteDescription}>{quote.description || 'No note provided.'}</Text>
+                          <Text style={styles.quoteDescription}>{quote.description || t('quotes.noNote')}</Text>
                           <Text style={styles.quoteFee}>
                             {t('quote.detailFeeLine', {
                               total: formatMoney(total, job.currency),
@@ -305,7 +334,7 @@ const JobCard = ({ job, quotes = [], onAcceptQuote, onEditJob, onDeleteJob, onCo
                             }}
                             disabled={status === 'Booked'}
                           >
-                            <Text style={styles.acceptButtonText}>Pay</Text>
+                            <Text style={styles.acceptButtonText}>{t('quotes.pay')}</Text>
                           </TouchableOpacity>
                         )}
                       </View>

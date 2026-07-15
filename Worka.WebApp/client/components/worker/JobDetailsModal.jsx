@@ -2,10 +2,13 @@ import React, { useState } from 'react';
 import { ImageBackground, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { formatDate } from '../../api/workaApi';
+import { useI18n } from '../../i18n/I18nContext';
+import { categoryLabel } from '../../i18n/categories';
 import MapPreview from '../MapPreview';
 import PhotoLightbox from '../PhotoLightbox';
 
 const JobDetailsModal = ({ job, image, userLocation = null, onClose, onQuote }) => {
+  const { t } = useI18n();
   const [lightboxUri, setLightboxUri] = useState(null);
 
   return (
@@ -15,7 +18,7 @@ const JobDetailsModal = ({ job, image, userLocation = null, onClose, onQuote }) 
         {job ? (
           <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
             <View style={styles.header}>
-              <Text style={styles.title}>Job details</Text>
+              <Text style={styles.title}>{t('jobs.details')}</Text>
               <TouchableOpacity
                 style={styles.closeButton}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -29,7 +32,7 @@ const JobDetailsModal = ({ job, image, userLocation = null, onClose, onQuote }) 
               <ImageBackground source={{ uri: image }} style={styles.photo} imageStyle={styles.photoRadius}>
                 <View style={styles.photoOverlay}>
                   <Text style={styles.photoText}>
-                    {job.photoUrl ? 'Customer reference photo — tap to enlarge' : job.category || 'Home services'}
+                    {job.photoUrl ? t('jobs.referencePhotoTap') : categoryLabel(t, job.category)}
                   </Text>
                 </View>
               </ImageBackground>
@@ -37,16 +40,16 @@ const JobDetailsModal = ({ job, image, userLocation = null, onClose, onQuote }) 
 
             <Text style={styles.jobName}>{job.jobName}</Text>
             <Text style={styles.meta}>
-              {job.category || 'Home services'} - Posted {formatDate(job.createdAt)}
+              {categoryLabel(t, job.category)} - {t('jobs.postedDate', { date: formatDate(job.createdAt) })}
             </Text>
 
             <View style={styles.section}>
-              <Text style={styles.sectionLabel}>Work needed</Text>
+              <Text style={styles.sectionLabel}>{t('jobs.workNeeded')}</Text>
               <Text style={styles.description}>{job.jobDescription}</Text>
             </View>
 
             <View style={styles.section}>
-              <Text style={styles.sectionLabel}>Location</Text>
+              <Text style={styles.sectionLabel}>{t('jobs.location')}</Text>
               <MapPreview
                 latitude={job.latitude}
                 longitude={job.longitude}
@@ -64,7 +67,7 @@ const JobDetailsModal = ({ job, image, userLocation = null, onClose, onQuote }) 
               }}
             >
               <MaterialCommunityIcons name="cash-plus" size={20} color="#fff" />
-              <Text style={styles.quoteButtonText}>Send a quote</Text>
+              <Text style={styles.quoteButtonText}>{t('quotes.sendA')}</Text>
             </TouchableOpacity>
           </ScrollView>
         ) : null}

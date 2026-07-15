@@ -2,16 +2,20 @@ import React from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { DrawerContentScrollView, DrawerItemList } from '@react-navigation/drawer';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useI18n } from '../i18n/I18nContext';
 
 export default function SharedDrawerContent(props) {
   const { logoutHandler, userType } = props;
+  const { t } = useI18n();
 
   return (
     <DrawerContentScrollView {...props} contentContainerStyle={styles.drawerScroll}>
       <View style={styles.drawerContainer}>
         <View style={styles.brandBlock}>
           <Image source={require('../assets/logo.png')} style={styles.logo} resizeMode="contain" />
-          <Text style={styles.workspaceLabel}>{userType} workspace</Text>
+          <Text style={styles.workspaceLabel}>
+            {userType === 'Customer' ? t('drawer.customerWorkspace') : t('drawer.professionalWorkspace')}
+          </Text>
         </View>
 
         <DrawerItemList
@@ -25,7 +29,7 @@ export default function SharedDrawerContent(props) {
 
         <Pressable style={styles.logoutButton} onPress={logoutHandler}>
           <MaterialCommunityIcons name="logout" size={20} color="#fff" />
-          <Text style={styles.logoutText}>Logout</Text>
+          <Text style={styles.logoutText}>{t('drawer.logout')}</Text>
         </Pressable>
 
         <Text style={styles.legalText}>LSL</Text>

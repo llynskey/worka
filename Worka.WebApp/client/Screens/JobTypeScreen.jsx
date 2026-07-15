@@ -14,8 +14,10 @@ import {
 import notify from '../Utils/notify';
 import * as ImagePicker from 'expo-image-picker';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { api, CURRENCIES, getErrorMessage, resolveUploadUrl, unwrap } from '../api/workaApi';
+import { api, getErrorMessage, resolveUploadUrl, unwrap } from '../api/workaApi';
 import { lookupLocations } from '../api/locationLookup';
+import { useI18n } from '../i18n/I18nContext';
+import { categoryLabel } from '../i18n/categories';
 
 const jobTypes = [
   {
@@ -51,6 +53,7 @@ const jobTypes = [
 ];
 
 const JobTypeScreen = ({ navigation }) => {
+  const { t } = useI18n();
   const [selectedType, setSelectedType] = useState(jobTypes[0]);
   const [account, setAccount] = useState(null);
   const [loadingAccount, setLoadingAccount] = useState(true);
@@ -65,7 +68,6 @@ const JobTypeScreen = ({ navigation }) => {
     address: '',
     locationLabel: '',
     photoUrl: '',
-    currency: 'gbp',
     latitude: null,
     longitude: null,
   });
@@ -78,7 +80,7 @@ const JobTypeScreen = ({ navigation }) => {
         if (mounted) setAccount(unwrap(response.data));
       })
       .catch((error) => {
-        notify('Account needed', getErrorMessage(error, 'Unable to load your customer account.'));
+        notify(t('post.accountNeededTitle'), getErrorMessage(error, t('post.accountLoadError')));
       })
       .finally(() => {
         if (mounted) setLoadingAccount(false);
@@ -111,7 +113,7 @@ const JobTypeScreen = ({ navigation }) => {
 
   const searchLocations = async () => {
     if (form.address.trim().length < 3) {
-      setLocationError('Enter at least 3 characters to search.');
+      setLocationError(t('post.minChars'));
       return;
     }
 
@@ -121,11 +123,11 @@ const JobTypeScreen = ({ navigation }) => {
       const results = await lookupLocations(form.address);
       setLocationSuggestions(results);
       if (results.length === 0) {
-        setLocationError('No matching locations found. Try a fuller address or nearby town.');
+        setLocationError(t('post.noLocations'));
       }
     } catch (error) {
       setLocationSuggestions([]);
-      setLocationError(getErrorMessage(error, 'Could not search locations right now.'));
+      setLocationError(getErrorMessage(error, t('post.locationSearchError')));
     } finally {
       setLookupLoading(false);
     }
@@ -181,7 +183,7 @@ const JobTypeScreen = ({ navigation }) => {
     try {
       const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permission.granted) {
-        notify('Photo access needed', 'Allow photo library access to attach a job image.');
+        notify(t('photo.accessTitle'), t('photo.accessJobText'));
         return;
       }
 
@@ -196,12 +198,12 @@ const JobTypeScreen = ({ navigation }) => {
 
       const asset = result.assets?.[0];
       if (!asset?.uri) {
-        notify('No photo selected', 'Choose an image and try again.');
+        notify(t('photo.noneTitle'), t('photo.noneText'));
         return;
       }
 
       if (asset.fileSize && asset.fileSize > 8 * 1024 * 1024) {
-        notify('Image too large', 'Use an image that is 8MB or smaller.');
+        notify(t('photo.tooLargeTitle'), t('photo.tooLargeText'));
         return;
       }
 
@@ -212,13 +214,13 @@ const JobTypeScreen = ({ navigation }) => {
       const response = await api.post('/uploads/job-photo', upload);
       const uploaded = unwrap(response.data);
       if (!uploaded?.url) {
-        notify('Upload failed', 'No image URL was returned.');
+        notify(t('photo.uploadFailedTitle'), t('photo.noUrl'));
         return;
       }
 
       setForm((current) => ({ ...current, photoUrl: uploaded.url }));
     } catch (error) {
-      notify('Could not upload photo', getErrorMessage(error, 'Try another image or paste a URL.'));
+      notify(t('photo.uploadErrorTitle'), getErrorMessage(error, t('photo.uploadErrorText')));
     } finally {
       setUploadingPhoto(false);
     }
@@ -226,27 +228,27 @@ const JobTypeScreen = ({ navigation }) => {
 
   const submitJob = async () => {
     if (!account?.customerId) {
-      notify('Account needed', 'Your customer account is still loading.');
+      notify(t('post.accountNeededTitle'), t('post.accountLoading'));
       return;
     }
 
     if (!form.jobName.trim()) {
-      notify('Add a title', 'Give professionals a short title for the job.');
+      notify(t('jobs.addTitleTitle'), t('post.addTitleText'));
       return;
     }
 
     if (!form.jobDescription.trim()) {
-      notify('Add details', 'Describe the work so professionals can quote accurately.');
+      notify(t('post.addDetailsTitle'), t('post.addDetailsText'));
       return;
     }
 
     if (!form.address.trim()) {
-      notify('Add an address', 'Add the job location or service area.');
+      notify(t('post.addAddressTitle'), t('post.addAddressText'));
       return;
     }
 
     if (!hasVerifiedLocation) {
-      notify('Choose a verified location', 'Search the address and choose one of the location results.');
+      notify(t('post.verifiedLocationTitle'), t('post.verifiedLocationText'));
       return;
     }
 
@@ -261,7 +263,6 @@ const JobTypeScreen = ({ navigation }) => {
         latitude: form.latitude,
         longitude: form.longitude,
         category: selectedType.type,
-        currency: form.currency,
       });
 
       setForm({
@@ -273,10 +274,10 @@ const JobTypeScreen = ({ navigation }) => {
         latitude: null,
         longitude: null,
       });
-      notify('Job posted', 'Professionals can now send quotes.');
+      notify(t('post.postedTitle'), t('post.postedText'));
       navigation?.navigate('Job List');
     } catch (error) {
-      notify('Could not post job', getErrorMessage(error, 'Try again in a moment.'));
+      notify(t('post.postErrorTitle'), getErrorMessage(error, t('common.tryAgain')));
     } finally {
       setSubmitting(false);
     }
@@ -290,13 +291,13 @@ const JobTypeScreen = ({ navigation }) => {
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <ImageBackground source={{ uri: selectedType.image }} style={styles.hero} imageStyle={styles.heroImage}>
           <View style={styles.heroOverlay}>
-            <Text style={styles.eyebrow}>New job</Text>
-            <Text style={styles.title}>Tell Worka what needs doing.</Text>
-            <Text style={styles.subtitle}>Clear details help professionals quote faster.</Text>
+            <Text style={styles.eyebrow}>{t('post.newJob')}</Text>
+            <Text style={styles.title}>{t('post.heroTitle')}</Text>
+            <Text style={styles.subtitle}>{t('post.heroSubtitle')}</Text>
           </View>
         </ImageBackground>
 
-        <Text style={styles.sectionTitle}>Category</Text>
+        <Text style={styles.sectionTitle}>{t('jobs.category')}</Text>
         <View style={styles.categoryGrid}>
           {jobTypes.map((job) => {
             const selected = selectedType.type === job.type;
@@ -307,7 +308,9 @@ const JobTypeScreen = ({ navigation }) => {
                 onPress={() => setSelectedType(job)}
               >
                 <MaterialCommunityIcons name={job.icon} size={22} color={selected ? '#fff' : '#111'} />
-                <Text style={[styles.categoryText, selected && styles.categoryTextActive]}>{job.type}</Text>
+                <Text style={[styles.categoryText, selected && styles.categoryTextActive]}>
+                  {categoryLabel(t, job.type)}
+                </Text>
               </TouchableOpacity>
             );
           })}
@@ -315,14 +318,14 @@ const JobTypeScreen = ({ navigation }) => {
 
         <View style={styles.formCard}>
           <TextInput
-            placeholder="Job title"
+            placeholder={t('jobs.titlePlaceholder')}
             placeholderTextColor="#686b64"
             value={form.jobName}
             onChangeText={(text) => updateField('jobName', text)}
             style={styles.input}
           />
           <TextInput
-            placeholder="Describe the work"
+            placeholder={t('jobs.descPlaceholder')}
             placeholderTextColor="#686b64"
             value={form.jobDescription}
             onChangeText={(text) => updateField('jobDescription', text)}
@@ -330,29 +333,11 @@ const JobTypeScreen = ({ navigation }) => {
             multiline
           />
 
-          <Text style={styles.currencyLabel}>Currency for quotes</Text>
-          <View style={styles.currencyRow}>
-            {CURRENCIES.map((option) => {
-              const active = form.currency === option.code;
-              return (
-                <TouchableOpacity
-                  key={option.code}
-                  style={[styles.currencyChip, active && styles.currencyChipActive]}
-                  onPress={() => updateField('currency', option.code)}
-                >
-                  <Text style={[styles.currencyChipText, active && styles.currencyChipTextActive]}>
-                    {option.label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-
           <View style={styles.photoPanel}>
             <View style={styles.photoHeader}>
               <View style={{ flex: 1 }}>
-                <Text style={styles.photoTitle}>Reference photo</Text>
-                <Text style={styles.photoText}>Show the room, repair, appliance, item, or access issue.</Text>
+                <Text style={styles.photoTitle}>{t('post.photoTitle')}</Text>
+                <Text style={styles.photoText}>{t('post.photoText')}</Text>
               </View>
               {form.photoUrl ? (
                 <TouchableOpacity style={styles.clearPhotoButton} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} onPress={() => updateField('photoUrl', '')}>
@@ -365,13 +350,13 @@ const JobTypeScreen = ({ navigation }) => {
               <ImageBackground source={{ uri: resolveUploadUrl(form.photoUrl) }} style={styles.photoPreview} imageStyle={styles.photoPreviewImage}>
                 <View style={styles.photoPreviewOverlay}>
                   <MaterialCommunityIcons name="image-check-outline" size={18} color="#fff" />
-                  <Text style={styles.photoPreviewText}>Photo attached</Text>
+                  <Text style={styles.photoPreviewText}>{t('jobs.photoAttached')}</Text>
                 </View>
               </ImageBackground>
             ) : (
               <View style={styles.photoEmpty}>
                 <MaterialCommunityIcons name="image-plus-outline" size={26} color="#111" />
-                <Text style={styles.photoEmptyText}>Add a photo so quotes are faster and more accurate.</Text>
+                <Text style={styles.photoEmptyText}>{t('post.photoEmpty')}</Text>
               </View>
             )}
 
@@ -385,13 +370,13 @@ const JobTypeScreen = ({ navigation }) => {
               ) : (
                 <>
                   <MaterialCommunityIcons name="image-search-outline" size={20} color="#111" />
-                  <Text style={styles.photoUploadButtonText}>Choose photo</Text>
+                  <Text style={styles.photoUploadButtonText}>{t('post.choosePhoto')}</Text>
                 </>
               )}
             </TouchableOpacity>
 
             <TextInput
-              placeholder="Or paste an image URL"
+              placeholder={t('post.photoUrlPlaceholder')}
               placeholderTextColor="#686b64"
               value={form.photoUrl}
               onChangeText={(text) => updateField('photoUrl', text)}
@@ -401,7 +386,7 @@ const JobTypeScreen = ({ navigation }) => {
           </View>
 
           <TextInput
-            placeholder="Start typing the job address"
+            placeholder={t('post.addressPlaceholder')}
             placeholderTextColor="#686b64"
             value={form.address}
             onChangeText={(text) => updateField('address', text)}
@@ -419,7 +404,7 @@ const JobTypeScreen = ({ navigation }) => {
             ) : (
               <>
                 <MaterialCommunityIcons name="map-search-outline" size={20} color="#111" />
-                <Text style={styles.lookupButtonText}>Search address</Text>
+                <Text style={styles.lookupButtonText}>{t('post.searchAddress')}</Text>
               </>
             )}
           </TouchableOpacity>
@@ -435,7 +420,7 @@ const JobTypeScreen = ({ navigation }) => {
             <View style={styles.locationSelected}>
               <MaterialCommunityIcons name="map-marker-check-outline" size={20} color="#111" />
               <View style={{ flex: 1 }}>
-                <Text style={styles.locationSelectedTitle}>Location set</Text>
+                <Text style={styles.locationSelectedTitle}>{t('post.locationSet')}</Text>
                 <Text style={styles.locationSelectedText}>{form.locationLabel || form.address}</Text>
               </View>
             </View>
@@ -466,7 +451,7 @@ const JobTypeScreen = ({ navigation }) => {
             ) : (
               <>
                 <MaterialCommunityIcons name="send-outline" size={20} color="#fff" />
-                <Text style={styles.submitButtonText}>Post job</Text>
+                <Text style={styles.submitButtonText}>{t('post.submit')}</Text>
               </>
             )}
           </TouchableOpacity>
@@ -481,39 +466,6 @@ const styles = StyleSheet.create({
     flex: 1,
     minHeight: 0,
     backgroundColor: '#f7f5ef',
-  },
-  currencyLabel: {
-    color: '#111',
-    fontSize: 14,
-    fontWeight: '900',
-    marginBottom: 8,
-  },
-  currencyRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 12,
-  },
-  currencyChip: {
-    minHeight: 40,
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#d9d5ca',
-    borderRadius: 999,
-    paddingHorizontal: 14,
-    backgroundColor: '#fbfaf6',
-  },
-  currencyChipActive: {
-    backgroundColor: '#111',
-    borderColor: '#111',
-  },
-  currencyChipText: {
-    color: '#111',
-    fontWeight: '800',
-    fontSize: 13,
-  },
-  currencyChipTextActive: {
-    color: '#fff',
   },
   scroll: {
     flex: 1,

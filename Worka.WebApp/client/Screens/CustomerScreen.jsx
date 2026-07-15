@@ -6,27 +6,29 @@ import JobList from '../components/customer/JobList';
 import ProDirectory from '../components/customer/ProDirectory';
 import JobTypeScreen from './JobTypeScreen';
 import WorkspaceShell from '../components/WorkspaceShell';
+import { useI18n } from '../i18n/I18nContext';
 
 const Tab = createBottomTabNavigator();
 
+// Stable keys/icons; labels + descriptions resolve through t() at render time.
 const webTabs = [
   {
     key: 'jobs',
-    label: 'Jobs',
+    labelKey: 'tabs.jobs',
     icon: 'clipboard-list-outline',
-    description: 'Track posted work and quotes',
+    descriptionKey: 'tabs.jobsDesc',
   },
   {
     key: 'post',
-    label: 'Post a job',
+    labelKey: 'tabs.post',
     icon: 'plus-circle-outline',
-    description: 'Create a new request',
+    descriptionKey: 'tabs.postDesc',
   },
   {
     key: 'pros',
-    label: 'Find pros',
+    labelKey: 'tabs.pros',
     icon: 'account-search-outline',
-    description: 'Browse and filter professionals',
+    descriptionKey: 'tabs.prosDesc',
   },
 ];
 
@@ -42,14 +44,24 @@ const createWebNavigation = (setActiveTab) => ({
 });
 
 const CustomerWebWorkspace = () => {
+  const { t } = useI18n();
   const [activeTab, setActiveTab] = useState('jobs');
   const navigation = useMemo(() => createWebNavigation(setActiveTab), []);
+  const tabs = useMemo(
+    () =>
+      webTabs.map((tab) => ({
+        ...tab,
+        label: t(tab.labelKey),
+        description: t(tab.descriptionKey),
+      })),
+    [t]
+  );
 
   return (
     <WorkspaceShell
-      eyebrow="Customer"
-      title="Workspace"
-      tabs={webTabs}
+      eyebrow={t('workspace.customer')}
+      title={t('workspace.title')}
+      tabs={tabs}
       activeTab={activeTab}
       onTabChange={setActiveTab}
     >
@@ -65,6 +77,8 @@ const CustomerWebWorkspace = () => {
 };
 
 const CustomerScreen = () => {
+  const { t } = useI18n();
+
   if (Platform.OS === 'web') {
     return <CustomerWebWorkspace />;
   }
@@ -99,9 +113,21 @@ const CustomerScreen = () => {
         },
       })}
     >
-      <Tab.Screen name="Job List" component={JobList} />
-      <Tab.Screen name="Post a Job" component={JobTypeScreen} />
-      <Tab.Screen name="Find Pros" component={ProDirectory} />
+      <Tab.Screen
+        name="Job List"
+        component={JobList}
+        options={{ title: t('tabs.jobs'), tabBarLabel: t('tabs.jobs') }}
+      />
+      <Tab.Screen
+        name="Post a Job"
+        component={JobTypeScreen}
+        options={{ title: t('tabs.post'), tabBarLabel: t('tabs.post') }}
+      />
+      <Tab.Screen
+        name="Find Pros"
+        component={ProDirectory}
+        options={{ title: t('tabs.pros'), tabBarLabel: t('tabs.pros') }}
+      />
     </Tab.Navigator>
   );
 };

@@ -2,9 +2,9 @@ import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-const Stars = ({ value, count, size = 15 }) => {
+const Stars = ({ value, count, size = 15, emptyLabel = 'No reviews yet' }) => {
   if (value == null) {
-    return <Text style={styles.noReviews}>No reviews yet</Text>;
+    return <Text style={styles.noReviews}>{emptyLabel}</Text>;
   }
 
   const rounded = Math.round(Number(value));

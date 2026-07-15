@@ -10,8 +10,9 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { api, formatMoney, getErrorMessage, unwrap } from '../../api/workaApi';
+import { useI18n } from '../../i18n/I18nContext';
 
-const WEEKDAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
+const MONTH_LOCALES = { en: 'en-GB', es: 'es-ES', fr: 'fr-FR', ro: 'ro-RO' };
 
 const startOfMonth = (date) => new Date(date.getFullYear(), date.getMonth(), 1);
 const dayKey = (date) =>
@@ -22,6 +23,7 @@ const dayKey = (date) =>
  * was accepted, placed on the day the booking was made.
  */
 const BookingsCalendar = () => {
+  const { t, language } = useI18n();
   const [jobs, setJobs] = useState([]);
   const [quotes, setQuotes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -39,11 +41,11 @@ const BookingsCalendar = () => {
       setQuotes(unwrap(quotesResponse.data) ?? []);
       setJobs(unwrap(jobsResponse.data) ?? []);
     } catch (err) {
-      setError(getErrorMessage(err, 'Unable to load your bookings.'));
+      setError(getErrorMessage(err, t('calendar.loadError')));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useFocusEffect(
     useCallback(() => {
@@ -106,7 +108,8 @@ const BookingsCalendar = () => {
     return rows;
   }, [monthDate]);
 
-  const monthLabel = monthDate.toLocaleDateString('en-GB', {
+  const weekdays = t('calendar.weekdays').split(',');
+  const monthLabel = monthDate.toLocaleDateString(MONTH_LOCALES[language] ?? 'en-GB', {
     month: 'long',
     year: 'numeric',
   });
@@ -122,7 +125,7 @@ const BookingsCalendar = () => {
     return (
       <View style={styles.centerState}>
         <ActivityIndicator color="#111" />
-        <Text style={styles.mutedText}>Loading your bookings...</Text>
+        <Text style={styles.mutedText}>{t('calendar.loading')}</Text>
       </View>
     );
   }
@@ -130,12 +133,14 @@ const BookingsCalendar = () => {
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
       <View style={styles.hero}>
-        <Text style={styles.eyebrow}>Bookings</Text>
-        <Text style={styles.heroTitle}>Your calendar</Text>
+        <Text style={styles.eyebrow}>{t('calendar.eyebrow')}</Text>
+        <Text style={styles.heroTitle}>{t('calendar.heroTitle')}</Text>
         <Text style={styles.heroText}>
           {monthTotal.length === 0
-            ? 'Bookings appear here the moment a customer pays your quote.'
-            : `${monthTotal.length} booking${monthTotal.length === 1 ? '' : 's'} this month.`}
+            ? t('calendar.emptyMonth')
+            : monthTotal.length === 1
+              ? t('calendar.monthCountOne')
+              : t('calendar.monthCount', { count: monthTotal.length })}
         </Text>
       </View>
 
@@ -170,7 +175,7 @@ const BookingsCalendar = () => {
         </View>
 
         <View style={styles.weekdayRow}>
-          {WEEKDAYS.map((weekday) => (
+          {weekdays.map((weekday) => (
             <Text key={weekday} style={styles.weekdayText}>
               {weekday}
             </Text>
@@ -220,8 +225,8 @@ const BookingsCalendar = () => {
 
       <Text style={styles.sectionTitle}>
         {selectedBookings.length === 0
-          ? 'No bookings on this day'
-          : `Bookings on this day (${selectedBookings.length})`}
+          ? t('calendar.noBookingsDay')
+          : t('calendar.bookingsDay', { count: selectedBookings.length })}
       </Text>
 
       {selectedBookings.map((booking) => (
@@ -244,7 +249,7 @@ const BookingsCalendar = () => {
           ) : null}
           <View style={[styles.statusPill, booking.completed && styles.statusPillDone]}>
             <Text style={[styles.statusText, booking.completed && styles.statusTextDone]}>
-              {booking.completed ? 'Completed' : 'Booked'}
+              {booking.completed ? t('status.completed') : t('status.booked')}
             </Text>
           </View>
         </View>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -7,33 +7,35 @@ import BidList from '../components/worker/BidList';
 import JobMap from '../components/worker/JobMap';
 import BookingsCalendar from '../components/worker/BookingsCalendar';
 import WorkspaceShell from '../components/WorkspaceShell';
+import { useI18n } from '../i18n/I18nContext';
 
 const Tab = createBottomTabNavigator();
 
+// Stable keys/icons; labels + descriptions resolve through t() at render time.
 const webTabs = [
   {
     key: 'jobs',
-    label: 'Available jobs',
+    labelKey: 'tabs.available',
     icon: 'briefcase-search-outline',
-    description: 'Find work to quote',
+    descriptionKey: 'tabs.availableDesc',
   },
   {
     key: 'map',
-    label: 'Map',
+    labelKey: 'tabs.map',
     icon: 'map-marker-radius-outline',
-    description: 'Browse jobs by location',
+    descriptionKey: 'tabs.mapDesc',
   },
   {
     key: 'bids',
-    label: 'My bids',
+    labelKey: 'tabs.bids',
     icon: 'file-document-edit-outline',
-    description: 'Track sent quotes',
+    descriptionKey: 'tabs.bidsDesc',
   },
   {
     key: 'calendar',
-    label: 'Calendar',
+    labelKey: 'tabs.calendar',
     icon: 'calendar-month-outline',
-    description: 'Your booked work',
+    descriptionKey: 'tabs.calendarDesc',
   },
 ];
 
@@ -45,13 +47,23 @@ const tabIcons = {
 };
 
 const WorkerWebWorkspace = () => {
+  const { t } = useI18n();
   const [activeTab, setActiveTab] = useState('jobs');
+  const tabs = useMemo(
+    () =>
+      webTabs.map((tab) => ({
+        ...tab,
+        label: t(tab.labelKey),
+        description: t(tab.descriptionKey),
+      })),
+    [t]
+  );
 
   return (
     <WorkspaceShell
-      eyebrow="Professional"
-      title="Workspace"
-      tabs={webTabs}
+      eyebrow={t('workspace.professional')}
+      title={t('workspace.title')}
+      tabs={tabs}
       activeTab={activeTab}
       onTabChange={setActiveTab}
     >
@@ -69,6 +81,8 @@ const WorkerWebWorkspace = () => {
 };
 
 const WorkerScreen = () => {
+  const { t } = useI18n();
+
   if (Platform.OS === 'web') {
     return <WorkerWebWorkspace />;
   }
@@ -96,10 +110,26 @@ const WorkerScreen = () => {
         },
       })}
     >
-      <Tab.Screen name="Available Jobs" component={JobList} />
-      <Tab.Screen name="Map" component={JobMap} />
-      <Tab.Screen name="My Bids" component={BidList} />
-      <Tab.Screen name="Calendar" component={BookingsCalendar} />
+      <Tab.Screen
+        name="Available Jobs"
+        component={JobList}
+        options={{ title: t('tabs.available'), tabBarLabel: t('tabs.available') }}
+      />
+      <Tab.Screen
+        name="Map"
+        component={JobMap}
+        options={{ title: t('tabs.map'), tabBarLabel: t('tabs.map') }}
+      />
+      <Tab.Screen
+        name="My Bids"
+        component={BidList}
+        options={{ title: t('tabs.bids'), tabBarLabel: t('tabs.bids') }}
+      />
+      <Tab.Screen
+        name="Calendar"
+        component={BookingsCalendar}
+        options={{ title: t('tabs.calendar'), tabBarLabel: t('tabs.calendar') }}
+      />
     </Tab.Navigator>
   );
 };

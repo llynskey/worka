@@ -14,29 +14,33 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { AuthContext } from '../auth/AuthContext';
 import { api, getErrorMessage } from '../api/workaApi';
+import { useI18n } from '../i18n/I18nContext';
 import styles from '../Utils/styles';
 
 type Props = {
   navigation: any;
 };
 
+// `value` 0/1 is the API account type — never translated. Labels and
+// descriptions resolve through t() at render time.
 const accountTypes = [
   {
-    label: 'Customer',
+    labelKey: 'workspace.customer',
     value: 0,
     icon: 'home-search-outline',
-    description: 'Post jobs and hire local professionals.',
+    descriptionKey: 'auth.customerDesc',
   },
   {
-    label: 'Professional',
+    labelKey: 'workspace.professional',
     value: 1,
     icon: 'briefcase-check-outline',
-    description: 'Find work and send quotes.',
+    descriptionKey: 'auth.professionalDesc',
   },
 ] as const;
 
 const SignupScreen: React.FC<Props> = ({ navigation }) => {
   const { signInWithToken } = useContext(AuthContext);
+  const { t } = useI18n();
   const [hidePassword, setHidePassword] = useState(true);
   const [loading, setLoading] = useState(false);
   const [accountType, setAccountType] = useState<0 | 1>(0);
@@ -57,11 +61,11 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
   );
 
   const validate = () => {
-    if (!formData.firstName.trim()) return 'First name is required.';
-    if (!formData.lastName.trim()) return 'Last name is required.';
-    if (!formData.email.trim()) return 'Email is required.';
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) return 'Enter a valid email.';
-    if (formData.password.length < 6) return 'Password must be at least 6 characters.';
+    if (!formData.firstName.trim()) return t('auth.errFirstName');
+    if (!formData.lastName.trim()) return t('auth.errLastName');
+    if (!formData.email.trim()) return t('auth.errEmail');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) return t('auth.errEmail');
+    if (formData.password.length < 6) return t('auth.errPassword');
     return null;
   };
 
@@ -85,17 +89,17 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
 
       const token = response?.data?.token;
       if (!token) {
-        setErrorMessage('No session token was returned.');
+        setErrorMessage(t('auth.errNoToken'));
         return;
       }
 
       await signInWithToken(token);
     } catch (error) {
-      setErrorMessage(getErrorMessage(error, 'Unable to create your account right now.'));
+      setErrorMessage(getErrorMessage(error, t('auth.errSignup')));
     } finally {
       setLoading(false);
     }
-  }, [accountType, formData, signInWithToken]);
+  }, [accountType, formData, signInWithToken, t]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -112,12 +116,12 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
             <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconButton}>
               <MaterialCommunityIcons name="arrow-left" size={24} color="#111" />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>Create account</Text>
+            <Text style={styles.headerTitle}>{t('auth.createAccount')}</Text>
             <View style={styles.iconButtonSpacer} />
           </View>
 
           <View style={styles.formContainer}>
-            <Text style={styles.sectionEyebrow}>I want to use Worka as a</Text>
+            <Text style={styles.sectionEyebrow}>{t('auth.joiningAs')}</Text>
             <View style={styles.segmentGrid}>
               {accountTypes.map((type) => {
                 const selected = accountType === type.value;
@@ -136,10 +140,10 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
                       color={selected ? '#fff' : '#111'}
                     />
                     <Text style={[styles.segmentTitle, selected && styles.segmentTitleActive]}>
-                      {type.label}
+                      {t(type.labelKey)}
                     </Text>
                     <Text style={[styles.segmentDescription, selected && styles.segmentDescriptionActive]}>
-                      {type.description}
+                      {t(type.descriptionKey)}
                     </Text>
                   </TouchableOpacity>
                 );
@@ -155,7 +159,7 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
 
             <TextInput
               style={styles.input}
-              placeholder="First name"
+              placeholder={t('account.firstName')}
               placeholderTextColor="#666"
               value={formData.firstName}
               onChangeText={(text) => handleChangeText('firstName', text)}
@@ -166,7 +170,7 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
 
             <TextInput
               style={styles.input}
-              placeholder="Last name"
+              placeholder={t('account.lastName')}
               placeholderTextColor="#666"
               value={formData.lastName}
               onChangeText={(text) => handleChangeText('lastName', text)}
@@ -177,7 +181,7 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
 
             <TextInput
               style={styles.input}
-              placeholder="Email"
+              placeholder={t('account.email')}
               placeholderTextColor="#666"
               value={formData.email}
               onChangeText={(text) => handleChangeText('email', text)}
@@ -190,7 +194,7 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
             <View style={styles.passwordContainer}>
               <TextInput
                 style={styles.passwordInput}
-                placeholder="Password"
+                placeholder={t('auth.password')}
                 placeholderTextColor="#666"
                 value={formData.password}
                 onChangeText={(text) => handleChangeText('password', text)}
@@ -214,7 +218,7 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
               ) : (
                 <>
                   <MaterialCommunityIcons name="account-plus-outline" size={20} color="#fff" />
-                  <Text style={styles.buttonText}>Create account</Text>
+                  <Text style={styles.buttonText}>{t('auth.createAccount')}</Text>
                 </>
               )}
             </TouchableOpacity>

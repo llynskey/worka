@@ -40,7 +40,7 @@ const WorkerSettingsScreen = ({ navigation }) => {
 
   const changePassword = async () => {
     if (newPassword.length < 6) {
-      notify('Password too short', 'Use at least 6 characters.');
+      notify(t('settings.passwordShortTitle'), t('settings.passwordShortText'));
       return;
     }
 
@@ -49,9 +49,9 @@ const WorkerSettingsScreen = ({ navigation }) => {
       await api.post('/account/changePassword', { currentPassword, newPassword });
       setCurrentPassword('');
       setNewPassword('');
-      notify('Password updated', 'Use your new password next time you log in.');
+      notify(t('settings.passwordUpdatedTitle'), t('settings.passwordUpdatedText'));
     } catch (error) {
-      notify('Could not change password', getErrorMessage(error));
+      notify(t('settings.passwordErrorTitle'), getErrorMessage(error));
     } finally {
       setChangingPassword(false);
     }
@@ -59,24 +59,25 @@ const WorkerSettingsScreen = ({ navigation }) => {
 
   const deleteAccount = async () => {
     if (!deletePassword) {
-      notify('Password needed', 'Enter your password to confirm deletion.');
+      notify(t('settings.passwordNeededTitle'), t('settings.passwordNeededText'));
       return;
     }
 
     const confirmed = await confirmAction(
-      'Delete your account?',
-      'Your profile, jobs, and quotes will be permanently removed. This cannot be undone.',
-      'Delete forever'
+      t('settings.deleteConfirmTitle'),
+      t('settings.deleteConfirmText'),
+      t('settings.deleteForever'),
+      t('common.cancel')
     );
     if (!confirmed) return;
 
     try {
       setDeleting(true);
       await api.delete('/account', { data: { password: deletePassword } });
-      notify('Account deleted', 'Sorry to see you go.');
+      notify(t('settings.deletedTitle'), t('settings.deletedText'));
       await signOut();
     } catch (error) {
-      notify('Could not delete account', getErrorMessage(error));
+      notify(t('settings.deleteErrorTitle'), getErrorMessage(error));
     } finally {
       setDeleting(false);
     }
@@ -87,32 +88,32 @@ const WorkerSettingsScreen = ({ navigation }) => {
       <View style={styles.headerCard}>
         <MaterialCommunityIcons name="cog-outline" size={34} color="#111" />
         <View style={{ flex: 1 }}>
-          <Text style={styles.title}>Professional settings</Text>
-          <Text style={styles.subtitle}>Control how Worka surfaces jobs and bid updates.</Text>
+          <Text style={styles.title}>{t('settings.proTitle')}</Text>
+          <Text style={styles.subtitle}>{t('settings.proSubtitle')}</Text>
         </View>
       </View>
 
       <View style={styles.card}>
         <View style={styles.settingRow}>
           <View style={{ flex: 1 }}>
-            <Text style={styles.settingTitle}>Available for work</Text>
-            <Text style={styles.settingText}>Show new job opportunities in your marketplace feed.</Text>
+            <Text style={styles.settingTitle}>{t('settings.availableForWork')}</Text>
+            <Text style={styles.settingText}>{t('settings.availableForWorkText')}</Text>
           </View>
           <Switch value={available} onValueChange={setAvailable} />
         </View>
         <View style={styles.divider} />
         <View style={styles.settingRow}>
           <View style={{ flex: 1 }}>
-            <Text style={styles.settingTitle}>Job alerts</Text>
-            <Text style={styles.settingText}>Notify me when new customer requests are posted.</Text>
+            <Text style={styles.settingTitle}>{t('settings.jobAlerts')}</Text>
+            <Text style={styles.settingText}>{t('settings.jobAlertsText')}</Text>
           </View>
           <Switch value={jobAlerts} onValueChange={setJobAlerts} />
         </View>
         <View style={styles.divider} />
         <View style={styles.settingRow}>
           <View style={{ flex: 1 }}>
-            <Text style={styles.settingTitle}>Bid updates</Text>
-            <Text style={styles.settingText}>Notify me when a customer accepts or closes a quote.</Text>
+            <Text style={styles.settingTitle}>{t('settings.bidUpdates')}</Text>
+            <Text style={styles.settingText}>{t('settings.bidUpdatesText')}</Text>
           </View>
           <Switch value={bidAlerts} onValueChange={setBidAlerts} />
         </View>
@@ -120,7 +121,7 @@ const WorkerSettingsScreen = ({ navigation }) => {
 
       <TouchableOpacity style={styles.linkCard} onPress={() => navigation.navigate('Account')}>
         <MaterialCommunityIcons name="account-hard-hat-outline" size={24} color="#111" />
-        <Text style={styles.linkText}>Manage professional profile</Text>
+        <Text style={styles.linkText}>{t('settings.manageProfile')}</Text>
         <MaterialCommunityIcons name="chevron-right" size={24} color="#111" />
       </TouchableOpacity>
 
@@ -148,12 +149,12 @@ const WorkerSettingsScreen = ({ navigation }) => {
       </View>
 
       <View style={styles.card}>
-        <Text style={styles.settingTitle}>Change password</Text>
+        <Text style={styles.settingTitle}>{t('settings.changePassword')}</Text>
         <TextInput
           style={styles.securityInput}
           value={currentPassword}
           onChangeText={setCurrentPassword}
-          placeholder="Current password"
+          placeholder={t('settings.currentPassword')}
           placeholderTextColor="#686b64"
           secureTextEntry
           autoCapitalize="none"
@@ -162,7 +163,7 @@ const WorkerSettingsScreen = ({ navigation }) => {
           style={styles.securityInput}
           value={newPassword}
           onChangeText={setNewPassword}
-          placeholder="New password (min 6 characters)"
+          placeholder={t('settings.newPassword')}
           placeholderTextColor="#686b64"
           secureTextEntry
           autoCapitalize="none"
@@ -171,21 +172,19 @@ const WorkerSettingsScreen = ({ navigation }) => {
           {changingPassword ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.securityButtonText}>Update password</Text>
+            <Text style={styles.securityButtonText}>{t('settings.updatePassword')}</Text>
           )}
         </TouchableOpacity>
       </View>
 
       <View style={[styles.card, styles.dangerCard]}>
-        <Text style={styles.settingTitle}>Delete account</Text>
-        <Text style={styles.settingText}>
-          Permanently removes your account and all associated data. This cannot be undone.
-        </Text>
+        <Text style={styles.settingTitle}>{t('settings.deleteAccount')}</Text>
+        <Text style={styles.settingText}>{t('settings.deleteAccountText')}</Text>
         <TextInput
           style={styles.securityInput}
           value={deletePassword}
           onChangeText={setDeletePassword}
-          placeholder="Confirm with your password"
+          placeholder={t('settings.confirmPassword')}
           placeholderTextColor="#686b64"
           secureTextEntry
           autoCapitalize="none"
@@ -194,29 +193,29 @@ const WorkerSettingsScreen = ({ navigation }) => {
           {deleting ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.securityButtonText}>Delete my account</Text>
+            <Text style={styles.securityButtonText}>{t('settings.deleteMyAccount')}</Text>
           )}
         </TouchableOpacity>
       </View>
 
       <View style={styles.card}>
-        <Text style={styles.settingTitle}>Support</Text>
+        <Text style={styles.settingTitle}>{t('settings.support')}</Text>
         <Text style={styles.settingText}>pros@worka.site</Text>
-        <Text style={styles.settingText}>For urgent bid issues, include the job title and quote amount.</Text>
+        <Text style={styles.settingText}>{t('settings.supportProText')}</Text>
         <View style={styles.legalLinksRow}>
           <TouchableOpacity onPress={() => Linking.openURL('https://worka.site/privacy.html')}>
-            <Text style={styles.legalLink}>Privacy Policy</Text>
+            <Text style={styles.legalLink}>{t('settings.privacyPolicy')}</Text>
           </TouchableOpacity>
           <Text style={styles.settingText}>·</Text>
           <TouchableOpacity onPress={() => Linking.openURL('https://worka.site/terms.html')}>
-            <Text style={styles.legalLink}>Terms of Service</Text>
+            <Text style={styles.legalLink}>{t('settings.terms')}</Text>
           </TouchableOpacity>
         </View>
       </View>
 
       <TouchableOpacity style={styles.signOutButton} onPress={signOut}>
         <MaterialCommunityIcons name="logout" size={19} color="#111" />
-        <Text style={styles.signOutText}>Sign out</Text>
+        <Text style={styles.signOutText}>{t('common.signOut')}</Text>
       </TouchableOpacity>
 
       <Text style={styles.versionText}>Worka v1.0.0</Text>

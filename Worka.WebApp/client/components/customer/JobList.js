@@ -16,6 +16,7 @@ import notify, { confirmAction } from '../../Utils/notify';
 import { useFocusEffect } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { api, formatDate, formatMoney, unwrap, getErrorMessage } from '../../api/workaApi';
+import { useI18n } from '../../i18n/I18nContext';
 import JobCard from './JobCard';
 import Avatar from '../Avatar';
 import Stars, { StarInput } from '../Stars';
@@ -38,6 +39,7 @@ const statusLabel = (status) => {
 };
 
 const CustomerJobList = ({ navigation }) => {
+  const { t } = useI18n();
   const [account, setAccount] = useState(null);
   const [jobs, setJobs] = useState([]);
   const [quotes, setQuotes] = useState([]);
@@ -60,21 +62,10 @@ const CustomerJobList = ({ navigation }) => {
 
     const params = new URLSearchParams(window.location.search);
     const checkout = params.get('checkout');
-    if (checkout === 'success') {
-      setCheckoutMessage({
-        type: 'success',
-        title: 'Payment received',
-        text: 'Your booking is being confirmed. Pull to refresh if the job has not updated yet.',
-      });
-      window.history.replaceState(null, '', window.location.pathname);
-    }
-
-    if (checkout === 'cancelled') {
-      setCheckoutMessage({
-        type: 'cancelled',
-        title: 'Payment cancelled',
-        text: 'No money was taken. You can choose the quote again when you are ready.',
-      });
+    if (checkout === 'success' || checkout === 'cancelled') {
+      // Only the type is stored — title/text resolve through t() at render
+      // time so the banner follows language switches.
+      setCheckoutMessage({ type: checkout });
       window.history.replaceState(null, '', window.location.pathname);
     }
   }, []);
@@ -99,12 +90,12 @@ const CustomerJobList = ({ navigation }) => {
       setRefreshing(true);
       await loadDashboard();
     } catch (err) {
-      setError(getErrorMessage(err, 'Unable to load your jobs.'));
+      setError(getErrorMessage(err, t('jobs.loadError')));
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [loadDashboard]);
+  }, [loadDashboard, t]);
 
   useFocusEffect(
     useCallback(() => {
@@ -128,10 +119,10 @@ const CustomerJobList = ({ navigation }) => {
         booked: jobsById[quote.jobId]?.acceptedQuoteId === quote.quoteId,
         price: quote.price,
         currency: jobsById[quote.jobId]?.currency,
-        jobName: jobsById[quote.jobId]?.jobName ?? 'a job',
+        jobName: jobsById[quote.jobId]?.jobName ?? t('jobs.aJob'),
         when: formatDate(quote.createdAt),
       }));
-  }, [jobsById, quotes]);
+  }, [jobsById, quotes, t]);
 
   const quotesByJob = useMemo(() => {
     return quotes.reduce((acc, quote) => {
@@ -151,12 +142,12 @@ const CustomerJobList = ({ navigation }) => {
     }, null);
 
     return [
-      { label: 'Open jobs', value: openJobs },
-      { label: 'Quotes', value: quoteTotal },
-      { label: 'Booked', value: bookedJobs },
-      { label: 'Best quote', value: bestQuote ? formatMoney(bestQuote.price) : '-' },
+      { label: t('jobs.statOpen'), value: openJobs },
+      { label: t('jobs.statQuotes'), value: quoteTotal },
+      { label: t('jobs.statBooked'), value: bookedJobs },
+      { label: t('jobs.statBestQuote'), value: bestQuote ? formatMoney(bestQuote.price) : '-' },
     ];
-  }, [jobs, quotes]);
+  }, [jobs, quotes, t]);
 
   const activeJobs = useMemo(
     () => jobs.filter((job) => ['Open', 'Booked'].includes(statusLabel(job.jobStatus))),
@@ -182,7 +173,7 @@ const CustomerJobList = ({ navigation }) => {
         });
         const checkout = unwrap(response.data);
         if (!checkout?.checkoutUrl) {
-          notify('Could not start payment', 'No checkout link was returned.');
+          notify(t('checkout.startErrorTitle'), t('checkout.noLink'));
           return;
         }
 
@@ -193,10 +184,10 @@ const CustomerJobList = ({ navigation }) => {
 
         await Linking.openURL(checkout.checkoutUrl);
       } catch (err) {
-        notify('Could not start payment', getErrorMessage(err, 'Try again in a moment.'));
+        notify(t('checkout.startErrorTitle'), getErrorMessage(err, t('common.tryAgain')));
       }
     },
-    []
+    [t]
   );
 
   const openReview = useCallback((job) => {
@@ -214,13 +205,13 @@ const CustomerJobList = ({ navigation }) => {
         comment: reviewForm.comment.trim(),
       });
       setReviewJob(null);
-      notify('Thanks for the review', 'Your rating helps other customers pick the right pro.');
+      notify(t('reviews.thanksTitle'), t('reviews.thanksText'));
     } catch (err) {
-      notify('Could not submit review', getErrorMessage(err, 'Try again in a moment.'));
+      notify(t('reviews.errorTitle'), getErrorMessage(err, t('common.tryAgain')));
     } finally {
       setSubmittingReview(false);
     }
-  }, [reviewForm, reviewJob]);
+  }, [reviewForm, reviewJob, t]);
 
   const openEditJob = useCallback((job) => {
     setEditForm({ jobName: job.jobName ?? '', jobDescription: job.jobDescription ?? '' });
@@ -230,7 +221,7 @@ const CustomerJobList = ({ navigation }) => {
   const saveJobEdit = useCallback(async () => {
     if (!editJob) return;
     if (!editForm.jobName.trim()) {
-      notify('Add a title', 'The job needs a short title.');
+      notify(t('jobs.addTitleTitle'), t('jobs.addTitleText'));
       return;
     }
 
@@ -249,59 +240,61 @@ const CustomerJobList = ({ navigation }) => {
       });
       setEditJob(null);
       await refresh();
-      notify('Job updated', 'Professionals will see the new details.');
+      notify(t('jobs.updatedTitle'), t('jobs.updatedText'));
     } catch (err) {
-      notify('Could not update job', getErrorMessage(err, 'Try again in a moment.'));
+      notify(t('jobs.updateErrorTitle'), getErrorMessage(err, t('common.tryAgain')));
     } finally {
       setSavingEdit(false);
     }
-  }, [editForm, editJob, refresh]);
+  }, [editForm, editJob, refresh, t]);
 
   const deleteJob = useCallback(
     async (job) => {
       const confirmed = await confirmAction(
-        'Delete this job?',
-        `"${job.jobName}" and any quotes on it will be removed. This cannot be undone.`,
-        'Delete'
+        t('jobs.deleteConfirmTitle'),
+        t('jobs.deleteConfirmText', { name: job.jobName }),
+        t('common.delete'),
+        t('common.cancel')
       );
       if (!confirmed) return;
 
       try {
         await api.delete(`/Jobs/${job.jobId}`);
         await refresh();
-        notify('Job deleted', 'The job and its quotes were removed.');
+        notify(t('jobs.deletedTitle'), t('jobs.deletedText'));
       } catch (err) {
-        notify('Could not delete job', getErrorMessage(err, 'Try again in a moment.'));
+        notify(t('jobs.deleteErrorTitle'), getErrorMessage(err, t('common.tryAgain')));
       }
     },
-    [refresh]
+    [refresh, t]
   );
 
   const completeJob = useCallback(
     async (job) => {
       const confirmed = await confirmAction(
-        'Mark job complete?',
-        'Confirm the work is finished to close this job.',
-        'Mark complete'
+        t('jobs.completeConfirmTitle'),
+        t('jobs.completeConfirmText'),
+        t('jobs.markComplete'),
+        t('common.cancel')
       );
       if (!confirmed) return;
 
       try {
         await api.post(`/Jobs/${job.jobId}/complete`);
         await refresh();
-        notify('Job completed', 'Nice one — the job is now closed.');
+        notify(t('jobs.completedTitle'), t('jobs.completedText'));
       } catch (err) {
-        notify('Could not complete job', getErrorMessage(err, 'Try again in a moment.'));
+        notify(t('jobs.completeErrorTitle'), getErrorMessage(err, t('common.tryAgain')));
       }
     },
-    [refresh]
+    [refresh, t]
   );
 
   if (loading && !refreshing) {
     return (
       <View style={styles.centerState}>
         <ActivityIndicator color="#111" />
-        <Text style={styles.mutedText}>Loading your Worka workspace...</Text>
+        <Text style={styles.mutedText}>{t('jobs.loadingWorkspace')}</Text>
       </View>
     );
   }
@@ -310,10 +303,10 @@ const CustomerJobList = ({ navigation }) => {
     return (
       <View style={styles.centerState}>
         <MaterialCommunityIcons name="cloud-alert-outline" size={34} color="#111" />
-        <Text style={styles.errorTitle}>Could not load jobs</Text>
+        <Text style={styles.errorTitle}>{t('jobs.couldNotLoad')}</Text>
         <Text style={styles.mutedText}>{error}</Text>
         <TouchableOpacity style={styles.primaryButton} onPress={refresh}>
-          <Text style={styles.primaryButtonText}>Retry</Text>
+          <Text style={styles.primaryButtonText}>{t('common.retry')}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -336,8 +329,16 @@ const CustomerJobList = ({ navigation }) => {
                 color="#111"
               />
               <View style={{ flex: 1 }}>
-                <Text style={styles.checkoutBannerTitle}>{checkoutMessage.title}</Text>
-                <Text style={styles.checkoutBannerText}>{checkoutMessage.text}</Text>
+                <Text style={styles.checkoutBannerTitle}>
+                  {checkoutMessage.type === 'success'
+                    ? t('jobs.paymentReceivedTitle')
+                    : t('jobs.paymentCancelledTitle')}
+                </Text>
+                <Text style={styles.checkoutBannerText}>
+                  {checkoutMessage.type === 'success'
+                    ? t('jobs.paymentReceivedText')
+                    : t('jobs.paymentCancelledText')}
+                </Text>
               </View>
               <TouchableOpacity style={styles.bannerClose} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} onPress={() => setCheckoutMessage(null)}>
                 <MaterialCommunityIcons name="close" size={18} color="#111" />
@@ -346,14 +347,14 @@ const CustomerJobList = ({ navigation }) => {
           ) : null}
 
           <View style={styles.hero}>
-            <Text style={styles.eyebrow}>Customer marketplace</Text>
+            <Text style={styles.eyebrow}>{t('jobs.customerEyebrow')}</Text>
             <Text style={styles.heroTitle}>
-              {account ? `Good to see you, ${account.firstName}.` : 'Your Worka pipeline'}
+              {account ? t('jobs.greeting', { name: account.firstName }) : t('jobs.pipeline')}
             </Text>
-            <Text style={styles.heroText}>Post work, compare quotes, and book the right pro.</Text>
+            <Text style={styles.heroText}>{t('jobs.heroText')}</Text>
             <TouchableOpacity style={styles.primaryButton} onPress={() => navigation?.navigate('Post a Job')}>
               <MaterialCommunityIcons name="plus-circle-outline" size={20} color="#fff" />
-              <Text style={styles.primaryButtonText}>Post a job</Text>
+              <Text style={styles.primaryButtonText}>{t('jobs.postJob')}</Text>
             </TouchableOpacity>
           </View>
 
@@ -368,7 +369,7 @@ const CustomerJobList = ({ navigation }) => {
 
           {recentActivity.length > 0 ? (
             <View style={styles.activityCard}>
-              <Text style={styles.activityTitle}>Recent activity</Text>
+              <Text style={styles.activityTitle}>{t('jobs.recentActivity')}</Text>
               {recentActivity.map((entry) => (
                 <View key={entry.id} style={styles.activityRow}>
                   <View style={[styles.activityDot, entry.booked && styles.activityDotBooked]}>
@@ -379,9 +380,9 @@ const CustomerJobList = ({ navigation }) => {
                     />
                   </View>
                   <Text style={styles.activityText}>
-                    {entry.booked ? 'Booked ' : 'New quote '}
+                    {entry.booked ? t('jobs.activityBooked') : t('jobs.activityQuote')}{' '}
                     <Text style={styles.activityStrong}>{formatMoney(entry.price, entry.currency)}</Text>
-                    {' on '}
+                    {` ${t('jobs.activityOn')} `}
                     <Text style={styles.activityStrong}>{entry.jobName}</Text>
                   </Text>
                   <Text style={styles.activityWhen}>{entry.when}</Text>
@@ -396,7 +397,7 @@ const CustomerJobList = ({ navigation }) => {
               onPress={() => setJobFilter('active')}
             >
               <Text style={[styles.segmentText, jobFilter === 'active' && styles.segmentTextActive]}>
-                Active ({activeJobs.length})
+                {t('jobs.activeCount', { count: activeJobs.length })}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -404,28 +405,28 @@ const CustomerJobList = ({ navigation }) => {
               onPress={() => setJobFilter('past')}
             >
               <Text style={[styles.segmentText, jobFilter === 'past' && styles.segmentTextActive]}>
-                Past ({pastJobs.length})
+                {t('jobs.pastCount', { count: pastJobs.length })}
               </Text>
             </TouchableOpacity>
           </View>
 
-          <Text style={styles.sectionTitle}>Your jobs</Text>
+          <Text style={styles.sectionTitle}>{t('jobs.yourJobs')}</Text>
         </View>
       }
       ListEmptyComponent={
         jobFilter === 'past' ? (
           <View style={styles.emptyState}>
             <MaterialCommunityIcons name="history" size={40} color="#111" />
-            <Text style={styles.emptyTitle}>No past jobs yet</Text>
-            <Text style={styles.mutedText}>Completed and closed jobs will appear here.</Text>
+            <Text style={styles.emptyTitle}>{t('jobs.noPastTitle')}</Text>
+            <Text style={styles.mutedText}>{t('jobs.noPastText')}</Text>
           </View>
         ) : (
           <View style={styles.emptyState}>
             <MaterialCommunityIcons name="clipboard-plus-outline" size={40} color="#111" />
-            <Text style={styles.emptyTitle}>No active jobs</Text>
-            <Text style={styles.mutedText}>Create your first job to start receiving quotes.</Text>
+            <Text style={styles.emptyTitle}>{t('jobs.noActiveTitle')}</Text>
+            <Text style={styles.mutedText}>{t('jobs.noActiveText')}</Text>
             <TouchableOpacity style={styles.primaryButton} onPress={() => navigation?.navigate('Post a Job')}>
-              <Text style={styles.primaryButtonText}>Post a job</Text>
+              <Text style={styles.primaryButtonText}>{t('jobs.postJob')}</Text>
             </TouchableOpacity>
           </View>
         )
@@ -454,7 +455,7 @@ const CustomerJobList = ({ navigation }) => {
           {checkoutPreview ? (
             <>
               <View style={styles.editHeader}>
-                <Text style={styles.editTitle}>Review & pay</Text>
+                <Text style={styles.editTitle}>{t('checkout.reviewPay')}</Text>
                 <TouchableOpacity
                   style={styles.bannerClose}
                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -479,31 +480,32 @@ const CustomerJobList = ({ navigation }) => {
                   <Text style={styles.checkoutProName} numberOfLines={1}>
                     {checkoutPreview.quote.professionalFirstName
                       ? `${checkoutPreview.quote.professionalFirstName} ${checkoutPreview.quote.professionalLastName ?? ''}`.trim()
-                      : 'Worka professional'}
+                      : t('checkout.proFallback')}
                   </Text>
                   <Stars
                     value={checkoutPreview.quote.professionalRating}
                     count={checkoutPreview.quote.professionalReviewCount}
                     size={13}
+                    emptyLabel={t('reviews.none')}
                   />
                 </View>
               </View>
 
               <View style={styles.checkoutLines}>
                 <View style={styles.checkoutLine}>
-                  <Text style={styles.checkoutLineLabel}>Quote</Text>
+                  <Text style={styles.checkoutLineLabel}>{t('checkout.quote')}</Text>
                   <Text style={styles.checkoutLineValue}>
                     {formatMoney(checkoutPreview.quote.price, checkoutPreview.job.currency)}
                   </Text>
                 </View>
                 <View style={styles.checkoutLine}>
-                  <Text style={styles.checkoutLineLabel}>Worka service fee</Text>
+                  <Text style={styles.checkoutLineLabel}>{t('checkout.serviceFee')}</Text>
                   <Text style={styles.checkoutLineValue}>
                     {formatMoney(getServiceFee(checkoutPreview.quote.price), checkoutPreview.job.currency)}
                   </Text>
                 </View>
                 <View style={[styles.checkoutLine, styles.checkoutTotalLine]}>
-                  <Text style={styles.checkoutTotalLabel}>Total</Text>
+                  <Text style={styles.checkoutTotalLabel}>{t('checkout.total')}</Text>
                   <Text style={styles.checkoutTotalValue}>
                     {formatMoney(
                       Number(checkoutPreview.quote.price) + getServiceFee(checkoutPreview.quote.price),
@@ -515,9 +517,7 @@ const CustomerJobList = ({ navigation }) => {
 
               <View style={styles.checkoutSecureRow}>
                 <MaterialCommunityIcons name="shield-check-outline" size={17} color="#24513b" />
-                <Text style={styles.checkoutSecureText}>
-                  Secure payment by Stripe. Apple Pay, Google Pay, and cards supported.
-                </Text>
+                <Text style={styles.checkoutSecureText}>{t('checkout.secureLine')}</Text>
               </View>
 
               <TouchableOpacity
@@ -536,12 +536,12 @@ const CustomerJobList = ({ navigation }) => {
                   <ActivityIndicator color="#fff" />
                 ) : (
                   <Text style={styles.editSaveText}>
-                    Pay{' '}
-                    {formatMoney(
-                      Number(checkoutPreview.quote.price) + getServiceFee(checkoutPreview.quote.price),
-                      checkoutPreview.job.currency
-                    )}{' '}
-                    securely
+                    {t('checkout.paySecurely', {
+                      amount: formatMoney(
+                        Number(checkoutPreview.quote.price) + getServiceFee(checkoutPreview.quote.price),
+                        checkoutPreview.job.currency
+                      ),
+                    })}
                   </Text>
                 )}
               </TouchableOpacity>
@@ -555,7 +555,7 @@ const CustomerJobList = ({ navigation }) => {
       <View style={styles.editBackdrop}>
         <View style={styles.editCard}>
           <View style={styles.editHeader}>
-            <Text style={styles.editTitle}>Edit job</Text>
+            <Text style={styles.editTitle}>{t('jobs.editJob')}</Text>
             <TouchableOpacity
               style={styles.bannerClose}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -569,14 +569,14 @@ const CustomerJobList = ({ navigation }) => {
             style={styles.editInput}
             value={editForm.jobName}
             onChangeText={(jobName) => setEditForm((current) => ({ ...current, jobName }))}
-            placeholder="Job title"
+            placeholder={t('jobs.titlePlaceholder')}
             placeholderTextColor="#686b64"
           />
           <TextInput
             style={[styles.editInput, styles.editTextArea]}
             value={editForm.jobDescription}
             onChangeText={(jobDescription) => setEditForm((current) => ({ ...current, jobDescription }))}
-            placeholder="Describe the work"
+            placeholder={t('jobs.descPlaceholder')}
             placeholderTextColor="#686b64"
             multiline
           />
@@ -585,7 +585,7 @@ const CustomerJobList = ({ navigation }) => {
             {savingEdit ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text style={styles.editSaveText}>Save changes</Text>
+              <Text style={styles.editSaveText}>{t('common.saveChanges')}</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -596,7 +596,7 @@ const CustomerJobList = ({ navigation }) => {
       <View style={styles.editBackdrop}>
         <View style={styles.editCard}>
           <View style={styles.editHeader}>
-            <Text style={styles.editTitle}>Leave a review</Text>
+            <Text style={styles.editTitle}>{t('reviews.leave')}</Text>
             <TouchableOpacity
               style={styles.bannerClose}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -619,7 +619,7 @@ const CustomerJobList = ({ navigation }) => {
             style={[styles.editInput, styles.editTextArea]}
             value={reviewForm.comment}
             onChangeText={(comment) => setReviewForm((current) => ({ ...current, comment }))}
-            placeholder="How did the work go?"
+            placeholder={t('reviews.placeholder')}
             placeholderTextColor="#686b64"
             multiline
           />
@@ -628,7 +628,7 @@ const CustomerJobList = ({ navigation }) => {
             {submittingReview ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text style={styles.editSaveText}>Submit review</Text>
+              <Text style={styles.editSaveText}>{t('reviews.submit')}</Text>
             )}
           </TouchableOpacity>
         </View>

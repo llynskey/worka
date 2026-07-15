@@ -14,11 +14,13 @@ import { useFocusEffect } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { api, formatDate, getErrorMessage, unwrap } from '../../api/workaApi';
 import { formatDistance, getDistanceKm, requestCurrentLocation } from '../../Utils/locationUtils';
+import { useI18n } from '../../i18n/I18nContext';
+import { categoryLabel } from '../../i18n/categories';
 import MapPreview from '../MapPreview';
 
 const hasCoordinates = (job) => Number.isFinite(Number(job.latitude)) && Number.isFinite(Number(job.longitude));
 
-const getLocationLabel = (job) => job.locationLabel || job.address || 'Location not set';
+const getLocationLabel = (job, fallback = 'Location not set') => job.locationLabel || job.address || fallback;
 
 const MAPBOX_TOKEN = process.env.EXPO_PUBLIC_MAPBOX_TOKEN;
 
@@ -58,12 +60,14 @@ const openExternalMap = (job, currentLocation) => {
 };
 
 const WebMapFrame = ({ job, minHeight = 420, userLocation = null }) => {
+  const { t } = useI18n();
+
   if (!job || !hasCoordinates(job)) {
     return (
       <View style={[styles.mapPlaceholder, { minHeight }]}>
         <MaterialCommunityIcons name="map-marker-off-outline" size={36} color="#111" />
-        <Text style={styles.placeholderTitle}>Choose a located job</Text>
-        <Text style={styles.placeholderText}>Jobs posted with address lookup will appear on the map.</Text>
+        <Text style={styles.placeholderTitle}>{t('map.chooseLocatedJob')}</Text>
+        <Text style={styles.placeholderText}>{t('map.placeholderText')}</Text>
       </View>
     );
   }
@@ -77,13 +81,14 @@ const WebMapFrame = ({ job, minHeight = 420, userLocation = null }) => {
       latitude={job.latitude}
       longitude={job.longitude}
       userLocation={userLocation}
-      locationLabel={getLocationLabel(job)}
+      locationLabel={getLocationLabel(job, t('map.notSet'))}
       height={Math.max(minHeight - 56, 180)}
     />
   );
 };
 
 const JobMap = () => {
+  const { t } = useI18n();
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -117,12 +122,12 @@ const JobMap = () => {
       setRefreshing(true);
       await loadJobs();
     } catch (err) {
-      setError(getErrorMessage(err, 'Unable to load the job map.'));
+      setError(getErrorMessage(err, t('map.loadError')));
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [loadJobs]);
+  }, [loadJobs, t]);
 
   useFocusEffect(
     useCallback(() => {
@@ -156,7 +161,7 @@ const JobMap = () => {
       const location = await requestCurrentLocation();
       setCurrentLocation(location);
     } catch (err) {
-      setLocationError(err instanceof Error ? err.message : 'Could not get current location.');
+      setLocationError(err instanceof Error ? err.message : t('map.locationFailed'));
     } finally {
       setLocating(false);
     }
@@ -166,7 +171,7 @@ const JobMap = () => {
     return (
       <View style={styles.centerState}>
         <ActivityIndicator color="#111" />
-        <Text style={styles.mutedText}>Loading job locations...</Text>
+        <Text style={styles.mutedText}>{t('map.loading')}</Text>
       </View>
     );
   }
@@ -175,10 +180,10 @@ const JobMap = () => {
     return (
       <View style={styles.centerState}>
         <MaterialCommunityIcons name="map-alert-outline" size={34} color="#111" />
-        <Text style={styles.errorTitle}>Could not load map</Text>
+        <Text style={styles.errorTitle}>{t('map.couldNotLoad')}</Text>
         <Text style={styles.mutedText}>{error}</Text>
         <TouchableOpacity style={styles.primaryButton} onPress={refresh}>
-          <Text style={styles.primaryButtonText}>Retry</Text>
+          <Text style={styles.primaryButtonText}>{t('common.retry')}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -187,9 +192,11 @@ const JobMap = () => {
   const headerBlock = (
     <View style={styles.header}>
       <View style={styles.headerCopy}>
-        <Text style={styles.eyebrow}>Job map</Text>
-        <Text style={styles.title}>Browse work by location.</Text>
-        <Text style={styles.subtitle}>{locatedJobs.length} located jobs, {unlocatedJobs.length} awaiting location.</Text>
+        <Text style={styles.eyebrow}>{t('map.eyebrow')}</Text>
+        <Text style={styles.title}>{t('map.title')}</Text>
+        <Text style={styles.subtitle}>
+          {t('map.subtitle', { located: locatedJobs.length, unlocated: unlocatedJobs.length })}
+        </Text>
       </View>
       <TouchableOpacity style={styles.refreshButton} onPress={refresh} disabled={refreshing}>
         {refreshing ? (
@@ -205,12 +212,10 @@ const JobMap = () => {
     <View style={styles.locationBar}>
       <View style={{ flex: 1 }}>
         <Text style={styles.locationBarTitle}>
-          {currentLocation ? 'Current location set' : 'Current location not set'}
+          {currentLocation ? t('map.locationSetTitle') : t('map.locationNotSetTitle')}
         </Text>
         <Text style={styles.locationBarText}>
-          {currentLocation
-            ? 'Located jobs are sorted by distance. Open a job for directions.'
-            : 'Share location to show distance to each job.'}
+          {currentLocation ? t('map.locationSetText') : t('map.locationNotSetText')}
         </Text>
         {locationError ? <Text style={styles.locationError}>{locationError}</Text> : null}
       </View>
@@ -221,7 +226,7 @@ const JobMap = () => {
           ) : (
             <>
               <MaterialCommunityIcons name="crosshairs-gps" size={18} color="#111" />
-              <Text style={styles.locationButtonText}>Use location</Text>
+              <Text style={styles.locationButtonText}>{t('map.useLocation')}</Text>
             </>
           )}
         </TouchableOpacity>
@@ -234,8 +239,8 @@ const JobMap = () => {
       {locatedJobs.length === 0 ? (
         <View style={styles.emptyState}>
           <MaterialCommunityIcons name="map-marker-plus-outline" size={36} color="#111" />
-          <Text style={styles.emptyTitle}>No located jobs yet</Text>
-          <Text style={styles.mutedText}>New jobs must now choose a lookup result before posting.</Text>
+          <Text style={styles.emptyTitle}>{t('map.emptyTitle')}</Text>
+          <Text style={styles.mutedText}>{t('map.emptyText')}</Text>
         </View>
       ) : (
         locatedJobs.map((job) => {
@@ -253,15 +258,17 @@ const JobMap = () => {
                   {distanceLabel || formatDate(job.createdAt)}
                 </Text>
               </View>
-              <Text style={[styles.jobLocation, active && styles.jobLocationActive]}>{getLocationLabel(job)}</Text>
+              <Text style={[styles.jobLocation, active && styles.jobLocationActive]}>
+                {getLocationLabel(job, t('map.notSet'))}
+              </Text>
               <View style={styles.jobFooter}>
                 <Text style={[styles.jobCategory, active && styles.jobCategoryActive]}>
-                  {job.category || 'Home services'}
+                  {categoryLabel(t, job.category)}
                 </Text>
                 <TouchableOpacity style={styles.openMapButton} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} onPress={() => openExternalMap(job, currentLocation)}>
                   <MaterialCommunityIcons name="open-in-new" size={15} color={active ? '#fff' : '#111'} />
                   <Text style={[styles.openMapText, active && styles.openMapTextActive]}>
-                    {currentLocation ? 'Directions' : 'Open'}
+                    {currentLocation ? t('map.directions') : t('map.open')}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -272,10 +279,10 @@ const JobMap = () => {
 
       {unlocatedJobs.length > 0 ? (
         <View style={styles.unlocatedBlock}>
-          <Text style={styles.unlocatedTitle}>Jobs missing coordinates</Text>
+          <Text style={styles.unlocatedTitle}>{t('map.missingCoords')}</Text>
           {unlocatedJobs.map((job) => (
             <Text key={job.jobId} style={styles.unlocatedText}>
-              {job.jobName} - {job.address || 'No address'}
+              {job.jobName} - {job.address || t('map.noAddress')}
             </Text>
           ))}
         </View>

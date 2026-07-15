@@ -16,6 +16,8 @@ import { api, formatDate, formatMoney, getErrorMessage, unwrap } from '../../api
 import Avatar from '../Avatar';
 import Stars from '../Stars';
 import { SPOKEN_LANGUAGES, languageLabel } from '../../i18n/spokenLanguages';
+import { useI18n } from '../../i18n/I18nContext';
+import { categoryLabel } from '../../i18n/categories';
 
 const parseLanguages = (value) =>
   String(value ?? '')
@@ -23,9 +25,12 @@ const parseLanguages = (value) =>
     .map((code) => code.trim().toLowerCase())
     .filter(Boolean);
 
+// Stable English values — sent to the API as the specialty filter.
+// Displayed labels resolve through categoryLabel(t, chip) at render time.
 const specialtyChips = ['Plumbing', 'Electrical', 'Painting', 'Cleaning', 'Garden', 'Repairs'];
 
 const ProDirectory = () => {
+  const { t } = useI18n();
   const [pros, setPros] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -72,12 +77,12 @@ const ProDirectory = () => {
       setRefreshing(true);
       await loadPros();
     } catch (err) {
-      setError(getErrorMessage(err, 'Unable to load professionals.'));
+      setError(getErrorMessage(err, t('directory.loadError')));
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [loadPros]);
+  }, [loadPros, t]);
 
   useEffect(() => {
     refresh();
@@ -88,7 +93,7 @@ const ProDirectory = () => {
     return (
       <View style={styles.centerState}>
         <ActivityIndicator color="#111" />
-        <Text style={styles.mutedText}>Finding professionals near you...</Text>
+        <Text style={styles.mutedText}>{t('directory.finding')}</Text>
       </View>
     );
   }
@@ -104,11 +109,9 @@ const ProDirectory = () => {
       ListHeaderComponent={
         <View>
           <View style={styles.hero}>
-            <Text style={styles.eyebrow}>Find pros</Text>
-            <Text style={styles.heroTitle}>Professionals in your area</Text>
-            <Text style={styles.heroText}>
-              Search by trade, area, or budget, then post a job to get their quotes.
-            </Text>
+            <Text style={styles.eyebrow}>{t('tabs.pros')}</Text>
+            <Text style={styles.heroTitle}>{t('directory.heroTitle')}</Text>
+            <Text style={styles.heroText}>{t('directory.heroText')}</Text>
           </View>
 
           <View style={styles.filterCard}>
@@ -119,7 +122,7 @@ const ProDirectory = () => {
                   style={styles.searchInput}
                   value={search}
                   onChangeText={setSearch}
-                  placeholder="Search name, trade, or skill"
+                  placeholder={t('directory.searchPlaceholder')}
                   placeholderTextColor="#686b64"
                   returnKeyType="search"
                   onSubmitEditing={refresh}
@@ -134,7 +137,7 @@ const ProDirectory = () => {
                   style={styles.searchInput}
                   value={area}
                   onChangeText={setArea}
-                  placeholder="Area (e.g. Leeds)"
+                  placeholder={t('directory.areaPlaceholder')}
                   placeholderTextColor="#686b64"
                   returnKeyType="search"
                   onSubmitEditing={refresh}
@@ -146,7 +149,7 @@ const ProDirectory = () => {
                   style={styles.searchInput}
                   value={maxPrice}
                   onChangeText={setMaxPrice}
-                  placeholder="Max avg price"
+                  placeholder={t('directory.maxPricePlaceholder')}
                   placeholderTextColor="#686b64"
                   keyboardType="numeric"
                   returnKeyType="search"
@@ -164,7 +167,7 @@ const ProDirectory = () => {
                     style={[styles.chip, active && styles.chipActive]}
                     onPress={() => setSpecialty(active ? '' : chip)}
                   >
-                    <Text style={[styles.chipText, active && styles.chipTextActive]}>{chip}</Text>
+                    <Text style={[styles.chipText, active && styles.chipTextActive]}>{categoryLabel(t, chip)}</Text>
                   </TouchableOpacity>
                 );
               })}
@@ -192,7 +195,7 @@ const ProDirectory = () => {
 
             <TouchableOpacity style={styles.applyButton} onPress={refresh}>
               <MaterialCommunityIcons name="filter-check-outline" size={18} color="#fff" />
-              <Text style={styles.applyButtonText}>Apply filters</Text>
+              <Text style={styles.applyButtonText}>{t('directory.applyFilters')}</Text>
             </TouchableOpacity>
           </View>
 
@@ -207,10 +210,8 @@ const ProDirectory = () => {
       ListEmptyComponent={
         <View style={styles.emptyState}>
           <MaterialCommunityIcons name="account-search-outline" size={40} color="#111" />
-          <Text style={styles.emptyTitle}>No professionals found</Text>
-          <Text style={styles.mutedText}>
-            Try widening the area or clearing the price filter. New pros join Worka every week.
-          </Text>
+          <Text style={styles.emptyTitle}>{t('directory.emptyTitle')}</Text>
+          <Text style={styles.mutedText}>{t('directory.emptyText')}</Text>
         </View>
       }
       renderItem={({ item }) => (
@@ -221,15 +222,15 @@ const ProDirectory = () => {
               <Text style={styles.cardName}>
                 {item.firstName} {item.lastName}
               </Text>
-              <Text style={styles.cardSpecialty}>{item.specialty || 'General home services'}</Text>
+              <Text style={styles.cardSpecialty}>{item.specialty || t('directory.generalServices')}</Text>
               <View style={styles.cardStars}>
-                <Stars value={item.averageRating} count={item.reviewCount} />
+                <Stars value={item.averageRating} count={item.reviewCount} emptyLabel={t('reviews.none')} />
               </View>
             </View>
             {item.readyForPayments ? (
               <View style={styles.verifiedPill}>
                 <MaterialCommunityIcons name="shield-check-outline" size={14} color="#24513b" />
-                <Text style={styles.verifiedText}>Payout ready</Text>
+                <Text style={styles.verifiedText}>{t('directory.payoutReady')}</Text>
               </View>
             ) : null}
           </View>
@@ -252,30 +253,30 @@ const ProDirectory = () => {
 
           <View style={styles.metaRow}>
             <MaterialCommunityIcons name="map-marker-outline" size={16} color="#62645c" />
-            <Text style={styles.metaText}>{item.serviceArea || 'Area not listed yet'}</Text>
+            <Text style={styles.metaText}>{item.serviceArea || t('directory.areaNotListed')}</Text>
           </View>
 
           <View style={styles.statsRow}>
             <View style={styles.statBox}>
               <Text style={styles.statValue}>{item.quoteCount}</Text>
-              <Text style={styles.statLabel}>Quotes sent</Text>
+              <Text style={styles.statLabel}>{t('directory.quotesSent')}</Text>
             </View>
             <View style={styles.statBox}>
               <Text style={styles.statValue}>
                 {item.averageQuotePrice != null ? formatMoney(item.averageQuotePrice) : '—'}
               </Text>
-              <Text style={styles.statLabel}>Avg price</Text>
+              <Text style={styles.statLabel}>{t('directory.avgPrice')}</Text>
             </View>
             <View style={styles.statBox}>
               <Text style={styles.statValue}>
                 {item.minQuotePrice != null ? formatMoney(item.minQuotePrice) : '—'}
               </Text>
-              <Text style={styles.statLabel}>From</Text>
+              <Text style={styles.statLabel}>{t('directory.from')}</Text>
             </View>
           </View>
 
           <View style={styles.viewProfileRow}>
-            <Text style={styles.viewProfileText}>View full profile & reviews</Text>
+            <Text style={styles.viewProfileText}>{t('directory.viewProfile')}</Text>
             <MaterialCommunityIcons name="chevron-right" size={20} color="#111" />
           </View>
         </TouchableOpacity>
@@ -300,10 +301,14 @@ const ProDirectory = () => {
                       {selectedPro.firstName} {selectedPro.lastName}
                     </Text>
                     <Text style={styles.cardSpecialty}>
-                      {selectedPro.specialty || 'General home services'}
+                      {selectedPro.specialty || t('directory.generalServices')}
                     </Text>
                     <View style={styles.cardStars}>
-                      <Stars value={selectedPro.averageRating} count={selectedPro.reviewCount} />
+                      <Stars
+                        value={selectedPro.averageRating}
+                        count={selectedPro.reviewCount}
+                        emptyLabel={t('reviews.none')}
+                      />
                     </View>
                   </View>
                   <TouchableOpacity
@@ -318,7 +323,7 @@ const ProDirectory = () => {
                 {selectedPro.readyForPayments ? (
                   <View style={[styles.verifiedPill, styles.proModalPill]}>
                     <MaterialCommunityIcons name="shield-check-outline" size={14} color="#24513b" />
-                    <Text style={styles.verifiedText}>Payout ready — bookable through Worka</Text>
+                    <Text style={styles.verifiedText}>{t('directory.payoutReadyBookable')}</Text>
                   </View>
                 ) : null}
 
@@ -336,13 +341,13 @@ const ProDirectory = () => {
 
                 <View style={styles.metaRow}>
                   <MaterialCommunityIcons name="map-marker-outline" size={16} color="#62645c" />
-                  <Text style={styles.metaText}>{selectedPro.serviceArea || 'Area not listed yet'}</Text>
+                  <Text style={styles.metaText}>{selectedPro.serviceArea || t('directory.areaNotListed')}</Text>
                 </View>
 
                 <View style={styles.statsRow}>
                   <View style={styles.statBox}>
                     <Text style={styles.statValue}>{selectedPro.quoteCount}</Text>
-                    <Text style={styles.statLabel}>Quotes sent</Text>
+                    <Text style={styles.statLabel}>{t('directory.quotesSent')}</Text>
                   </View>
                   <View style={styles.statBox}>
                     <Text style={styles.statValue}>
@@ -350,21 +355,21 @@ const ProDirectory = () => {
                         ? formatMoney(selectedPro.averageQuotePrice)
                         : '—'}
                     </Text>
-                    <Text style={styles.statLabel}>Avg price</Text>
+                    <Text style={styles.statLabel}>{t('directory.avgPrice')}</Text>
                   </View>
                   <View style={styles.statBox}>
                     <Text style={styles.statValue}>
                       {selectedPro.minQuotePrice != null ? formatMoney(selectedPro.minQuotePrice) : '—'}
                     </Text>
-                    <Text style={styles.statLabel}>From</Text>
+                    <Text style={styles.statLabel}>{t('directory.from')}</Text>
                   </View>
                 </View>
 
-                <Text style={styles.reviewsTitle}>Reviews</Text>
+                <Text style={styles.reviewsTitle}>{t('reviews.title')}</Text>
                 {reviewsLoading ? (
                   <ActivityIndicator color="#111" style={{ marginVertical: 16 }} />
                 ) : proReviews.length === 0 ? (
-                  <Text style={styles.mutedText}>No reviews yet — be the first to book them.</Text>
+                  <Text style={styles.mutedText}>{t('directory.noReviews')}</Text>
                 ) : (
                   proReviews.map((review) => (
                     <View key={review.reviewId} style={styles.reviewRow}>
