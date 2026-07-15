@@ -7,6 +7,7 @@ import { useI18n } from '../../i18n/I18nContext';
 import Avatar from '../Avatar';
 import Stars from '../Stars';
 import MapPreview from '../MapPreview';
+import PhotoLightbox from '../PhotoLightbox';
 
 const WORKA_SERVICE_FEE_RATE = 0.10;
 const WORKA_SERVICE_FEE_MINIMUM = 2;
@@ -44,6 +45,7 @@ const JobCard = ({ job, quotes = [], onAcceptQuote, onEditJob, onDeleteJob, onCo
   const { t } = useI18n();
   const [detailsVisible, setDetailsVisible] = useState(false);
   const [userLocation, setUserLocation] = useState(null);
+  const [lightboxUri, setLightboxUri] = useState(null);
 
   const openDetails = () => {
     setDetailsVisible(true);
@@ -67,12 +69,14 @@ const JobCard = ({ job, quotes = [], onAcceptQuote, onEditJob, onDeleteJob, onCo
   return (
     <>
       <View style={styles.card}>
-        <ImageBackground source={{ uri: image }} style={styles.image} imageStyle={styles.imageRadius}>
-          <View style={styles.imageOverlay}>
-            <Text style={styles.category}>{job.category || 'Home services'}</Text>
-            <Text style={styles.date}>{job.photoUrl ? 'Photo attached' : formatDate(job.createdAt)}</Text>
-          </View>
-        </ImageBackground>
+        <TouchableOpacity activeOpacity={0.9} onPress={() => setLightboxUri(image)}>
+          <ImageBackground source={{ uri: image }} style={styles.image} imageStyle={styles.imageRadius}>
+            <View style={styles.imageOverlay}>
+              <Text style={styles.category}>{job.category || 'Home services'}</Text>
+              <Text style={styles.date}>{job.photoUrl ? 'Photo attached' : formatDate(job.createdAt)}</Text>
+            </View>
+          </ImageBackground>
+        </TouchableOpacity>
 
         <View style={styles.body}>
           <View style={styles.titleRow}>
@@ -96,7 +100,7 @@ const JobCard = ({ job, quotes = [], onAcceptQuote, onEditJob, onDeleteJob, onCo
               <MaterialCommunityIcons name="file-search-outline" size={18} color="#111" />
               <Text style={styles.detailsButtonText}>View details</Text>
             </TouchableOpacity>
-            {bestQuote ? <Text style={styles.bestQuoteText}>Best quote {formatMoney(bestQuote.price)}</Text> : null}
+            {bestQuote ? <Text style={styles.bestQuoteText}>Best quote {formatMoney(bestQuote.price, job.currency)}</Text> : null}
           </View>
 
           {(status === 'Open' || status === 'Booked' || status === 'Done') && (
@@ -129,7 +133,7 @@ const JobCard = ({ job, quotes = [], onAcceptQuote, onEditJob, onDeleteJob, onCo
           <View style={styles.quoteBlock}>
             <View style={styles.quoteHeader}>
               <Text style={styles.quoteTitle}>{quotes.length} quote{quotes.length === 1 ? '' : 's'}</Text>
-              {acceptedQuote && <Text style={styles.acceptedText}>Booked total {formatMoney(acceptedTotal)}</Text>}
+              {acceptedQuote && <Text style={styles.acceptedText}>Booked total {formatMoney(acceptedTotal, job.currency)}</Text>}
             </View>
 
             {quotes.length === 0 ? (
@@ -158,13 +162,13 @@ const JobCard = ({ job, quotes = [], onAcceptQuote, onEditJob, onDeleteJob, onCo
                           <Stars value={quote.professionalRating} count={quote.professionalReviewCount} size={13} />
                         </View>
                       </View>
-                      <Text style={styles.quotePrice}>{formatMoney(quote.price)}</Text>
+                      <Text style={styles.quotePrice}>{formatMoney(quote.price, job.currency)}</Text>
                       <Text style={styles.quoteDescription}>{quote.description || 'No note provided.'}</Text>
                       <Text style={styles.quoteFee}>
                         {t('quote.feeLine', {
-                          fee: formatMoney(serviceFee),
-                          total: formatMoney(total),
-                          price: formatMoney(quote.price),
+                          fee: formatMoney(serviceFee, job.currency),
+                          total: formatMoney(total, job.currency),
+                          price: formatMoney(quote.price, job.currency),
                         })}
                       </Text>
                       <View style={styles.walletRow}>
@@ -201,11 +205,13 @@ const JobCard = ({ job, quotes = [], onAcceptQuote, onEditJob, onDeleteJob, onCo
         <View style={styles.modalBackdrop}>
           <View style={styles.modalCard}>
             <ScrollView contentContainerStyle={styles.modalContent} showsVerticalScrollIndicator={false}>
-              <ImageBackground source={{ uri: image }} style={styles.modalImage} imageStyle={styles.modalImageRadius}>
-                <View style={styles.modalImageOverlay}>
-                  <Text style={styles.modalImageLabel}>{job.photoUrl ? 'Customer reference photo' : job.category || 'Job detail'}</Text>
-                </View>
-              </ImageBackground>
+              <TouchableOpacity activeOpacity={0.9} onPress={() => setLightboxUri(image)}>
+                <ImageBackground source={{ uri: image }} style={styles.modalImage} imageStyle={styles.modalImageRadius}>
+                  <View style={styles.modalImageOverlay}>
+                    <Text style={styles.modalImageLabel}>{job.photoUrl ? 'Customer reference photo — tap to enlarge' : job.category || 'Job detail'}</Text>
+                  </View>
+                </ImageBackground>
+              </TouchableOpacity>
 
               <View style={styles.modalHeader}>
                 <View style={{ flex: 1 }}>
@@ -276,13 +282,13 @@ const JobCard = ({ job, quotes = [], onAcceptQuote, onEditJob, onDeleteJob, onCo
                               <Stars value={quote.professionalRating} count={quote.professionalReviewCount} size={13} />
                             </View>
                           </View>
-                          <Text style={styles.quotePrice}>{formatMoney(quote.price)}</Text>
+                          <Text style={styles.quotePrice}>{formatMoney(quote.price, job.currency)}</Text>
                           <Text style={styles.quoteDescription}>{quote.description || 'No note provided.'}</Text>
                           <Text style={styles.quoteFee}>
                             {t('quote.detailFeeLine', {
-                              total: formatMoney(total),
-                              price: formatMoney(quote.price),
-                              fee: formatMoney(serviceFee),
+                              total: formatMoney(total, job.currency),
+                              price: formatMoney(quote.price, job.currency),
+                              fee: formatMoney(serviceFee, job.currency),
                             })}
                           </Text>
                         </View>
@@ -317,6 +323,12 @@ const JobCard = ({ job, quotes = [], onAcceptQuote, onEditJob, onDeleteJob, onCo
           </View>
         </View>
       </Modal>
+
+      <PhotoLightbox
+        uri={lightboxUri}
+        label={job.jobName}
+        onClose={() => setLightboxUri(null)}
+      />
     </>
   );
 };

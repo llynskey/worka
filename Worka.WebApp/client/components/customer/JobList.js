@@ -17,7 +17,17 @@ import { useFocusEffect } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { api, formatDate, formatMoney, unwrap, getErrorMessage } from '../../api/workaApi';
 import JobCard from './JobCard';
-import { StarInput } from '../Stars';
+import Avatar from '../Avatar';
+import Stars, { StarInput } from '../Stars';
+
+const WORKA_SERVICE_FEE_RATE = 0.1;
+const WORKA_SERVICE_FEE_MINIMUM = 2;
+
+const getServiceFee = (price) => {
+  const amount = Number(price);
+  if (!Number.isFinite(amount) || amount <= 0) return 0;
+  return Math.max(WORKA_SERVICE_FEE_MINIMUM, amount * WORKA_SERVICE_FEE_RATE);
+};
 
 const statusLabel = (status) => {
   if (status === 1 || String(status).toLowerCase() === 'accepted') return 'Booked';
@@ -42,6 +52,8 @@ const CustomerJobList = ({ navigation }) => {
   const [reviewJob, setReviewJob] = useState(null);
   const [reviewForm, setReviewForm] = useState({ rating: 5, comment: '' });
   const [submittingReview, setSubmittingReview] = useState(false);
+  const [checkoutPreview, setCheckoutPreview] = useState(null);
+  const [startingCheckout, setStartingCheckout] = useState(false);
 
   useEffect(() => {
     if (Platform.OS !== 'web' || typeof window === 'undefined') return;
@@ -115,6 +127,7 @@ const CustomerJobList = ({ navigation }) => {
         id: quote.quoteId,
         booked: jobsById[quote.jobId]?.acceptedQuoteId === quote.quoteId,
         price: quote.price,
+        currency: jobsById[quote.jobId]?.currency,
         jobName: jobsById[quote.jobId]?.jobName ?? 'a job',
         when: formatDate(quote.createdAt),
       }));
@@ -230,6 +243,7 @@ const CustomerJobList = ({ navigation }) => {
         address: editJob.address ?? '',
         locationLabel: editJob.locationLabel ?? '',
         photoUrl: editJob.photoUrl ?? '',
+        currency: editJob.currency ?? 'gbp',
         latitude: editJob.latitude,
         longitude: editJob.longitude,
       });
@@ -366,7 +380,7 @@ const CustomerJobList = ({ navigation }) => {
                   </View>
                   <Text style={styles.activityText}>
                     {entry.booked ? 'Booked ' : 'New quote '}
-                    <Text style={styles.activityStrong}>{formatMoney(entry.price)}</Text>
+                    <Text style={styles.activityStrong}>{formatMoney(entry.price, entry.currency)}</Text>
                     {' on '}
                     <Text style={styles.activityStrong}>{entry.jobName}</Text>
                   </Text>
@@ -420,7 +434,7 @@ const CustomerJobList = ({ navigation }) => {
         <JobCard
           job={item}
           quotes={quotesByJob[item.jobId] ?? []}
-          onAcceptQuote={(quote) => acceptQuote(item, quote)}
+          onAcceptQuote={(quote) => setCheckoutPreview({ job: item, quote })}
           onEditJob={openEditJob}
           onDeleteJob={deleteJob}
           onCompleteJob={completeJob}
@@ -428,6 +442,114 @@ const CustomerJobList = ({ navigation }) => {
         />
       )}
     />
+
+    <Modal
+      visible={!!checkoutPreview}
+      transparent
+      animationType="slide"
+      onRequestClose={() => setCheckoutPreview(null)}
+    >
+      <View style={styles.editBackdrop}>
+        <View style={styles.editCard}>
+          {checkoutPreview ? (
+            <>
+              <View style={styles.editHeader}>
+                <Text style={styles.editTitle}>Review & pay</Text>
+                <TouchableOpacity
+                  style={styles.bannerClose}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  onPress={() => setCheckoutPreview(null)}
+                >
+                  <MaterialCommunityIcons name="close" size={18} color="#111" />
+                </TouchableOpacity>
+              </View>
+
+              <Text style={styles.checkoutJobName} numberOfLines={2}>
+                {checkoutPreview.job.jobName}
+              </Text>
+
+              <View style={styles.checkoutProRow}>
+                <Avatar
+                  photoUrl={checkoutPreview.quote.professionalPhotoUrl}
+                  firstName={checkoutPreview.quote.professionalFirstName}
+                  lastName={checkoutPreview.quote.professionalLastName}
+                  size={40}
+                />
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Text style={styles.checkoutProName} numberOfLines={1}>
+                    {checkoutPreview.quote.professionalFirstName
+                      ? `${checkoutPreview.quote.professionalFirstName} ${checkoutPreview.quote.professionalLastName ?? ''}`.trim()
+                      : 'Worka professional'}
+                  </Text>
+                  <Stars
+                    value={checkoutPreview.quote.professionalRating}
+                    count={checkoutPreview.quote.professionalReviewCount}
+                    size={13}
+                  />
+                </View>
+              </View>
+
+              <View style={styles.checkoutLines}>
+                <View style={styles.checkoutLine}>
+                  <Text style={styles.checkoutLineLabel}>Quote</Text>
+                  <Text style={styles.checkoutLineValue}>
+                    {formatMoney(checkoutPreview.quote.price, checkoutPreview.job.currency)}
+                  </Text>
+                </View>
+                <View style={styles.checkoutLine}>
+                  <Text style={styles.checkoutLineLabel}>Worka service fee</Text>
+                  <Text style={styles.checkoutLineValue}>
+                    {formatMoney(getServiceFee(checkoutPreview.quote.price), checkoutPreview.job.currency)}
+                  </Text>
+                </View>
+                <View style={[styles.checkoutLine, styles.checkoutTotalLine]}>
+                  <Text style={styles.checkoutTotalLabel}>Total</Text>
+                  <Text style={styles.checkoutTotalValue}>
+                    {formatMoney(
+                      Number(checkoutPreview.quote.price) + getServiceFee(checkoutPreview.quote.price),
+                      checkoutPreview.job.currency
+                    )}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.checkoutSecureRow}>
+                <MaterialCommunityIcons name="shield-check-outline" size={17} color="#24513b" />
+                <Text style={styles.checkoutSecureText}>
+                  Secure payment by Stripe. Apple Pay, Google Pay, and cards supported.
+                </Text>
+              </View>
+
+              <TouchableOpacity
+                style={styles.editSaveButton}
+                disabled={startingCheckout}
+                onPress={async () => {
+                  try {
+                    setStartingCheckout(true);
+                    await acceptQuote(checkoutPreview.job, checkoutPreview.quote);
+                  } finally {
+                    setStartingCheckout(false);
+                  }
+                }}
+              >
+                {startingCheckout ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.editSaveText}>
+                    Pay{' '}
+                    {formatMoney(
+                      Number(checkoutPreview.quote.price) + getServiceFee(checkoutPreview.quote.price),
+                      checkoutPreview.job.currency
+                    )}{' '}
+                    securely
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </>
+          ) : null}
+        </View>
+      </View>
+    </Modal>
 
     <Modal visible={!!editJob} transparent animationType="slide" onRequestClose={() => setEditJob(null)}>
       <View style={styles.editBackdrop}>
@@ -743,6 +865,78 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '900',
     color: '#111',
+  },
+  checkoutJobName: {
+    color: '#111',
+    fontSize: 17,
+    fontWeight: '900',
+    marginBottom: 12,
+  },
+  checkoutProRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    borderWidth: 1,
+    borderColor: '#e3dfd2',
+    borderRadius: 8,
+    padding: 12,
+    backgroundColor: '#fbfaf6',
+    marginBottom: 14,
+  },
+  checkoutProName: {
+    color: '#111',
+    fontWeight: '900',
+    fontSize: 14,
+  },
+  checkoutLines: {
+    borderWidth: 1,
+    borderColor: '#e3dfd2',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 14,
+  },
+  checkoutLine: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 5,
+  },
+  checkoutLineLabel: {
+    color: '#62645c',
+    fontWeight: '700',
+  },
+  checkoutLineValue: {
+    color: '#111',
+    fontWeight: '800',
+  },
+  checkoutTotalLine: {
+    borderTopWidth: 1,
+    borderTopColor: '#ece7dc',
+    marginTop: 6,
+    paddingTop: 10,
+  },
+  checkoutTotalLabel: {
+    color: '#111',
+    fontWeight: '900',
+    fontSize: 16,
+  },
+  checkoutTotalValue: {
+    color: '#111',
+    fontWeight: '900',
+    fontSize: 18,
+  },
+  checkoutSecureRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    marginBottom: 14,
+  },
+  checkoutSecureText: {
+    flex: 1,
+    color: '#24513b',
+    fontWeight: '700',
+    fontSize: 13,
+    lineHeight: 18,
   },
   editBackdrop: {
     flex: 1,

@@ -5,6 +5,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import JobList from '../components/worker/JobList';
 import BidList from '../components/worker/BidList';
 import JobMap from '../components/worker/JobMap';
+import BookingsCalendar from '../components/worker/BookingsCalendar';
 import WorkspaceShell from '../components/WorkspaceShell';
 
 const Tab = createBottomTabNavigator();
@@ -28,7 +29,20 @@ const webTabs = [
     icon: 'file-document-edit-outline',
     description: 'Track sent quotes',
   },
+  {
+    key: 'calendar',
+    label: 'Calendar',
+    icon: 'calendar-month-outline',
+    description: 'Your booked work',
+  },
 ];
+
+const tabIcons = {
+  'Available Jobs': 'briefcase-search-outline',
+  Map: 'map-marker-radius-outline',
+  'My Bids': 'file-document-edit-outline',
+  Calendar: 'calendar-month-outline',
+};
 
 const WorkerWebWorkspace = () => {
   const [activeTab, setActiveTab] = useState('jobs');
@@ -41,7 +55,15 @@ const WorkerWebWorkspace = () => {
       activeTab={activeTab}
       onTabChange={setActiveTab}
     >
-      {activeTab === 'jobs' ? <JobList /> : activeTab === 'map' ? <JobMap /> : <BidList />}
+      {activeTab === 'jobs' ? (
+        <JobList />
+      ) : activeTab === 'map' ? (
+        <JobMap />
+      ) : activeTab === 'bids' ? (
+        <BidList />
+      ) : (
+        <BookingsCalendar />
+      )}
     </WorkspaceShell>
   );
 };
@@ -55,10 +77,13 @@ const WorkerScreen = () => {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarIcon: ({ color, size }) => {
-          const iconName = route.name === 'Available Jobs' ? 'briefcase-search-outline' : 'file-document-edit-outline';
-          return <MaterialCommunityIcons name={iconName} size={size ?? 22} color={color} />;
-        },
+        tabBarIcon: ({ color, size }) => (
+          <MaterialCommunityIcons
+            name={tabIcons[route.name] ?? 'briefcase-search-outline'}
+            size={size ?? 22}
+            color={color}
+          />
+        ),
         tabBarActiveTintColor: '#111',
         tabBarInactiveTintColor: '#777',
         tabBarLabelStyle: { fontWeight: '800', fontSize: 13 },
@@ -74,6 +99,7 @@ const WorkerScreen = () => {
       <Tab.Screen name="Available Jobs" component={JobList} />
       <Tab.Screen name="Map" component={JobMap} />
       <Tab.Screen name="My Bids" component={BidList} />
+      <Tab.Screen name="Calendar" component={BookingsCalendar} />
     </Tab.Navigator>
   );
 };

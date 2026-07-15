@@ -14,7 +14,7 @@ import {
 import notify from '../Utils/notify';
 import * as ImagePicker from 'expo-image-picker';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { api, getErrorMessage, resolveUploadUrl, unwrap } from '../api/workaApi';
+import { api, CURRENCIES, getErrorMessage, resolveUploadUrl, unwrap } from '../api/workaApi';
 import { lookupLocations } from '../api/locationLookup';
 
 const jobTypes = [
@@ -65,6 +65,7 @@ const JobTypeScreen = ({ navigation }) => {
     address: '',
     locationLabel: '',
     photoUrl: '',
+    currency: 'gbp',
     latitude: null,
     longitude: null,
   });
@@ -260,6 +261,7 @@ const JobTypeScreen = ({ navigation }) => {
         latitude: form.latitude,
         longitude: form.longitude,
         category: selectedType.type,
+        currency: form.currency,
       });
 
       setForm({
@@ -327,6 +329,24 @@ const JobTypeScreen = ({ navigation }) => {
             style={[styles.input, styles.textArea]}
             multiline
           />
+
+          <Text style={styles.currencyLabel}>Currency for quotes</Text>
+          <View style={styles.currencyRow}>
+            {CURRENCIES.map((option) => {
+              const active = form.currency === option.code;
+              return (
+                <TouchableOpacity
+                  key={option.code}
+                  style={[styles.currencyChip, active && styles.currencyChipActive]}
+                  onPress={() => updateField('currency', option.code)}
+                >
+                  <Text style={[styles.currencyChipText, active && styles.currencyChipTextActive]}>
+                    {option.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
 
           <View style={styles.photoPanel}>
             <View style={styles.photoHeader}>
@@ -461,6 +481,39 @@ const styles = StyleSheet.create({
     flex: 1,
     minHeight: 0,
     backgroundColor: '#f7f5ef',
+  },
+  currencyLabel: {
+    color: '#111',
+    fontSize: 14,
+    fontWeight: '900',
+    marginBottom: 8,
+  },
+  currencyRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 12,
+  },
+  currencyChip: {
+    minHeight: 40,
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#d9d5ca',
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    backgroundColor: '#fbfaf6',
+  },
+  currencyChipActive: {
+    backgroundColor: '#111',
+    borderColor: '#111',
+  },
+  currencyChipText: {
+    color: '#111',
+    fontWeight: '800',
+    fontSize: 13,
+  },
+  currencyChipTextActive: {
+    color: '#fff',
   },
   scroll: {
     flex: 1,

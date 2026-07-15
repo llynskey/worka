@@ -200,6 +200,7 @@ namespace Worka.Services.Payments
             var quoteAmount = RoundMoney(quote.Price);
             var serviceFee = CalculateServiceFee(quoteAmount);
             var total = quoteAmount + serviceFee;
+            var currency = string.IsNullOrWhiteSpace(job.Currency) ? _currency : job.Currency.ToLowerInvariant();
 
             var payment = new WorkaPayment
             {
@@ -212,7 +213,7 @@ namespace Worka.Services.Payments
                 ServiceFeeAmount = serviceFee,
                 WorkerAmount = quoteAmount,
                 TotalAmount = total,
-                Currency = _currency,
+                Currency = currency,
                 Status = PendingCheckoutStatus,
                 CreatedAt = DateTimeOffset.UtcNow,
                 UpdatedAt = DateTimeOffset.UtcNow
@@ -232,12 +233,12 @@ namespace Worka.Services.Payments
                         Quantity = 1,
                         PriceData = new SessionLineItemPriceDataOptions
                         {
-                            Currency = _currency,
+                            Currency = currency,
                             UnitAmount = ToMinorUnits(total),
                             ProductData = new SessionLineItemPriceDataProductDataOptions
                             {
                                 Name = $"Worka booking: {job.Name}",
-                                Description = $"Quote {FormatAmount(quoteAmount)} + Worka service fee {FormatAmount(serviceFee)}"
+                                Description = $"Quote {FormatAmount(quoteAmount, currency)} + Worka service fee {FormatAmount(serviceFee, currency)}"
                             }
                         }
                     }
@@ -388,9 +389,9 @@ namespace Worka.Services.Payments
             return decimal.ToInt64(RoundMoney(amount) * 100m);
         }
 
-        private string FormatAmount(decimal amount)
+        private string FormatAmount(decimal amount, string currency = null)
         {
-            return $"{_currency.ToUpperInvariant()} {amount:0.00}";
+            return $"{(currency ?? _currency).ToUpperInvariant()} {amount:0.00}";
         }
 
         private decimal GetDecimalSetting(string sectionKey, string flatKey, decimal fallback)

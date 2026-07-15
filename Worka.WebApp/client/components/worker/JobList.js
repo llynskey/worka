@@ -289,7 +289,7 @@ const WorkerJobList = () => {
               {existingQuote ? (
                 <View style={styles.quotedBox}>
                   <Text style={styles.quotedLabel}>Your quote</Text>
-                  <Text style={styles.quotedAmount}>{formatMoney(existingQuote.price)}</Text>
+                  <Text style={styles.quotedAmount}>{formatMoney(existingQuote.price, item.currency)}</Text>
                   <Text style={styles.quotedDescription}>{existingQuote.description}</Text>
                 </View>
               ) : (
@@ -358,7 +358,7 @@ const WorkerJobList = () => {
                 style={styles.input}
                 value={quoteForm.price}
                 onChangeText={(price) => setQuoteForm((current) => ({ ...current, price }))}
-                placeholder="Price"
+                placeholder={`Price (${(selectedJob?.currency || 'gbp').toUpperCase()})`}
                 placeholderTextColor="#686b64"
                 keyboardType="decimal-pad"
               />

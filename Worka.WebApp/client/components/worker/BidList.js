@@ -191,13 +191,13 @@ const BidList = () => {
               </View>
             </View>
 
-            <Text style={styles.amount}>{formatMoney(item.price)}</Text>
+            <Text style={styles.amount}>{formatMoney(item.price, job?.currency)}</Text>
             <Text style={styles.description}>{item.description || 'No quote note provided.'}</Text>
             {accepted ? (
               <View style={styles.payoutBox}>
                 <MaterialCommunityIcons name="cash-fast" size={18} color="#24513b" />
                 <Text style={styles.payoutText}>
-                  Customer booked this quote. Your share is {formatMoney(item.price)} and is paid out through Stripe Connect once your payout account is ready.
+                  Customer booked this quote. Your share is {formatMoney(item.price, job?.currency)} and is paid out through Stripe Connect once your payout account is ready.
                 </Text>
               </View>
             ) : (

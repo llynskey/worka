@@ -14,6 +14,8 @@ namespace Worka.Services.DTOs.Jobs
 
         public string PhotoUrl { get; set; } = string.Empty;
 
+        public string Currency { get; set; } = "gbp";
+
         public double? Latitude { get; set; }
 
         public double? Longitude { get; set; }

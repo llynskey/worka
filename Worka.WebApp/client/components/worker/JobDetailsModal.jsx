@@ -1,10 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ImageBackground, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { formatDate } from '../../api/workaApi';
 import MapPreview from '../MapPreview';
+import PhotoLightbox from '../PhotoLightbox';
 
-const JobDetailsModal = ({ job, image, userLocation = null, onClose, onQuote }) => (
+const JobDetailsModal = ({ job, image, userLocation = null, onClose, onQuote }) => {
+  const [lightboxUri, setLightboxUri] = useState(null);
+
+  return (
   <Modal visible={!!job} transparent animationType="slide" onRequestClose={onClose}>
     <View style={styles.backdrop}>
       <View style={styles.card}>
@@ -21,13 +25,15 @@ const JobDetailsModal = ({ job, image, userLocation = null, onClose, onQuote }) 
               </TouchableOpacity>
             </View>
 
-            <ImageBackground source={{ uri: image }} style={styles.photo} imageStyle={styles.photoRadius}>
-              <View style={styles.photoOverlay}>
-                <Text style={styles.photoText}>
-                  {job.photoUrl ? 'Customer reference photo' : job.category || 'Home services'}
-                </Text>
-              </View>
-            </ImageBackground>
+            <TouchableOpacity activeOpacity={0.9} onPress={() => setLightboxUri(image)}>
+              <ImageBackground source={{ uri: image }} style={styles.photo} imageStyle={styles.photoRadius}>
+                <View style={styles.photoOverlay}>
+                  <Text style={styles.photoText}>
+                    {job.photoUrl ? 'Customer reference photo — tap to enlarge' : job.category || 'Home services'}
+                  </Text>
+                </View>
+              </ImageBackground>
+            </TouchableOpacity>
 
             <Text style={styles.jobName}>{job.jobName}</Text>
             <Text style={styles.meta}>
@@ -64,8 +70,15 @@ const JobDetailsModal = ({ job, image, userLocation = null, onClose, onQuote }) 
         ) : null}
       </View>
     </View>
+
+    <PhotoLightbox
+      uri={lightboxUri}
+      label={job?.jobName}
+      onClose={() => setLightboxUri(null)}
+    />
   </Modal>
-);
+  );
+};
 
 const styles = StyleSheet.create({
   backdrop: {

@@ -29,7 +29,11 @@ namespace Worka.Services.DTOs.Jobs
 
         public JobStatusEnum JobStatus { get; set; }
 
+        public string Currency { get; set; }
+
         public DateTimeOffset CreatedAt { get; set; }
+
+        public DateTimeOffset UpdatedAt { get; set; }
 
         public JobResponseDTO(Job job)
         {
@@ -45,7 +49,9 @@ namespace Worka.Services.DTOs.Jobs
             JobStatus = job.Status;
             CustomerId = job.CustomerId.ToString();
             AcceptedQuoteId = job.AcceptedQuoteId?.ToString();
+            Currency = job.Currency;
             CreatedAt = job.CreatedAt;
+            UpdatedAt = job.UpdatedAt;
         }
     }
 }

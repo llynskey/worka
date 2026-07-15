@@ -16,6 +16,14 @@ namespace Worka.Services.Jobs
             _dbContext = dbContext;
         }
 
+        private static readonly string[] SupportedCurrencies = { "gbp", "eur", "usd", "pln", "ron" };
+
+        private static string SanitizeCurrency(string currency)
+        {
+            var candidate = (currency ?? string.Empty).Trim().ToLowerInvariant();
+            return SupportedCurrencies.Contains(candidate) ? candidate : "gbp";
+        }
+
         public async Task<WorkaResponse<JobResponseDTO>> CreateJobAsync(string userId, CreateJobDTO jobDto)
         {
             try
@@ -61,6 +69,7 @@ namespace Worka.Services.Jobs
                     Address = address,
                     LocationLabel = locationLabel,
                     PhotoUrl = photoUrl,
+                    Currency = SanitizeCurrency(jobDto.Currency),
                     Latitude = jobDto.Latitude,
                     Longitude = jobDto.Longitude,
                     CustomerId = customer.CustomerId,
@@ -119,6 +128,7 @@ namespace Worka.Services.Jobs
                     ? address
                     : jobDto.LocationLabel.Trim();
                 job.PhotoUrl = UploadPaths.SanitizeJobPhoto(jobDto.PhotoUrl);
+                job.Currency = SanitizeCurrency(jobDto.Currency);
                 job.Latitude = jobDto.Latitude;
                 job.Longitude = jobDto.Longitude;
                 job.UpdatedAt = DateTimeOffset.UtcNow;

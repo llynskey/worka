@@ -59,7 +59,9 @@ export type Job = {
   customerId: string;
   acceptedQuoteId?: string | null;
   jobStatus: number | string;
+  currency?: string;
   createdAt: string;
+  updatedAt?: string;
 };
 
 export type Quote = {
@@ -165,13 +167,34 @@ export function getErrorMessage(error: unknown, fallback = 'Something went wrong
   return error instanceof Error ? error.message : fallback;
 }
 
-export function formatMoney(value: number | string | null | undefined) {
+export const CURRENCIES = [
+  { code: 'gbp', symbol: '£', label: 'GBP £' },
+  { code: 'eur', symbol: '€', label: 'EUR €' },
+  { code: 'usd', symbol: '$', label: 'USD $' },
+  { code: 'pln', symbol: 'zł', label: 'PLN zł' },
+  { code: 'ron', symbol: 'lei', label: 'RON lei' },
+] as const;
+
+export function currencySymbol(currency?: string | null): string {
+  const code = (currency ?? 'gbp').toLowerCase();
+  return CURRENCIES.find((c) => c.code === code)?.symbol ?? '£';
+}
+
+export function formatMoney(
+  value: number | string | null | undefined,
+  currency?: string | null,
+) {
   const amount = Number(value ?? 0);
-  return new Intl.NumberFormat('en-GB', {
-    style: 'currency',
-    currency: 'GBP',
-    maximumFractionDigits: 0,
-  }).format(Number.isFinite(amount) ? amount : 0);
+  const code = (currency ?? 'gbp').toUpperCase();
+  try {
+    return new Intl.NumberFormat('en-GB', {
+      style: 'currency',
+      currency: code,
+      maximumFractionDigits: 0,
+    }).format(Number.isFinite(amount) ? amount : 0);
+  } catch {
+    return `${code} ${Number.isFinite(amount) ? amount : 0}`;
+  }
 }
 
 export function formatDate(value: string | null | undefined) {

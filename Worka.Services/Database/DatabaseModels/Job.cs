@@ -22,6 +22,9 @@ namespace Worka.Services.Database.DatabaseModels
 
         public string PhotoUrl { get; set; } = string.Empty;
 
+        /// <summary>ISO currency code the job is priced in, e.g. "gbp".</summary>
+        public string Currency { get; set; } = "gbp";
+
         public double? Latitude { get; set; }
 
         public double? Longitude { get; set; }
