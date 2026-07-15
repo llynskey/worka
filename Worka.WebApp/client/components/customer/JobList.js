@@ -19,6 +19,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { api, formatDate, formatMoney, unwrap, getErrorMessage } from '../../api/workaApi';
 import { useI18n } from '../../i18n/I18nContext';
 import JobCard from './JobCard';
+import AppFooter from '../AppFooter';
 import Avatar from '../Avatar';
 import Stars, { StarInput } from '../Stars';
 
@@ -326,6 +327,7 @@ const CustomerJobList = ({ navigation }) => {
       keyExtractor={(item) => String(item.jobId)}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} />}
       contentContainerStyle={styles.listContent}
+      ListFooterComponent={<AppFooter />}
       ListHeaderComponent={
         <View>
           {checkoutMessage ? (

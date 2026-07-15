@@ -5,6 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AuthContext } from '../auth/AuthContext';
 import { api, getErrorMessage } from '../api/workaApi';
 import notify, { confirmAction } from '../Utils/notify';
+import AppFooter from '../components/AppFooter';
 import SelectField from '../components/SelectField';
 import { useI18n } from '../i18n/I18nContext';
 
@@ -213,6 +214,8 @@ const WorkerSettingsScreen = ({ navigation }) => {
       </TouchableOpacity>
 
       <Text style={styles.versionText}>Worka v1.0.0</Text>
+
+      <AppFooter />
     </ScrollView>
   );
 };

@@ -3,8 +3,8 @@ import { Linking, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { useI18n } from '../i18n/I18nContext';
 
 /**
- * Slim global footer shown under every signed-in page: quiet legal links
- * and the LSL mark.
+ * Slim footer rendered at the very bottom of each page's scrollable
+ * content (not pinned): quiet legal links and the LSL mark.
  */
 const AppFooter = () => {
   const { t } = useI18n();
@@ -30,11 +30,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingHorizontal: 4,
+    paddingTop: 14,
+    marginTop: 22,
     borderTopWidth: 1,
     borderTopColor: '#e3dfd2',
-    backgroundColor: '#f7f5ef',
   },
   links: {
     flexDirection: 'row',

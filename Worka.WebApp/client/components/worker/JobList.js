@@ -21,6 +21,7 @@ import { api, formatDate, formatMoney, getErrorMessage, resolveUploadUrl, unwrap
 import { formatDistance, getDistanceKm, requestCurrentLocation } from '../../Utils/locationUtils';
 import { useI18n } from '../../i18n/I18nContext';
 import { categoryLabel } from '../../i18n/categories';
+import AppFooter from '../AppFooter';
 import JobDetailsModal from './JobDetailsModal';
 
 const categoryImages = {
@@ -197,6 +198,7 @@ const WorkerJobList = () => {
         keyExtractor={(item) => String(item.jobId)}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} />}
         contentContainerStyle={styles.listContent}
+        ListFooterComponent={<AppFooter />}
         ListHeaderComponent={
           <View style={styles.hero}>
             <Text style={styles.eyebrow}>{t('work.eyebrow')}</Text>

@@ -17,7 +17,6 @@ import LoadingScreen from './Screens/LoadingScreen';
 
 import SharedDrawerContent from './components/SharedDrawerContent';
 import NotifyHost from './components/NotifyHost';
-import AppFooter from './components/AppFooter';
 import { AuthContext, AuthProvider } from './auth/AuthContext';
 import { I18nProvider, useI18n } from './i18n/I18nContext';
 
@@ -225,7 +224,6 @@ const AppInner: React.FC = () => {
           <NeutralScreen />
         )}
       </NavigationContainer>
-      {user ? <AppFooter /> : null}
       <NotifyHost />
     </SafeAreaView>
   );

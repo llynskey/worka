@@ -14,6 +14,7 @@ import notify from '../Utils/notify';
 import * as ImagePicker from 'expo-image-picker';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { api, getErrorMessage, unwrap } from '../api/workaApi';
+import AppFooter from '../components/AppFooter';
 import Avatar from '../components/Avatar';
 import LanguagePicker from '../components/LanguagePicker';
 import { useI18n } from '../i18n/I18nContext';
@@ -410,6 +411,8 @@ const WorkerAccountScreen = () => {
           )}
         </TouchableOpacity>
       </View>
+
+      <AppFooter />
     </ScrollView>
   );
 };

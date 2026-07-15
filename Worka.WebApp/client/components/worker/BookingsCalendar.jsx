@@ -11,6 +11,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { api, formatMoney, getErrorMessage, unwrap } from '../../api/workaApi';
 import useAutoRefresh from '../../Utils/useAutoRefresh';
+import AppFooter from '../AppFooter';
 import { useI18n } from '../../i18n/I18nContext';
 
 const MONTH_LOCALES = { en: 'en-GB', es: 'es-ES', fr: 'fr-FR', ro: 'ro-RO' };
@@ -258,6 +259,8 @@ const BookingsCalendar = () => {
           </View>
         </View>
       ))}
+
+      <AppFooter />
     </ScrollView>
   );
 };

@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { api, formatDate, formatMoney, getErrorMessage, unwrap } from '../../api/workaApi';
+import AppFooter from '../AppFooter';
 import Avatar from '../Avatar';
 import Stars from '../Stars';
 import SelectField from '../SelectField';
@@ -111,6 +112,7 @@ const ProDirectory = () => {
       keyExtractor={(item) => String(item.professionalId)}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} />}
       contentContainerStyle={styles.listContent}
+      ListFooterComponent={<AppFooter />}
       keyboardShouldPersistTaps="handled"
       ListHeaderComponent={
         <View>

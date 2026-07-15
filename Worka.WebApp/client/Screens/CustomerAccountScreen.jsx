@@ -13,6 +13,7 @@ import notify from '../Utils/notify';
 import * as ImagePicker from 'expo-image-picker';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { api, CURRENCIES, getErrorMessage, unwrap } from '../api/workaApi';
+import AppFooter from '../components/AppFooter';
 import Avatar from '../components/Avatar';
 import LanguagePicker from '../components/LanguagePicker';
 import SelectField from '../components/SelectField';
@@ -270,6 +271,8 @@ const CustomerAccountScreen = () => {
           )}
         </TouchableOpacity>
       </View>
+
+      <AppFooter />
     </ScrollView>
   );
 };

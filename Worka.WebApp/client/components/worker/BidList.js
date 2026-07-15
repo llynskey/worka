@@ -15,6 +15,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { api, formatDate, formatMoney, getErrorMessage, unwrap } from '../../api/workaApi';
 import notify, { confirmAction } from '../../Utils/notify';
 import useAutoRefresh from '../../Utils/useAutoRefresh';
+import AppFooter from '../AppFooter';
 import { useI18n } from '../../i18n/I18nContext';
 import { categoryLabel } from '../../i18n/categories';
 
@@ -156,6 +157,7 @@ const BidList = () => {
       keyExtractor={(item) => String(item.quoteId)}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} />}
       contentContainerStyle={styles.listContent}
+      ListFooterComponent={<AppFooter />}
       ListHeaderComponent={
         <View style={styles.hero}>
           <Text style={styles.eyebrow}>{t('bids.eyebrow')}</Text>

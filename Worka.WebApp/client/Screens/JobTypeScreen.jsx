@@ -18,6 +18,7 @@ import { api, getErrorMessage, resolveUploadUrl, unwrap } from '../api/workaApi'
 import { lookupLocations } from '../api/locationLookup';
 import { useI18n } from '../i18n/I18nContext';
 import { categoryLabel } from '../i18n/categories';
+import AppFooter from '../components/AppFooter';
 
 const jobTypes = [
   {
@@ -455,6 +456,8 @@ const JobTypeScreen = ({ navigation }) => {
               </>
             )}
           </TouchableOpacity>
+
+          <AppFooter />
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
