@@ -32,7 +32,12 @@
     },
     "web": {
       "favicon": "./assets/favicon.png",
-      "bundler": "metro"
+      "bundler": "metro",
+      "name": "Worka — get things done in your language",
+      "shortName": "Worka",
+      "description": "Find trusted local professionals who speak your language for repairs, moving, cleaning, paperwork, and everyday jobs.",
+      "themeColor": "#ffffff",
+      "backgroundColor": "#ffffff"
     },
     "plugins": [
       [

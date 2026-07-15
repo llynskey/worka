@@ -121,6 +121,23 @@ const AuthScreen: React.FC = () => {
   const [resetLoading, setResetLoading] = useState(false);
   const [scrollTick, setScrollTick] = useState(0);
 
+  // On stacked layouts the auth panel sits below the hero; when the nav
+  // button swaps modes we scroll it into view so the tap visibly "does"
+  // something.
+  const scrollRef = React.useRef<ScrollView>(null);
+  const mainYRef = React.useRef(0);
+  const panelYRef = React.useRef(0);
+
+  const scrollToPanel = () => {
+    if (!isStacked) return;
+    setTimeout(() => {
+      scrollRef.current?.scrollTo({
+        y: Math.max(mainYRef.current + panelYRef.current - 12, 0),
+        animated: true,
+      });
+    }, 80);
+  };
+
   useEffect(() => {
     if (Platform.OS !== "web" || typeof window === "undefined") return;
 
@@ -268,6 +285,7 @@ const AuthScreen: React.FC = () => {
     setShowLogin(false);
     setAuthMode("login");
     setAuthError("");
+    scrollToPanel();
   };
 
   const openAuth = (mode: "login" | "signup" | "forgot" | "reset") => {
@@ -275,6 +293,7 @@ const AuthScreen: React.FC = () => {
     setAuthMode(mode);
     setAuthError("");
     setAuthInfo("");
+    scrollToPanel();
   };
 
   const onForgotPassword = async () => {
@@ -408,6 +427,7 @@ const AuthScreen: React.FC = () => {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <ScrollView
+        ref={scrollRef}
         style={[styles.scroll, webScrollStyle]}
         scrollEventThrottle={80}
         onScroll={(event) => {
@@ -420,7 +440,9 @@ const AuthScreen: React.FC = () => {
           {
             paddingHorizontal: horizontalGutter,
             paddingTop: isPhone ? 18 : 24,
-            paddingBottom: isPhone ? 36 : 28,
+            // Phones get extra clearance so the footer never hides behind
+            // Safari's floating bottom toolbar (100vh includes that zone).
+            paddingBottom: isPhone ? 96 : 32,
           },
         ]}
         keyboardShouldPersistTaps="handled"
@@ -479,6 +501,9 @@ const AuthScreen: React.FC = () => {
               styles.main,
               isStacked ? styles.mainStacked : styles.mainDesktop,
             ]}
+            onLayout={(event) => {
+              mainYRef.current = event.nativeEvent.layout.y;
+            }}
           >
             <View style={[styles.hero, !isStacked && styles.heroDesktop]}>
               <View style={styles.eyebrowRow}>
@@ -513,6 +538,9 @@ const AuthScreen: React.FC = () => {
                 isPhone && styles.panelPhone,
                 panelShadowStyle,
               ]}
+              onLayout={(event) => {
+                panelYRef.current = event.nativeEvent.layout.y;
+              }}
             >
               {showLogin ? (
                 <View>
