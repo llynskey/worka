@@ -18,6 +18,15 @@ namespace Worka.Services.Database.DatabaseModels
 
         public string ServiceArea { get; set; } = string.Empty;
 
+        /// <summary>Human-readable label for the work base, e.g. "Leeds, UK".</summary>
+        public string LocationLabel { get; set; } = string.Empty;
+
+        /// <summary>Work base latitude; null until the professional sets a location.</summary>
+        public double? Latitude { get; set; }
+
+        /// <summary>Work base longitude; null until the professional sets a location.</summary>
+        public double? Longitude { get; set; }
+
         /// <summary>Comma-separated ISO language codes, e.g. "en,pl,ro".</summary>
         public string Languages { get; set; } = string.Empty;
 

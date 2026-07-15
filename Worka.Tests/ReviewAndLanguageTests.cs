@@ -146,6 +146,26 @@ namespace Worka.Tests
             Assert.Empty(french.Data);
         }
 
+        [Fact]
+        public async Task Professional_can_save_a_work_location()
+        {
+            using var db = TestHelpers.CreateDbContext();
+            var (_, professionalUserId) = Seed(db);
+            var service = new ProfessionalsService(db);
+            var pro = db.Professionals.Single();
+
+            var updated = await service.UpdateAsync(
+                professionalUserId.ToString(),
+                pro.FirstName, pro.LastName, pro.Email, pro.Specialty, pro.Bio, pro.ServiceArea,
+                latitude: 53.8008, longitude: -1.5491, locationLabel: "Leeds, UK");
+
+            Assert.True(updated.Success);
+            Assert.Equal(53.8008, updated.Data.Latitude);
+            Assert.Equal(-1.5491, updated.Data.Longitude);
+            Assert.Equal("Leeds, UK", updated.Data.LocationLabel);
+            Assert.Equal(53.8008, db.Professionals.Single().Latitude);
+        }
+
         [Theory]
         [InlineData("EN, pl,  es", "en,pl,es")]
         [InlineData("en,en,en", "en")]

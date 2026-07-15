@@ -16,7 +16,10 @@ namespace Worka.Services.Professionals
             string bio,
             string serviceArea,
             string languages = null,
-            string photoUrl = null);
+            string photoUrl = null,
+            double? latitude = null,
+            double? longitude = null,
+            string locationLabel = null);
 
         Task<WorkaResponse<ProfessionalResponseDTO>> EnsureExistsAsync(
             string userId,

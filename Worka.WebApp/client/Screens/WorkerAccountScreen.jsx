@@ -14,6 +14,7 @@ import notify from '../Utils/notify';
 import * as ImagePicker from 'expo-image-picker';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { api, getErrorMessage, unwrap } from '../api/workaApi';
+import { lookupLocations } from '../api/locationLookup';
 import AppFooter from '../components/AppFooter';
 import Avatar from '../components/Avatar';
 import LanguagePicker from '../components/LanguagePicker';
@@ -62,10 +63,17 @@ const WorkerAccountScreen = () => {
     bio: '',
     languages: '',
     photoUrl: '',
+    locationLabel: '',
+    latitude: null,
+    longitude: null,
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [locSearch, setLocSearch] = useState('');
+  const [locSuggestions, setLocSuggestions] = useState([]);
+  const [locLoading, setLocLoading] = useState(false);
+  const [locError, setLocError] = useState('');
   const [stripeStatus, setStripeStatus] = useState(null);
   const [stripeLoading, setStripeLoading] = useState(false);
   const [stripeError, setStripeError] = useState('');
@@ -84,6 +92,9 @@ const WorkerAccountScreen = () => {
         bio: account.bio ?? '',
         languages: account.languages ?? '',
         photoUrl: account.photoUrl ?? '',
+        locationLabel: account.locationLabel ?? '',
+        latitude: account.latitude ?? null,
+        longitude: account.longitude ?? null,
       });
       setStripeStatus({
         connected: !!account.stripeConnected,
@@ -199,6 +210,37 @@ const WorkerAccountScreen = () => {
     }
   };
 
+  const searchWorkLocation = async () => {
+    if (locSearch.trim().length < 3) {
+      setLocError(t('post.minChars'));
+      return;
+    }
+    try {
+      setLocLoading(true);
+      setLocError('');
+      const results = await lookupLocations(locSearch);
+      setLocSuggestions(results);
+      if (results.length === 0) setLocError(t('post.noLocations'));
+    } catch (error) {
+      setLocSuggestions([]);
+      setLocError(getErrorMessage(error, t('post.locationSearchError')));
+    } finally {
+      setLocLoading(false);
+    }
+  };
+
+  const chooseWorkLocation = (location) => {
+    setForm((current) => ({
+      ...current,
+      latitude: location.latitude,
+      longitude: location.longitude,
+      locationLabel: location.label,
+    }));
+    setLocSuggestions([]);
+    setLocSearch('');
+    setLocError('');
+  };
+
   const save = async () => {
     if (!form.firstName.trim() || !form.lastName.trim() || !form.email.trim()) {
       notify(t('account.missingTitle'), t('account.missingText'));
@@ -218,6 +260,9 @@ const WorkerAccountScreen = () => {
         bio: account.bio ?? '',
         languages: account.languages ?? '',
         photoUrl: account.photoUrl ?? '',
+        locationLabel: account.locationLabel ?? '',
+        latitude: account.latitude ?? null,
+        longitude: account.longitude ?? null,
       });
       notify(t('account.savedTitle'), t('account.savedProText'));
     } catch (error) {
@@ -323,6 +368,59 @@ const WorkerAccountScreen = () => {
             </>
           )}
         </TouchableOpacity>
+      </View>
+
+      <View style={[styles.formCard, styles.workCard]}>
+        <Text style={styles.workTitle}>{t('account.workLocation')}</Text>
+        <Text style={styles.workHint}>{t('account.workLocationHint')}</Text>
+
+        {Number.isFinite(form.latitude) && Number.isFinite(form.longitude) ? (
+          <View style={styles.locationSet}>
+            <MaterialCommunityIcons name="map-marker-check-outline" size={20} color="#111" />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.locationSetTitle}>{t('post.locationSet')}</Text>
+              <Text style={styles.locationSetText}>
+                {form.locationLabel || `${form.latitude}, ${form.longitude}`}
+              </Text>
+            </View>
+          </View>
+        ) : null}
+
+        <TextInput
+          style={styles.input}
+          value={locSearch}
+          onChangeText={setLocSearch}
+          onSubmitEditing={searchWorkLocation}
+          placeholder={t('post.addressPlaceholder')}
+          placeholderTextColor="#686b64"
+        />
+        <TouchableOpacity style={styles.lookupButton} onPress={searchWorkLocation} disabled={locLoading}>
+          {locLoading ? (
+            <ActivityIndicator color="#111" />
+          ) : (
+            <>
+              <MaterialCommunityIcons name="map-search-outline" size={20} color="#111" />
+              <Text style={styles.lookupButtonText}>{t('post.searchAddress')}</Text>
+            </>
+          )}
+        </TouchableOpacity>
+
+        {locError ? <Text style={styles.workError}>{locError}</Text> : null}
+
+        {locSuggestions.length > 0 ? (
+          <View style={styles.suggestionList}>
+            {locSuggestions.map((location) => (
+              <TouchableOpacity
+                key={location.id}
+                style={styles.suggestionItem}
+                onPress={() => chooseWorkLocation(location)}
+              >
+                <MaterialCommunityIcons name="map-marker-outline" size={19} color="#111" />
+                <Text style={styles.suggestionText}>{location.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        ) : null}
       </View>
 
       <View style={styles.formCard}>
@@ -493,6 +591,77 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#e3dfd2',
     padding: 14,
+  },
+  workCard: {
+    marginBottom: 14,
+  },
+  workTitle: {
+    color: '#111',
+    fontSize: 18,
+    fontWeight: '900',
+  },
+  workHint: {
+    color: '#62645c',
+    lineHeight: 20,
+    marginTop: 4,
+    marginBottom: 12,
+  },
+  lookupButton: {
+    minHeight: 48,
+    borderWidth: 1,
+    borderColor: '#111',
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#fff',
+  },
+  lookupButtonText: {
+    color: '#111',
+    fontWeight: '900',
+  },
+  workError: {
+    color: '#111',
+    fontWeight: '800',
+    marginTop: 10,
+  },
+  suggestionList: {
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: '#e3dfd2',
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  suggestionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1ede4',
+  },
+  suggestionText: {
+    flex: 1,
+    color: '#111',
+    fontWeight: '700',
+  },
+  locationSet: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: '#f4f1ea',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+  },
+  locationSetTitle: {
+    color: '#111',
+    fontWeight: '900',
+  },
+  locationSetText: {
+    color: '#4d504b',
+    marginTop: 2,
   },
   photoRow: {
     flexDirection: 'row',

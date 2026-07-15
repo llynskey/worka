@@ -77,6 +77,7 @@ namespace Worka.Services.Database
                 entity.Property(professional => professional.Specialty).HasMaxLength(160).IsRequired();
                 entity.Property(professional => professional.Bio).HasMaxLength(2000).IsRequired();
                 entity.Property(professional => professional.ServiceArea).HasMaxLength(240).IsRequired();
+                entity.Property(professional => professional.LocationLabel).HasMaxLength(500).IsRequired();
                 entity.Property(professional => professional.Languages).HasMaxLength(200).IsRequired();
                 entity.Property(professional => professional.PhotoUrl).HasMaxLength(1000).IsRequired();
                 entity.Property(professional => professional.StripeAccountId).HasMaxLength(200).IsRequired();

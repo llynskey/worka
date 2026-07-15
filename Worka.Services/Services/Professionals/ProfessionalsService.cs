@@ -149,7 +149,10 @@ namespace Worka.Services.Professionals
             string bio,
             string serviceArea,
             string languages = null,
-            string photoUrl = null)
+            string photoUrl = null,
+            double? latitude = null,
+            double? longitude = null,
+            string locationLabel = null)
         {
             if (!Guid.TryParse(userId, out var userGuid))
             {
@@ -168,6 +171,14 @@ namespace Worka.Services.Professionals
             professional.Specialty = string.IsNullOrWhiteSpace(specialty) ? "General home services" : specialty.Trim();
             professional.Bio = bio.Trim();
             professional.ServiceArea = serviceArea.Trim();
+            // Work location is optional and updated as a set: a caller that sends
+            // coordinates also sends the label they belong to.
+            if (latitude.HasValue && longitude.HasValue)
+            {
+                professional.Latitude = latitude;
+                professional.Longitude = longitude;
+                professional.LocationLabel = (locationLabel ?? string.Empty).Trim();
+            }
             if (languages != null) professional.Languages = Customers.CustomersService.NormalizeLanguages(languages);
             if (photoUrl != null) professional.PhotoUrl = UploadPaths.SanitizeProfilePhoto(photoUrl);
             professional.UpdatedAt = DateTimeOffset.UtcNow;

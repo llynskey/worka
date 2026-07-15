@@ -530,4 +530,15 @@ export default {
   'messages.you': 'Jij:',
   'messages.loadError': 'Berichten konden niet worden geladen',
   'messages.unreadCount': '{count} ongelezen',
+
+  // Afstand / werklocatie
+  'settings.distanceUnit': 'Afstandseenheid',
+  'settings.distanceUnitHint': 'Kies hoe afstanden in Worka worden getoond.',
+  'settings.miles': 'Mijl',
+  'settings.kilometres': 'Kilometer',
+  'account.workLocation': 'Werklocatie',
+  'account.workLocationHint': 'Waar je gevestigd bent — gebruikt om klussen op afstand te sorteren en filteren.',
+  'map.radiusLabel': 'Binnen {distance}',
+  'map.setWorkLocationHint': 'Stel een werklocatie in je account in om klussen op afstand te sorteren en filteren.',
+  'map.noneInRadius': 'Geen openstaande klussen binnen {distance}.',
 };

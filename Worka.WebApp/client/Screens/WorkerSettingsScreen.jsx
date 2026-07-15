@@ -7,6 +7,7 @@ import { api, getErrorMessage } from '../api/workaApi';
 import notify, { confirmAction } from '../Utils/notify';
 import AppFooter from '../components/AppFooter';
 import SelectField from '../components/SelectField';
+import { useDistanceUnit, setDistanceUnit } from '../Utils/distanceUnit';
 import { useI18n } from '../i18n/I18nContext';
 
 const WorkerSettingsScreen = ({ navigation }) => {
@@ -39,6 +40,7 @@ const WorkerSettingsScreen = ({ navigation }) => {
   }, [jobAlerts, bidAlerts]);
 
   const { t, language, languages, setLanguage } = useI18n();
+  const distanceUnit = useDistanceUnit();
 
   const changePassword = async () => {
     if (newPassword.length < 6) {
@@ -140,6 +142,27 @@ const WorkerSettingsScreen = ({ navigation }) => {
             placeholder={t('settings.language')}
             searchPlaceholder={t('common.search')}
           />
+        </View>
+      </View>
+
+      <View style={styles.card}>
+        <Text style={styles.settingTitle}>{t('settings.distanceUnit')}</Text>
+        <Text style={styles.settingText}>{t('settings.distanceUnitHint')}</Text>
+        <View style={styles.unitToggle}>
+          {[['mi', 'settings.miles'], ['km', 'settings.kilometres']].map(([unit, key]) => {
+            const active = distanceUnit === unit;
+            return (
+              <TouchableOpacity
+                key={unit}
+                style={[styles.unitOption, active && styles.unitOptionActive]}
+                onPress={() => setDistanceUnit(unit)}
+              >
+                <Text style={[styles.unitOptionText, active && styles.unitOptionTextActive]}>
+                  {t(key)}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </View>
       </View>
 
@@ -259,6 +282,32 @@ const styles = StyleSheet.create({
   languageSelect: {
     marginTop: 12,
     marginBottom: -12,
+  },
+  unitToggle: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 12,
+  },
+  unitOption: {
+    flex: 1,
+    minHeight: 46,
+    borderWidth: 1,
+    borderColor: '#d9d5ca',
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fbfaf6',
+  },
+  unitOptionActive: {
+    backgroundColor: '#111',
+    borderColor: '#111',
+  },
+  unitOptionText: {
+    color: '#111',
+    fontWeight: '900',
+  },
+  unitOptionTextActive: {
+    color: '#fff',
   },
   securityInput: {
     minHeight: 50,

@@ -248,6 +248,9 @@ namespace Worka.WebApp
                 ALTER TABLE customers ADD COLUMN IF NOT EXISTS "PhotoUrl" character varying(1000) NOT NULL DEFAULT '';
                 ALTER TABLE professionals ADD COLUMN IF NOT EXISTS "Languages" character varying(200) NOT NULL DEFAULT '';
                 ALTER TABLE professionals ADD COLUMN IF NOT EXISTS "PhotoUrl" character varying(1000) NOT NULL DEFAULT '';
+                ALTER TABLE professionals ADD COLUMN IF NOT EXISTS "LocationLabel" character varying(500) NOT NULL DEFAULT '';
+                ALTER TABLE professionals ADD COLUMN IF NOT EXISTS "Latitude" double precision NULL;
+                ALTER TABLE professionals ADD COLUMN IF NOT EXISTS "Longitude" double precision NULL;
                 CREATE TABLE IF NOT EXISTS reviews (
                     "ReviewId" uuid PRIMARY KEY,
                     "JobId" uuid NOT NULL REFERENCES jobs("JobId") ON DELETE CASCADE,

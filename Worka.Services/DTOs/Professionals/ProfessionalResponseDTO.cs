@@ -20,6 +20,12 @@ namespace Worka.Services.DTOs.Professionals
 
         public string ServiceArea { get; set; }
 
+        public string LocationLabel { get; set; }
+
+        public double? Latitude { get; set; }
+
+        public double? Longitude { get; set; }
+
         public string Languages { get; set; }
 
         public string PhotoUrl { get; set; }
@@ -42,6 +48,9 @@ namespace Worka.Services.DTOs.Professionals
             Specialty = professional.Specialty;
             Bio = professional.Bio;
             ServiceArea = professional.ServiceArea;
+            LocationLabel = professional.LocationLabel;
+            Latitude = professional.Latitude;
+            Longitude = professional.Longitude;
             Languages = professional.Languages;
             PhotoUrl = professional.PhotoUrl;
             StripeConnected = !string.IsNullOrWhiteSpace(professional.StripeAccountId);

@@ -530,4 +530,15 @@ export default {
   'messages.you': 'Du:',
   'messages.loadError': 'Nachrichten konnten nicht geladen werden',
   'messages.unreadCount': '{count} ungelesen',
+
+  // Entfernung / Arbeitsort
+  'settings.distanceUnit': 'Entfernungseinheit',
+  'settings.distanceUnitHint': 'Lege fest, wie Entfernungen in Worka angezeigt werden.',
+  'settings.miles': 'Meilen',
+  'settings.kilometres': 'Kilometer',
+  'account.workLocation': 'Arbeitsort',
+  'account.workLocationHint': 'Wo du ansässig bist – zum Sortieren und Filtern von Aufträgen nach Entfernung.',
+  'map.radiusLabel': 'Im Umkreis von {distance}',
+  'map.setWorkLocationHint': 'Lege in deinem Konto einen Arbeitsort fest, um Aufträge nach Entfernung zu sortieren und zu filtern.',
+  'map.noneInRadius': 'Keine offenen Aufträge im Umkreis von {distance}.',
 };

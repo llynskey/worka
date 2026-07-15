@@ -530,4 +530,15 @@ export default {
   'messages.you': 'Vous :',
   'messages.loadError': 'Impossible de charger les messages',
   'messages.unreadCount': '{count} non lus',
+
+  // Distance / lieu de travail
+  'settings.distanceUnit': 'Unité de distance',
+  'settings.distanceUnitHint': 'Choisissez comment les distances s\'affichent dans Worka.',
+  'settings.miles': 'Miles',
+  'settings.kilometres': 'Kilomètres',
+  'account.workLocation': 'Lieu de travail',
+  'account.workLocationHint': 'Où vous êtes basé — utilisé pour trier et filtrer les missions par distance.',
+  'map.radiusLabel': 'À moins de {distance}',
+  'map.setWorkLocationHint': 'Définissez un lieu de travail dans votre compte pour trier et filtrer par distance.',
+  'map.noneInRadius': 'Aucune mission ouverte à moins de {distance}.',
 };

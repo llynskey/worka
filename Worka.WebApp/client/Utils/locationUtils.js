@@ -1,3 +1,5 @@
+import { getDistanceUnit, kmToMiles } from './distanceUnit';
+
 export const hasCoordinates = (item) =>
   Number.isFinite(Number(item?.latitude)) && Number.isFinite(Number(item?.longitude));
 
@@ -22,8 +24,19 @@ export const getDistanceKm = (from, to) => {
   return earthRadiusKm * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 };
 
-export const formatDistance = (distanceKm) => {
+// Unit defaults to the user's saved preference (miles by default). Passing a
+// unit explicitly keeps this pure for tests / one-off callers.
+export const formatDistance = (distanceKm, unit) => {
   if (!Number.isFinite(distanceKm)) return '';
+  const resolved = unit || getDistanceUnit();
+
+  if (resolved === 'mi') {
+    const miles = kmToMiles(distanceKm);
+    if (miles < 0.1) return `${Math.round(miles * 1760)} yd away`;
+    if (miles < 10) return `${miles.toFixed(1)} mi away`;
+    return `${Math.round(miles)} mi away`;
+  }
+
   if (distanceKm < 1) return `${Math.round(distanceKm * 1000)} m away`;
   if (distanceKm < 10) return `${distanceKm.toFixed(1)} km away`;
   return `${Math.round(distanceKm)} km away`;

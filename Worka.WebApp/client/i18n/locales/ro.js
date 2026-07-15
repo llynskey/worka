@@ -530,4 +530,15 @@ export default {
   'messages.you': 'Tu:',
   'messages.loadError': 'Nu s-au putut încărca mesajele',
   'messages.unreadCount': '{count} necitite',
+
+  // Distanță / locul de muncă
+  'settings.distanceUnit': 'Unitate de distanță',
+  'settings.distanceUnitHint': 'Alege cum sunt afișate distanțele în Worka.',
+  'settings.miles': 'Mile',
+  'settings.kilometres': 'Kilometri',
+  'account.workLocation': 'Locul de muncă',
+  'account.workLocationHint': 'Unde ești stabilit — folosit pentru a sorta și filtra lucrările după distanță.',
+  'map.radiusLabel': 'În raza de {distance}',
+  'map.setWorkLocationHint': 'Setează un loc de muncă în contul tău pentru a sorta și filtra lucrările după distanță.',
+  'map.noneInRadius': 'Nicio lucrare deschisă în raza de {distance}.',
 };

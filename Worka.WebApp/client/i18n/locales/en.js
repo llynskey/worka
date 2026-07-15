@@ -530,4 +530,15 @@ export default {
   'messages.you': 'You:',
   'messages.loadError': 'Could not load messages',
   'messages.unreadCount': '{count} unread',
+
+  // Distance / work location
+  'settings.distanceUnit': 'Distance unit',
+  'settings.distanceUnitHint': 'Choose how distances are shown across Worka.',
+  'settings.miles': 'Miles',
+  'settings.kilometres': 'Kilometres',
+  'account.workLocation': 'Work location',
+  'account.workLocationHint': 'Where you are based — used to sort and filter jobs by distance.',
+  'map.radiusLabel': 'Within {distance}',
+  'map.setWorkLocationHint': 'Set a work location in your account to sort and filter jobs by distance.',
+  'map.noneInRadius': 'No open jobs within {distance}.',
 };

@@ -29,6 +29,12 @@ namespace Worka.WebApp.Controllers
 
             public string ServiceArea { get; set; } = string.Empty;
 
+            public string LocationLabel { get; set; }
+
+            public double? Latitude { get; set; }
+
+            public double? Longitude { get; set; }
+
             public string Languages { get; set; }
 
             public string PhotoUrl { get; set; }
@@ -77,7 +83,10 @@ namespace Worka.WebApp.Controllers
                 request.Bio,
                 request.ServiceArea,
                 request.Languages,
-                request.PhotoUrl);
+                request.PhotoUrl,
+                request.Latitude,
+                request.Longitude,
+                request.LocationLabel);
 
             return result.Success ? Ok(result) : BadRequest(result);
         }

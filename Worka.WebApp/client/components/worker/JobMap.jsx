@@ -15,10 +15,12 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import useAutoRefresh from '../../Utils/useAutoRefresh';
 import { api, formatDate, getErrorMessage, unwrap } from '../../api/workaApi';
 import { formatDistance, getDistanceKm, requestCurrentLocation } from '../../Utils/locationUtils';
+import { useDistanceUnit, milesToKm } from '../../Utils/distanceUnit';
 import { useI18n } from '../../i18n/I18nContext';
 import { categoryLabel } from '../../i18n/categories';
 import AppFooter from '../AppFooter';
 import MapPreview from '../MapPreview';
+import Slider from '../Slider';
 
 const hasCoordinates = (job) => Number.isFinite(Number(job.latitude)) && Number.isFinite(Number(job.longitude));
 
@@ -97,11 +99,26 @@ const JobMap = () => {
   const [error, setError] = useState(null);
   const [selectedJobId, setSelectedJobId] = useState(null);
   const [currentLocation, setCurrentLocation] = useState(null);
+  const [workLocation, setWorkLocation] = useState(null);
   const [locating, setLocating] = useState(false);
   const [locationError, setLocationError] = useState('');
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const isNarrow = windowWidth < 700;
   const mapHeight = Math.min(300, Math.round(windowHeight * 0.45));
+
+  const unit = useDistanceUnit();
+  const [radius, setRadius] = useState(unit === 'mi' ? 15 : 25);
+  // Reset to a sensible default whenever the unit preference changes.
+  useEffect(() => {
+    setRadius(unit === 'mi' ? 15 : 25);
+  }, [unit]);
+  const radiusMax = unit === 'mi' ? 60 : 100;
+  const radiusStep = unit === 'mi' ? 1 : 5;
+  const radiusKm = unit === 'mi' ? milesToKm(radius) : radius;
+
+  // The worker's saved work location takes priority as the distance origin;
+  // the device location is the fallback when no work location is set.
+  const origin = workLocation ?? currentLocation;
 
   const loadJobs = useCallback(async () => {
     setError(null);
@@ -146,18 +163,45 @@ const JobMap = () => {
     requestCurrentLocation().then(setCurrentLocation).catch(() => {});
   }, []);
 
+  // Load the saved work location so distances default to the worker's base.
+  useEffect(() => {
+    api
+      .get('/api/Professionals/account')
+      .then((response) => {
+        const account = unwrap(response.data);
+        if (account && hasCoordinates(account)) {
+          setWorkLocation({
+            latitude: Number(account.latitude),
+            longitude: Number(account.longitude),
+            label: account.locationLabel || '',
+          });
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   const locatedJobs = useMemo(() => {
     const nextJobs = jobs.filter(hasCoordinates);
-    if (!currentLocation) return nextJobs;
+    if (!origin) return nextJobs;
 
     return [...nextJobs].sort((a, b) => {
-      const aDistance = getDistanceKm(currentLocation, a) ?? Number.MAX_SAFE_INTEGER;
-      const bDistance = getDistanceKm(currentLocation, b) ?? Number.MAX_SAFE_INTEGER;
+      const aDistance = getDistanceKm(origin, a) ?? Number.MAX_SAFE_INTEGER;
+      const bDistance = getDistanceKm(origin, b) ?? Number.MAX_SAFE_INTEGER;
       return aDistance - bDistance;
     });
-  }, [currentLocation, jobs]);
+  }, [origin, jobs]);
   const unlocatedJobs = useMemo(() => jobs.filter((job) => !hasCoordinates(job)), [jobs]);
-  const selectedJob = locatedJobs.find((job) => job.jobId === selectedJobId) ?? locatedJobs[0] ?? null;
+
+  // With an origin we can filter to a radius; without one, show all located jobs.
+  const shownJobs = useMemo(() => {
+    if (!origin) return locatedJobs;
+    return locatedJobs.filter((job) => {
+      const distance = getDistanceKm(origin, job);
+      return distance != null && distance <= radiusKm;
+    });
+  }, [origin, locatedJobs, radiusKm]);
+
+  const selectedJob = shownJobs.find((job) => job.jobId === selectedJobId) ?? shownJobs[0] ?? null;
 
   const useCurrentLocation = async () => {
     try {
@@ -217,14 +261,18 @@ const JobMap = () => {
     <View style={[styles.locationBar, isNarrow && styles.locationBarNarrow]}>
       <View style={isNarrow ? styles.locationBarCopyNarrow : styles.locationBarCopy}>
         <Text style={styles.locationBarTitle}>
-          {currentLocation ? t('map.locationSetTitle') : t('map.locationNotSetTitle')}
+          {origin ? t('map.locationSetTitle') : t('map.locationNotSetTitle')}
         </Text>
         <Text style={styles.locationBarText}>
-          {currentLocation ? t('map.locationSetText') : t('map.locationNotSetText')}
+          {workLocation
+            ? (workLocation.label || t('map.locationSetText'))
+            : currentLocation
+              ? t('map.locationSetText')
+              : t('map.setWorkLocationHint')}
         </Text>
         {locationError ? <Text style={styles.locationError}>{locationError}</Text> : null}
       </View>
-      {currentLocation ? null : (
+      {workLocation || currentLocation ? null : (
         <TouchableOpacity
           style={[styles.locationButton, isNarrow && styles.locationButtonFull]}
           onPress={useCurrentLocation}
@@ -243,18 +291,34 @@ const JobMap = () => {
     </View>
   );
 
+  const radiusText = `${radius} ${unit}`;
+
+  const radiusBlock = origin ? (
+    <View style={styles.filterCard}>
+      <View style={styles.filterHeader}>
+        <Text style={styles.filterLabel}>{t('map.radiusLabel', { distance: radiusText })}</Text>
+        <Text style={styles.filterCount}>{shownJobs.length}</Text>
+      </View>
+      <Slider value={radius} min={1} max={radiusMax} step={radiusStep} onChange={setRadius} />
+    </View>
+  ) : null;
+
   const listBody = (
     <>
-      {locatedJobs.length === 0 ? (
+      {shownJobs.length === 0 ? (
         <View style={styles.emptyState}>
           <MaterialCommunityIcons name="map-marker-plus-outline" size={36} color="#111" />
           <Text style={styles.emptyTitle}>{t('map.emptyTitle')}</Text>
-          <Text style={styles.mutedText}>{t('map.emptyText')}</Text>
+          <Text style={styles.mutedText}>
+            {origin && locatedJobs.length > 0
+              ? t('map.noneInRadius', { distance: radiusText })
+              : t('map.emptyText')}
+          </Text>
         </View>
       ) : (
-        locatedJobs.map((job) => {
+        shownJobs.map((job) => {
           const active = selectedJob?.jobId === job.jobId;
-          const distanceLabel = formatDistance(getDistanceKm(currentLocation, job));
+          const distanceLabel = formatDistance(getDistanceKm(origin, job), unit);
           return (
             <TouchableOpacity
               key={job.jobId}
@@ -304,6 +368,7 @@ const JobMap = () => {
       <ScrollView style={styles.narrowShell} contentContainerStyle={styles.narrowContent}>
         {headerBlock}
         {locationBarBlock}
+        {radiusBlock}
         <View style={[styles.mapPaneNarrow, { height: mapHeight }]}>
           <WebMapFrame job={selectedJob} minHeight={mapHeight} userLocation={currentLocation} />
         </View>
@@ -317,6 +382,7 @@ const JobMap = () => {
     <View style={styles.shell}>
       {headerBlock}
       {locationBarBlock}
+      {radiusBlock}
 
       <View style={styles.mapLayout}>
         <View style={styles.mapPane}>
@@ -402,6 +468,39 @@ const styles = StyleSheet.create({
   },
   locationButtonFull: {
     alignSelf: 'stretch',
+  },
+  filterCard: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#e3dfd2',
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingTop: 12,
+    paddingBottom: 4,
+    marginBottom: 14,
+  },
+  filterHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
+  },
+  filterLabel: {
+    color: '#111',
+    fontWeight: '900',
+    fontSize: 15,
+  },
+  filterCount: {
+    minWidth: 26,
+    textAlign: 'center',
+    color: '#fff',
+    backgroundColor: '#111',
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    fontWeight: '900',
+    fontSize: 13,
+    overflow: 'hidden',
   },
   locationBarTitle: {
     color: '#111',
