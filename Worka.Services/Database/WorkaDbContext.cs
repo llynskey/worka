@@ -29,6 +29,8 @@ namespace Worka.Services.Database
 
         public DbSet<Review> Reviews => Set<Review>();
 
+        public DbSet<JobMessage> JobMessages => Set<JobMessage>();
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<User>(entity =>
@@ -165,6 +167,22 @@ namespace Worka.Services.Database
                 entity.HasOne<Professional>()
                     .WithMany()
                     .HasForeignKey(review => review.ProfessionalId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<JobMessage>(entity =>
+            {
+                entity.ToTable("job_messages");
+                entity.HasKey(message => message.JobMessageId);
+                entity.HasIndex(message => new { message.JobId, message.ProfessionalId });
+                entity.Property(message => message.Body).HasMaxLength(2000).IsRequired();
+                entity.HasOne<Job>()
+                    .WithMany()
+                    .HasForeignKey(message => message.JobId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne<Professional>()
+                    .WithMany()
+                    .HasForeignKey(message => message.ProfessionalId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
 

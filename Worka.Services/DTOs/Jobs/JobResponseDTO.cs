@@ -1,3 +1,4 @@
+using Worka.Services.Common;
 using Worka.Services.Database.DatabaseModels;
 using Worka.Services.Enums;
 
@@ -31,11 +32,14 @@ namespace Worka.Services.DTOs.Jobs
 
         public string Currency { get; set; }
 
+        /// <summary>True when the location has been reduced to an area for privacy.</summary>
+        public bool LocationApproximate { get; set; }
+
         public DateTimeOffset CreatedAt { get; set; }
 
         public DateTimeOffset UpdatedAt { get; set; }
 
-        public JobResponseDTO(Job job)
+        public JobResponseDTO(Job job, bool maskLocation = false)
         {
             JobId = job.JobId.ToString();
             JobName = job.Name;
@@ -52,6 +56,18 @@ namespace Worka.Services.DTOs.Jobs
             Currency = job.Currency;
             CreatedAt = job.CreatedAt;
             UpdatedAt = job.UpdatedAt;
+
+            if (maskLocation)
+            {
+                // The exact place of work is only shared with the professional
+                // whose quote was accepted and paid.
+                Address = LocationPrivacy.MaskAddress(job.Address);
+                LocationLabel = LocationPrivacy.MaskAddress(
+                    string.IsNullOrWhiteSpace(job.LocationLabel) ? job.Address : job.LocationLabel);
+                Latitude = LocationPrivacy.BlurCoordinate(job.Latitude);
+                Longitude = LocationPrivacy.BlurCoordinate(job.Longitude);
+                LocationApproximate = true;
+            }
         }
     }
 }

@@ -5,6 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AuthContext } from '../auth/AuthContext';
 import { api, getErrorMessage } from '../api/workaApi';
 import notify, { confirmAction } from '../Utils/notify';
+import SelectField from '../components/SelectField';
 import { useI18n } from '../i18n/I18nContext';
 
 const WorkerSettingsScreen = ({ navigation }) => {
@@ -130,21 +131,14 @@ const WorkerSettingsScreen = ({ navigation }) => {
       <View style={styles.card}>
         <Text style={styles.settingTitle}>{t('settings.language')}</Text>
         <Text style={styles.settingText}>{t('settings.languageHint')}</Text>
-        <View style={styles.languageRow}>
-          {languages.map((lang) => {
-            const active = lang.code === language;
-            return (
-              <TouchableOpacity
-                key={lang.code}
-                style={[styles.languageChip, active && styles.languageChipActive]}
-                onPress={() => setLanguage(lang.code)}
-              >
-                <Text style={[styles.languageChipText, active && styles.languageChipTextActive]}>
-                  {lang.label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
+        <View style={styles.languageSelect}>
+          <SelectField
+            options={languages.map((lang) => ({ value: lang.code, label: lang.label }))}
+            value={language}
+            onChange={setLanguage}
+            placeholder={t('settings.language')}
+            searchPlaceholder={t('common.search')}
+          />
         </View>
       </View>
 
@@ -259,32 +253,9 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     marginBottom: 8,
   },
-  languageRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
+  languageSelect: {
     marginTop: 12,
-  },
-  languageChip: {
-    minHeight: 40,
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#e3dfd2',
-    borderRadius: 999,
-    paddingHorizontal: 14,
-    backgroundColor: '#fbfaf6',
-  },
-  languageChipActive: {
-    backgroundColor: '#111',
-    borderColor: '#111',
-  },
-  languageChipText: {
-    color: '#111',
-    fontWeight: '800',
-    fontSize: 13,
-  },
-  languageChipTextActive: {
-    color: '#fff',
+    marginBottom: -12,
   },
   securityInput: {
     minHeight: 50,

@@ -15,6 +15,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { api, CURRENCIES, getErrorMessage, unwrap } from '../api/workaApi';
 import Avatar from '../components/Avatar';
 import LanguagePicker from '../components/LanguagePicker';
+import SelectField from '../components/SelectField';
 import { useI18n } from '../i18n/I18nContext';
 
 const emptyForm = {
@@ -248,24 +249,15 @@ const CustomerAccountScreen = () => {
           label={t('account.languagesLabel')}
         />
 
-        <Text style={styles.currencyLabel}>{t('account.currencyLabel')}</Text>
+        <SelectField
+          label={t('account.currencyLabel')}
+          options={CURRENCIES.map((option) => ({ value: option.code, label: option.label }))}
+          value={form.preferredCurrency}
+          onChange={(preferredCurrency) => setForm((current) => ({ ...current, preferredCurrency }))}
+          placeholder={t('account.currencyLabel')}
+          searchPlaceholder={t('common.search')}
+        />
         <Text style={styles.currencyHint}>{t('account.currencyHint')}</Text>
-        <View style={styles.currencyRow}>
-          {CURRENCIES.map((option) => {
-            const active = form.preferredCurrency === option.code;
-            return (
-              <TouchableOpacity
-                key={option.code}
-                style={[styles.currencyChip, active && styles.currencyChipActive]}
-                onPress={() => setForm((current) => ({ ...current, preferredCurrency: option.code }))}
-              >
-                <Text style={[styles.currencyChipText, active && styles.currencyChipTextActive]}>
-                  {option.label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
 
         <TouchableOpacity style={styles.button} onPress={save} disabled={saving}>
           {saving ? (
@@ -352,45 +344,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#fbfaf6',
     fontSize: 16,
   },
-  currencyLabel: {
-    color: '#111',
-    fontWeight: '900',
-    fontSize: 14,
-    marginTop: 4,
-  },
   currencyHint: {
     color: '#62645c',
     fontSize: 13,
     lineHeight: 18,
-    marginTop: 3,
-    marginBottom: 9,
-  },
-  currencyRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 16,
-  },
-  currencyChip: {
-    minHeight: 44,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#d9d5ca',
-    paddingHorizontal: 13,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#fbfaf6',
-  },
-  currencyChipActive: {
-    backgroundColor: '#111',
-    borderColor: '#111',
-  },
-  currencyChipText: {
-    color: '#111',
-    fontWeight: '700',
-  },
-  currencyChipTextActive: {
-    color: '#fff',
+    marginTop: -4,
+    marginBottom: 14,
   },
   button: {
     backgroundColor: '#111',

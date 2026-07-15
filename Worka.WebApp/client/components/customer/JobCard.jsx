@@ -6,6 +6,7 @@ import { requestCurrentLocation } from '../../Utils/locationUtils';
 import { useI18n } from '../../i18n/I18nContext';
 import { categoryLabel } from '../../i18n/categories';
 import Avatar from '../Avatar';
+import ChatModal from '../ChatModal';
 import Stars from '../Stars';
 import MapPreview from '../MapPreview';
 import PhotoLightbox from '../PhotoLightbox';
@@ -47,6 +48,7 @@ const JobCard = ({ job, quotes = [], onAcceptQuote, onEditJob, onDeleteJob, onCo
   const [detailsVisible, setDetailsVisible] = useState(false);
   const [userLocation, setUserLocation] = useState(null);
   const [lightboxUri, setLightboxUri] = useState(null);
+  const [chatQuote, setChatQuote] = useState(null);
 
   const openDetails = () => {
     setDetailsVisible(true);
@@ -104,9 +106,10 @@ const JobCard = ({ job, quotes = [], onAcceptQuote, onEditJob, onDeleteJob, onCo
               <Text style={styles.detailsButtonText}>{t('common.viewDetails')}</Text>
             </TouchableOpacity>
             {bestQuote ? (
-              <Text style={styles.bestQuoteText}>
-                {t('jobs.bestQuote', { amount: formatMoney(bestQuote.price, job.currency) })}
-              </Text>
+              <View style={styles.bestQuoteBox}>
+                <Text style={styles.bestQuoteLabel}>{t('jobs.bestQuoteLabel')}</Text>
+                <Text style={styles.bestQuoteValue}>{formatMoney(bestQuote.price, job.currency)}</Text>
+              </View>
             ) : null}
           </View>
 
@@ -118,7 +121,10 @@ const JobCard = ({ job, quotes = [], onAcceptQuote, onEditJob, onDeleteJob, onCo
                     <MaterialCommunityIcons name="pencil-outline" size={17} color="#111" />
                     <Text style={styles.manageButtonText}>{t('common.edit')}</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={styles.manageButton} onPress={() => onDeleteJob?.(job)}>
+                  <TouchableOpacity
+                    style={[styles.manageButton, styles.manageButtonRight]}
+                    onPress={() => onDeleteJob?.(job)}
+                  >
                     <MaterialCommunityIcons name="trash-can-outline" size={17} color="#8c2f2f" />
                     <Text style={[styles.manageButtonText, styles.manageButtonDanger]}>{t('common.delete')}</Text>
                   </TouchableOpacity>
@@ -179,6 +185,14 @@ const JobCard = ({ job, quotes = [], onAcceptQuote, onEditJob, onDeleteJob, onCo
                             emptyLabel={t('reviews.none')}
                           />
                         </View>
+                        <TouchableOpacity
+                          style={styles.chatButton}
+                          hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                          onPress={() => setChatQuote(quote)}
+                          accessibilityLabel={t('chat.title')}
+                        >
+                          <MaterialCommunityIcons name="chat-outline" size={18} color="#111" />
+                        </TouchableOpacity>
                       </View>
                       <Text style={styles.quotePrice}>{formatMoney(quote.price, job.currency)}</Text>
                       <Text style={styles.quoteDescription}>{quote.description || t('quotes.noNote')}</Text>
@@ -358,6 +372,20 @@ const JobCard = ({ job, quotes = [], onAcceptQuote, onEditJob, onDeleteJob, onCo
         label={job.jobName}
         onClose={() => setLightboxUri(null)}
       />
+
+      <ChatModal
+        visible={!!chatQuote}
+        onClose={() => setChatQuote(null)}
+        jobId={job.jobId}
+        professionalId={chatQuote?.professionalId}
+        title={job.jobName}
+        subtitle={
+          chatQuote?.professionalFirstName
+            ? `${chatQuote.professionalFirstName} ${chatQuote.professionalLastName ?? ''}`.trim()
+            : undefined
+        }
+        role="customer"
+      />
     </>
   );
 };
@@ -463,16 +491,35 @@ const styles = StyleSheet.create({
     color: '#111',
     fontWeight: '900',
   },
-  bestQuoteText: {
-    flex: 1,
-    textAlign: 'right',
-    color: '#111',
+  bestQuoteBox: {
+    borderWidth: 1,
+    borderColor: '#cfe3d4',
+    backgroundColor: '#dff4e8',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    alignItems: 'flex-end',
+  },
+  bestQuoteLabel: {
+    color: '#24513b',
+    fontSize: 11,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+  },
+  bestQuoteValue: {
+    color: '#24513b',
+    fontSize: 16,
     fontWeight: '900',
+    marginTop: 1,
   },
   manageRow: {
     flexDirection: 'row',
     gap: 10,
     marginTop: 10,
+  },
+  manageButtonRight: {
+    marginLeft: 'auto',
   },
   manageButton: {
     minHeight: 44,
@@ -556,6 +603,16 @@ const styles = StyleSheet.create({
     color: '#111',
     fontWeight: '900',
     fontSize: 14,
+  },
+  chatButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e3dfd2',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fbfaf6',
   },
   quotePrice: {
     color: '#111',

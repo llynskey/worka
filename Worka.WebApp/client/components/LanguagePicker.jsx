@@ -1,45 +1,44 @@
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { SPOKEN_LANGUAGES } from '../i18n/spokenLanguages';
+import { StyleSheet, Text, View } from 'react-native';
+import { SPOKEN_LANGUAGES, languageLabel } from '../i18n/spokenLanguages';
+import SelectField from './SelectField';
 
 const parseCsv = (value) =>
-  new Set(
-    String(value ?? '')
-      .split(',')
-      .map((code) => code.trim().toLowerCase())
-      .filter(Boolean)
-  );
+  String(value ?? '')
+    .split(',')
+    .map((code) => code.trim().toLowerCase())
+    .filter(Boolean);
 
+/**
+ * Searchable multi-select for spoken languages. Stores a CSV of codes,
+ * shows the selected languages as quiet chips under the field.
+ */
 const LanguagePicker = ({ value, onChange, label = 'Languages you speak' }) => {
   const selected = parseCsv(value);
 
-  const toggle = (code) => {
-    const next = new Set(selected);
-    if (next.has(code)) {
-      next.delete(code);
-    } else {
-      next.add(code);
-    }
-    onChange?.(Array.from(next).join(','));
-  };
-
   return (
     <View style={styles.wrap}>
-      <Text style={styles.label}>{label}</Text>
-      <View style={styles.chipRow}>
-        {SPOKEN_LANGUAGES.map((language) => {
-          const active = selected.has(language.code);
-          return (
-            <TouchableOpacity
-              key={language.code}
-              style={[styles.chip, active && styles.chipActive]}
-              onPress={() => toggle(language.code)}
-            >
-              <Text style={[styles.chipText, active && styles.chipTextActive]}>{language.label}</Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
+      <SelectField
+        label={label}
+        options={SPOKEN_LANGUAGES.map((language) => ({
+          value: language.code,
+          label: language.label,
+        }))}
+        value={value}
+        onChange={onChange}
+        multiple
+        placeholder={label}
+        searchPlaceholder="Search…"
+      />
+      {selected.length > 0 ? (
+        <View style={styles.chipRow}>
+          {selected.map((code) => (
+            <View key={code} style={styles.chip}>
+              <Text style={styles.chipText}>{languageLabel(code)}</Text>
+            </View>
+          ))}
+        </View>
+      ) : null}
     </View>
   );
 };
@@ -48,37 +47,25 @@ const styles = StyleSheet.create({
   wrap: {
     marginBottom: 12,
   },
-  label: {
-    color: '#111',
-    fontWeight: '900',
-    fontSize: 14,
-    marginBottom: 8,
-  },
   chipRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: 6,
+    marginTop: -4,
+    marginBottom: 4,
   },
   chip: {
-    minHeight: 40,
-    justifyContent: 'center',
     borderWidth: 1,
     borderColor: '#e3dfd2',
     borderRadius: 999,
-    paddingHorizontal: 14,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
     backgroundColor: '#fbfaf6',
   },
-  chipActive: {
-    backgroundColor: '#111',
-    borderColor: '#111',
-  },
   chipText: {
-    color: '#111',
+    color: '#62645c',
+    fontSize: 12,
     fontWeight: '800',
-    fontSize: 13,
-  },
-  chipTextActive: {
-    color: '#fff',
   },
 });
 

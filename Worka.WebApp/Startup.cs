@@ -17,6 +17,7 @@ using Worka.Services.Database;
 using Worka.Services.Email;
 using Worka.Services.Interest;
 using Worka.Services.Jobs;
+using Worka.Services.Messages;
 using Worka.Services.Payments;
 using Worka.Services.Professionals;
 using Worka.Services.Quotes;
@@ -86,6 +87,7 @@ namespace Worka.WebApp
             services.AddScoped<IPaymentsService, PaymentsService>();
             services.AddSingleton<IEmailService, SmtpEmailService>();
             services.AddScoped<IReviewsService, ReviewsService>();
+            services.AddScoped<IMessagesService, MessagesService>();
 
             var jwtSecret = Configuration["JwtSecret"];
             if (string.IsNullOrWhiteSpace(jwtSecret) || jwtSecret.Length < 32)
@@ -268,6 +270,16 @@ namespace Worka.WebApp
                     WHERE "PhotoUrl" LIKE 'http%' AND "PhotoUrl" LIKE '%/api/uploads/%';
                 ALTER TABLE jobs ADD COLUMN IF NOT EXISTS "Currency" character varying(8) NOT NULL DEFAULT 'gbp';
                 ALTER TABLE customers ADD COLUMN IF NOT EXISTS "PreferredCurrency" character varying(8) NOT NULL DEFAULT 'gbp';
+                CREATE TABLE IF NOT EXISTS job_messages (
+                    "JobMessageId" uuid PRIMARY KEY,
+                    "JobId" uuid NOT NULL REFERENCES jobs("JobId") ON DELETE CASCADE,
+                    "ProfessionalId" uuid NOT NULL REFERENCES professionals("ProfessionalId") ON DELETE CASCADE,
+                    "SenderUserId" uuid NOT NULL,
+                    "Body" character varying(2000) NOT NULL DEFAULT '',
+                    "CreatedAt" timestamp with time zone NOT NULL
+                );
+                CREATE INDEX IF NOT EXISTS "IX_job_messages_JobId_ProfessionalId"
+                    ON job_messages("JobId", "ProfessionalId");
                 """);
         }
     }

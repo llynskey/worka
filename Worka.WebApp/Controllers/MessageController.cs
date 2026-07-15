@@ -1,0 +1,45 @@
+using System.Security.Claims;
+using Worka.Services.DTOs.Messages;
+using Worka.Services.Messages;
+
+namespace Worka.WebApp.Controllers
+{
+    [ApiController]
+    [Authorize]
+    [Route("api")]
+    public class MessageController : ControllerBase
+    {
+        private readonly IMessagesService _messagesService;
+
+        public MessageController(IMessagesService messagesService)
+        {
+            _messagesService = messagesService ?? throw new ArgumentNullException(nameof(messagesService));
+        }
+
+        [HttpGet("Jobs/{jobId}/messages")]
+        public async Task<IActionResult> GetThread(string jobId, [FromQuery] string professionalId = null)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Unauthorized();
+            }
+
+            var result = await _messagesService.GetThreadAsync(userId, jobId, professionalId);
+            return result.Success ? Ok(result) : BadRequest(result);
+        }
+
+        [HttpPost("Jobs/{jobId}/messages")]
+        public async Task<IActionResult> Send(string jobId, [FromBody] SendJobMessageDTO request)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Unauthorized();
+            }
+
+            var result = await _messagesService.SendAsync(userId, jobId, request?.ProfessionalId, request?.Body);
+            return result.Success ? Ok(result) : BadRequest(result);
+        }
+    }
+}

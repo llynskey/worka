@@ -60,6 +60,7 @@ export type Job = {
   acceptedQuoteId?: string | null;
   jobStatus: number | string;
   currency?: string;
+  locationApproximate?: boolean;
   createdAt: string;
   updatedAt?: string;
 };

@@ -15,6 +15,8 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { api, formatDate, formatMoney, getErrorMessage, unwrap } from '../../api/workaApi';
 import Avatar from '../Avatar';
 import Stars from '../Stars';
+import SelectField from '../SelectField';
+import useAutoRefresh from '../../Utils/useAutoRefresh';
 import { SPOKEN_LANGUAGES, languageLabel } from '../../i18n/spokenLanguages';
 import { useI18n } from '../../i18n/I18nContext';
 import { categoryLabel } from '../../i18n/categories';
@@ -89,6 +91,10 @@ const ProDirectory = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [specialty, languageFilter]);
 
+  // Silent background refresh so newly joined professionals appear
+  // without a manual reload.
+  useAutoRefresh(loadPros, 30000);
+
   if (loading && !refreshing) {
     return (
       <View style={styles.centerState}>
@@ -158,6 +164,7 @@ const ProDirectory = () => {
               </View>
             </View>
 
+            <Text style={styles.filterGroupLabel}>{t('directory.serviceLabel')}</Text>
             <View style={styles.chipRow}>
               {specialtyChips.map((chip) => {
                 const active = specialty === chip;
@@ -173,25 +180,21 @@ const ProDirectory = () => {
               })}
             </View>
 
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              style={styles.langFilterScroll}
-              contentContainerStyle={styles.langFilterRow}
-            >
-              {SPOKEN_LANGUAGES.map((language) => {
-                const active = languageFilter === language.code;
-                return (
-                  <TouchableOpacity
-                    key={language.code}
-                    style={[styles.chip, active && styles.chipActive]}
-                    onPress={() => setLanguageFilter(active ? '' : language.code)}
-                  >
-                    <Text style={[styles.chipText, active && styles.chipTextActive]}>{language.label}</Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
+            <View style={styles.filterDivider} />
+
+            <SelectField
+              label={t('directory.languageLabel')}
+              options={SPOKEN_LANGUAGES.map((language) => ({
+                value: language.code,
+                label: language.label,
+              }))}
+              value={languageFilter}
+              onChange={(code) => setLanguageFilter(code || '')}
+              placeholder={t('directory.anyLanguage')}
+              searchPlaceholder={t('common.search')}
+              allowClear
+              clearLabel={t('directory.anyLanguage')}
+            />
 
             <TouchableOpacity style={styles.applyButton} onPress={refresh}>
               <MaterialCommunityIcons name="filter-check-outline" size={18} color="#fff" />
@@ -622,15 +625,16 @@ const styles = StyleSheet.create({
   cardStars: {
     marginTop: 4,
   },
-  langFilterScroll: {
-    flexGrow: 0,
-    flexShrink: 0,
-    marginBottom: 12,
+  filterGroupLabel: {
+    color: '#111',
+    fontWeight: '900',
+    fontSize: 14,
+    marginBottom: 8,
   },
-  langFilterRow: {
-    flexDirection: 'row',
-    gap: 8,
-    paddingRight: 8,
+  filterDivider: {
+    height: 1,
+    backgroundColor: '#ece7dc',
+    marginBottom: 12,
   },
   langChipRow: {
     flexDirection: 'row',

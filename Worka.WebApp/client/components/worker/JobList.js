@@ -14,6 +14,7 @@ import {
   View,
 } from 'react-native';
 import notify from '../../Utils/notify';
+import useAutoRefresh from '../../Utils/useAutoRefresh';
 import { useFocusEffect } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { api, formatDate, formatMoney, getErrorMessage, resolveUploadUrl, unwrap } from '../../api/workaApi';
@@ -85,6 +86,9 @@ const WorkerJobList = () => {
       refresh();
     }, [refresh])
   );
+
+  // New jobs appear without a manual reload.
+  useAutoRefresh(loadMarketplace);
 
   const quoteByJob = useMemo(() => {
     return quotes.reduce((acc, quote) => {
@@ -322,6 +326,7 @@ const WorkerJobList = () => {
             categoryImages.Repairs
           }
           userLocation={currentLocation}
+          professionalId={account?.professionalId}
           onClose={() => setSelectedDetailsJob(null)}
           onQuote={(job) => {
             setSelectedDetailsJob(null);

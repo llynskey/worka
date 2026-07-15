@@ -4,12 +4,14 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { formatDate } from '../../api/workaApi';
 import { useI18n } from '../../i18n/I18nContext';
 import { categoryLabel } from '../../i18n/categories';
+import ChatModal from '../ChatModal';
 import MapPreview from '../MapPreview';
 import PhotoLightbox from '../PhotoLightbox';
 
-const JobDetailsModal = ({ job, image, userLocation = null, onClose, onQuote }) => {
+const JobDetailsModal = ({ job, image, userLocation = null, onClose, onQuote, professionalId }) => {
   const { t } = useI18n();
   const [lightboxUri, setLightboxUri] = useState(null);
+  const [chatVisible, setChatVisible] = useState(false);
 
   return (
   <Modal visible={!!job} transparent animationType="slide" onRequestClose={onClose}>
@@ -57,6 +59,12 @@ const JobDetailsModal = ({ job, image, userLocation = null, onClose, onQuote }) 
                 locationLabel={job.locationLabel || job.address}
                 height={200}
               />
+              {job.locationApproximate ? (
+                <View style={styles.approxRow}>
+                  <MaterialCommunityIcons name="map-marker-radius-outline" size={16} color="#62645c" />
+                  <Text style={styles.approxText}>{t('jobs.approxLocation')}</Text>
+                </View>
+              ) : null}
             </View>
 
             <TouchableOpacity
@@ -69,6 +77,13 @@ const JobDetailsModal = ({ job, image, userLocation = null, onClose, onQuote }) 
               <MaterialCommunityIcons name="cash-plus" size={20} color="#fff" />
               <Text style={styles.quoteButtonText}>{t('quotes.sendA')}</Text>
             </TouchableOpacity>
+
+            {professionalId ? (
+              <TouchableOpacity style={styles.askButton} onPress={() => setChatVisible(true)}>
+                <MaterialCommunityIcons name="chat-outline" size={19} color="#111" />
+                <Text style={styles.askButtonText}>{t('chat.askQuestion')}</Text>
+              </TouchableOpacity>
+            ) : null}
           </ScrollView>
         ) : null}
       </View>
@@ -79,11 +94,33 @@ const JobDetailsModal = ({ job, image, userLocation = null, onClose, onQuote }) 
       label={job?.jobName}
       onClose={() => setLightboxUri(null)}
     />
+
+    <ChatModal
+      visible={chatVisible}
+      onClose={() => setChatVisible(false)}
+      jobId={job?.jobId}
+      professionalId={professionalId}
+      title={job?.jobName}
+      role="professional"
+    />
   </Modal>
   );
 };
 
 const styles = StyleSheet.create({
+  approxRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 6,
+    marginTop: 8,
+  },
+  approxText: {
+    flex: 1,
+    color: '#62645c',
+    fontSize: 12,
+    fontWeight: '700',
+    lineHeight: 17,
+  },
   backdrop: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.42)',
@@ -175,6 +212,23 @@ const styles = StyleSheet.create({
   },
   quoteButtonText: {
     color: '#fff',
+    fontWeight: '900',
+    fontSize: 15,
+  },
+  askButton: {
+    minHeight: 48,
+    borderWidth: 1,
+    borderColor: '#111',
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 10,
+  },
+  askButtonText: {
+    color: '#111',
     fontWeight: '900',
     fontSize: 15,
   },

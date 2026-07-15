@@ -10,5 +10,6 @@ namespace Worka.Services.Users
         Task<WorkaResponse<bool>> DeleteAccountAsync(string userId, DeleteAccountDTO request);
         Task<WorkaResponse<bool>> ForgotPasswordAsync(ForgotPasswordDTO request);
         Task<WorkaResponse<bool>> ResetPasswordAsync(ResetPasswordDTO request);
+        Task<WorkaResponse<UserResponseDTO>> SwitchAccountTypeAsync(string userId);
     }
 }

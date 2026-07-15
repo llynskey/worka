@@ -10,6 +10,7 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { api, formatMoney, getErrorMessage, unwrap } from '../../api/workaApi';
+import useAutoRefresh from '../../Utils/useAutoRefresh';
 import { useI18n } from '../../i18n/I18nContext';
 
 const MONTH_LOCALES = { en: 'en-GB', es: 'es-ES', fr: 'fr-FR', ro: 'ro-RO' };
@@ -52,6 +53,9 @@ const BookingsCalendar = () => {
       load();
     }, [load])
   );
+
+  // New bookings land on the calendar without a manual reload.
+  useAutoRefresh(load, 30000);
 
   const bookings = useMemo(() => {
     const jobsById = jobs.reduce((acc, job) => {

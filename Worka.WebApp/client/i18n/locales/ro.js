@@ -57,6 +57,7 @@ export default {
 
   // Common
   'common.cancel': 'Anulează',
+  'common.search': 'Caută',
   'common.close': 'Închide',
   'common.retry': 'Reîncearcă',
   'common.delete': 'Șterge',
@@ -116,6 +117,10 @@ export default {
   'drawer.customerWorkspace': 'Spațiu client',
   'drawer.professionalWorkspace': 'Spațiu profesionist',
   'drawer.logout': 'Ieșire',
+  'drawer.professionalBadge': 'Profesionist',
+  'drawer.switchToProfessional': 'Treci la profesionist',
+  'drawer.switchToCustomer': 'Treci la client',
+  'drawer.switchHint': 'Același cont pentru a angaja sau a lucra.',
 
   // Customer jobs dashboard
   'jobs.loadError': 'Nu am putut încărca lucrările tale.',
@@ -130,6 +135,9 @@ export default {
   'jobs.statQuotes': 'Oferte',
   'jobs.statBooked': 'Rezervate',
   'jobs.statBestQuote': 'Cea mai bună ofertă',
+  'jobs.statCompleted': 'Lucrări finalizate',
+  'jobs.bestQuoteLabel': 'Cea mai bună ofertă',
+  'jobs.approxLocation': 'Zonă aproximativă — adresa exactă este partajată după rezervarea lucrării.',
   'jobs.recentActivity': 'Activitate recentă',
   'jobs.activityBooked': 'Rezervare de',
   'jobs.activityQuote': 'Ofertă nouă de',
@@ -266,7 +274,10 @@ export default {
   'directory.heroText': 'Caută după meserie, zonă sau buget, apoi publică o lucrare pentru a primi ofertele lor.',
   'directory.searchPlaceholder': 'Caută nume, meserie sau abilitate',
   'directory.areaPlaceholder': 'Zonă (ex. Leeds)',
-  'directory.maxPricePlaceholder': 'Preț mediu maxim',
+  'directory.maxPricePlaceholder': 'Preț maxim',
+  'directory.serviceLabel': 'Serviciu',
+  'directory.languageLabel': 'Limba vorbită',
+  'directory.anyLanguage': 'Orice limbă',
   'directory.applyFilters': 'Aplică filtrele',
   'directory.emptyTitle': 'Niciun profesionist găsit',
   'directory.emptyText': 'Lărgește zona sau elimină filtrul de preț. În fiecare săptămână se alătură profesioniști noi pe Worka.',
@@ -500,4 +511,14 @@ export default {
   'auth.errReset': 'Nu s-a putut reseta parola.',
   'auth.infoResetSent': 'Dacă acest e-mail este înregistrat, linkul de resetare este pe drum.',
   'auth.infoResetDone': 'Parolă resetată. Acum te poți autentifica.',
+
+  // Chat
+  'chat.title': 'Conversație',
+  'chat.askQuestion': 'Pune o întrebare',
+  'chat.placeholder': 'Scrie un mesaj…',
+  'chat.send': 'Trimite',
+  'chat.empty': 'Niciun mesaj încă. Întreabă despre lucrare — datele de contact rămân ascunse până când lucrarea este rezervată.',
+  'chat.loadError': 'Mesajele nu au putut fi încărcate',
+  'chat.sendError': 'Mesajul nu a fost trimis',
+  'chat.hiddenNotice': 'Datele de contact sunt ascunse până când lucrarea este rezervată și plătită.',
 };

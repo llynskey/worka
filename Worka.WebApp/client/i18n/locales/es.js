@@ -57,6 +57,7 @@ export default {
 
   // Common
   'common.cancel': 'Cancelar',
+  'common.search': 'Buscar',
   'common.close': 'Cerrar',
   'common.retry': 'Reintentar',
   'common.delete': 'Eliminar',
@@ -98,7 +99,7 @@ export default {
   'tabs.jobsDesc': 'Sigue tus trabajos y presupuestos',
   'tabs.post': 'Publicar trabajo',
   'tabs.postDesc': 'Crea una nueva solicitud',
-  'tabs.pros': 'Buscar pros',
+  'tabs.pros': 'Buscar profesionales',
   'tabs.prosDesc': 'Explora y filtra profesionales',
   'tabs.available': 'Trabajos disponibles',
   'tabs.availableDesc': 'Encuentra trabajo que presupuestar',
@@ -116,6 +117,10 @@ export default {
   'drawer.customerWorkspace': 'Espacio de cliente',
   'drawer.professionalWorkspace': 'Espacio profesional',
   'drawer.logout': 'Salir',
+  'drawer.professionalBadge': 'Profesional',
+  'drawer.switchToProfessional': 'Cambiar a profesional',
+  'drawer.switchToCustomer': 'Cambiar a cliente',
+  'drawer.switchHint': 'Usa la misma cuenta para contratar o para trabajar.',
 
   // Customer jobs dashboard
   'jobs.loadError': 'No se pudieron cargar tus trabajos.',
@@ -130,6 +135,9 @@ export default {
   'jobs.statQuotes': 'Presupuestos',
   'jobs.statBooked': 'Reservados',
   'jobs.statBestQuote': 'Mejor precio',
+  'jobs.statCompleted': 'Trabajos completados',
+  'jobs.bestQuoteLabel': 'Mejor precio',
+  'jobs.approxLocation': 'Zona aproximada — la dirección exacta se comparte cuando se reserva el trabajo.',
   'jobs.recentActivity': 'Actividad reciente',
   'jobs.activityBooked': 'Reserva de',
   'jobs.activityQuote': 'Nuevo presupuesto de',
@@ -266,7 +274,10 @@ export default {
   'directory.heroText': 'Busca por oficio, zona o presupuesto, y publica un trabajo para recibir sus ofertas.',
   'directory.searchPlaceholder': 'Busca nombre, oficio o habilidad',
   'directory.areaPlaceholder': 'Zona (p. ej. Leeds)',
-  'directory.maxPricePlaceholder': 'Precio medio máx.',
+  'directory.maxPricePlaceholder': 'Precio máx.',
+  'directory.serviceLabel': 'Servicio',
+  'directory.languageLabel': 'Idioma hablado',
+  'directory.anyLanguage': 'Cualquier idioma',
   'directory.applyFilters': 'Aplicar filtros',
   'directory.emptyTitle': 'No se encontraron profesionales',
   'directory.emptyText': 'Amplía la zona o quita el filtro de precio. Cada semana se unen nuevos profesionales a Worka.',
@@ -500,4 +511,14 @@ export default {
   'auth.errReset': 'No se pudo restablecer la contraseña.',
   'auth.infoResetSent': 'Si ese correo está registrado, el enlace va de camino.',
   'auth.infoResetDone': 'Contraseña restablecida. Ya puedes iniciar sesión.',
+
+  // Chat
+  'chat.title': 'Chat',
+  'chat.askQuestion': 'Hacer una pregunta',
+  'chat.placeholder': 'Escribe un mensaje…',
+  'chat.send': 'Enviar',
+  'chat.empty': 'Aún no hay mensajes. Pregunta sobre el trabajo: los datos de contacto permanecen ocultos hasta que se reserve el trabajo.',
+  'chat.loadError': 'No se pudieron cargar los mensajes',
+  'chat.sendError': 'Mensaje no enviado',
+  'chat.hiddenNotice': 'Los datos de contacto están ocultos hasta que el trabajo se reserve y se pague.',
 };

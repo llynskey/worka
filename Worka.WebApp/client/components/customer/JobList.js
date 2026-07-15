@@ -13,6 +13,7 @@ import {
   View,
 } from 'react-native';
 import notify, { confirmAction } from '../../Utils/notify';
+import useAutoRefresh from '../../Utils/useAutoRefresh';
 import { useFocusEffect } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { api, formatDate, formatMoney, unwrap, getErrorMessage } from '../../api/workaApi';
@@ -103,6 +104,10 @@ const CustomerJobList = ({ navigation }) => {
     }, [refresh])
   );
 
+  // Keep the dashboard live: silently re-pull jobs/quotes so new quotes
+  // and status changes show up without a manual reload.
+  useAutoRefresh(loadDashboard);
+
   const jobsById = useMemo(() => {
     return jobs.reduce((acc, job) => {
       acc[job.jobId] = job;
@@ -135,17 +140,14 @@ const CustomerJobList = ({ navigation }) => {
   const stats = useMemo(() => {
     const openJobs = jobs.filter((job) => statusLabel(job.jobStatus) === 'Open').length;
     const bookedJobs = jobs.filter((job) => statusLabel(job.jobStatus) === 'Booked').length;
+    const completedJobs = jobs.filter((job) => statusLabel(job.jobStatus) === 'Done').length;
     const quoteTotal = quotes.length;
-    const bestQuote = quotes.reduce((best, quote) => {
-      if (!best || Number(quote.price) < Number(best.price)) return quote;
-      return best;
-    }, null);
 
     return [
       { label: t('jobs.statOpen'), value: openJobs },
       { label: t('jobs.statQuotes'), value: quoteTotal },
       { label: t('jobs.statBooked'), value: bookedJobs },
-      { label: t('jobs.statBestQuote'), value: bestQuote ? formatMoney(bestQuote.price) : '-' },
+      { label: t('jobs.statCompleted'), value: completedJobs },
     ];
   }, [jobs, quotes, t]);
 
@@ -425,7 +427,10 @@ const CustomerJobList = ({ navigation }) => {
             <MaterialCommunityIcons name="clipboard-plus-outline" size={40} color="#111" />
             <Text style={styles.emptyTitle}>{t('jobs.noActiveTitle')}</Text>
             <Text style={styles.mutedText}>{t('jobs.noActiveText')}</Text>
-            <TouchableOpacity style={styles.primaryButton} onPress={() => navigation?.navigate('Post a Job')}>
+            <TouchableOpacity
+              style={[styles.primaryButton, styles.primaryButtonCentered]}
+              onPress={() => navigation?.navigate('Post a Job')}
+            >
               <Text style={styles.primaryButtonText}>{t('jobs.postJob')}</Text>
             </TouchableOpacity>
           </View>
@@ -682,6 +687,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+  },
+  primaryButtonCentered: {
+    alignSelf: 'center',
+    marginTop: 14,
   },
   primaryButtonText: {
     color: '#fff',

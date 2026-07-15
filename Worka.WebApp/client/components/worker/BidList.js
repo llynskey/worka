@@ -14,6 +14,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { api, formatDate, formatMoney, getErrorMessage, unwrap } from '../../api/workaApi';
 import notify, { confirmAction } from '../../Utils/notify';
+import useAutoRefresh from '../../Utils/useAutoRefresh';
 import { useI18n } from '../../i18n/I18nContext';
 import { categoryLabel } from '../../i18n/categories';
 
@@ -61,6 +62,9 @@ const BidList = () => {
       refresh();
     }, [refresh])
   );
+
+  // Quote status changes (accepted/booked) show up without a reload.
+  useAutoRefresh(loadBids);
 
   const jobsById = useMemo(() => {
     return jobs.reduce((acc, job) => {

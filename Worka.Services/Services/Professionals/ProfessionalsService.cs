@@ -110,8 +110,11 @@ namespace Worka.Services.Professionals
                             ReadyForPayments = p.StripeChargesEnabled && p.StripePayoutsEnabled
                         };
                     })
+                    // Filter on the professional's lowest quoted price ("from" price):
+                    // averages are skewed by big jobs, so a max *average* filter would
+                    // hide affordable professionals who also take on large projects.
                     .Where(item => !maxPrice.HasValue
-                        || (item.AverageQuotePrice.HasValue && item.AverageQuotePrice.Value <= maxPrice.Value))
+                        || (item.MinQuotePrice.HasValue && item.MinQuotePrice.Value <= maxPrice.Value))
                     .ToList();
 
                 return new WorkaResponse<List<ProfessionalDirectoryItemDTO>>(items);

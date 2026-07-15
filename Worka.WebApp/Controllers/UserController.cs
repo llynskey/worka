@@ -74,6 +74,20 @@ namespace Worka.WebApp.Controllers
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
+        [Authorize]
+        [HttpPost("account/switchMode")]
+        public async Task<IActionResult> SwitchMode()
+        {
+            var userId = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Unauthorized();
+            }
+
+            var result = await _usersService.SwitchAccountTypeAsync(userId);
+            return result.Success ? Ok(ToAuthResponse(result)) : BadRequest(result);
+        }
+
         [HttpPost("forgotPassword")]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDTO request)
         {

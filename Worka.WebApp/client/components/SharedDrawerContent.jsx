@@ -1,12 +1,39 @@
-import React from 'react';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import React, { useContext, useState } from 'react';
+import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { DrawerContentScrollView, DrawerItemList } from '@react-navigation/drawer';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { api, getErrorMessage } from '../api/workaApi';
+import notify from '../Utils/notify';
+import { AuthContext } from '../auth/AuthContext';
 import { useI18n } from '../i18n/I18nContext';
 
 export default function SharedDrawerContent(props) {
   const { logoutHandler, userType } = props;
   const { t } = useI18n();
+  const { signInWithToken } = useContext(AuthContext);
+  const [switching, setSwitching] = useState(false);
+
+  const isCustomer = userType === 'Customer';
+
+  // Airbnb-style: one account, two workspaces. The API flips the account
+  // type, guarantees the matching profile exists, and returns a fresh
+  // token whose role claim drives which workspace renders.
+  const switchMode = async () => {
+    try {
+      setSwitching(true);
+      const response = await api.post('/account/switchMode');
+      const token = response?.data?.token;
+      if (!token) {
+        notify(t('common.tryAgain'), getErrorMessage(null, ''));
+        return;
+      }
+      await signInWithToken(token);
+    } catch (error) {
+      notify(t('common.tryAgain'), getErrorMessage(error));
+    } finally {
+      setSwitching(false);
+    }
+  };
 
   return (
     <DrawerContentScrollView {...props} contentContainerStyle={styles.drawerScroll}>
@@ -14,7 +41,7 @@ export default function SharedDrawerContent(props) {
         <View style={styles.brandBlock}>
           <Image source={require('../assets/logo.png')} style={styles.logo} resizeMode="contain" />
           <Text style={styles.workspaceLabel}>
-            {userType === 'Customer' ? t('drawer.customerWorkspace') : t('drawer.professionalWorkspace')}
+            {isCustomer ? t('drawer.customerWorkspace') : t('drawer.professionalWorkspace')}
           </Text>
         </View>
 
@@ -26,6 +53,22 @@ export default function SharedDrawerContent(props) {
           activeBackgroundColor="#f1ede4"
           inactiveTintColor="#4f524b"
         />
+
+        <Pressable style={styles.switchButton} onPress={switchMode} disabled={switching}>
+          {switching ? (
+            <ActivityIndicator color="#111" />
+          ) : (
+            <>
+              <MaterialCommunityIcons name="swap-horizontal" size={20} color="#111" />
+              <View style={styles.switchCopy}>
+                <Text style={styles.switchText}>
+                  {isCustomer ? t('drawer.switchToProfessional') : t('drawer.switchToCustomer')}
+                </Text>
+                <Text style={styles.switchHint}>{t('drawer.switchHint')}</Text>
+              </View>
+            </>
+          )}
+        </Pressable>
 
         <Pressable style={styles.logoutButton} onPress={logoutHandler}>
           <MaterialCommunityIcons name="logout" size={20} color="#fff" />
@@ -73,8 +116,36 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '800',
   },
-  logoutButton: {
+  switchButton: {
     marginTop: 'auto',
+    minHeight: 58,
+    borderWidth: 1,
+    borderColor: '#111',
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+    flexDirection: 'row',
+    gap: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  switchCopy: {
+    flexShrink: 1,
+  },
+  switchText: {
+    color: '#111',
+    fontSize: 14,
+    fontWeight: '900',
+  },
+  switchHint: {
+    color: '#8a8d84',
+    fontSize: 11,
+    fontWeight: '600',
+    marginTop: 1,
+  },
+  logoutButton: {
     backgroundColor: '#111',
     paddingVertical: 14,
     borderRadius: 8,

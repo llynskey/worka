@@ -275,6 +275,43 @@ namespace Worka.Services.Users
             }
         }
 
+        /// <summary>
+        /// Airbnb-style mode switch: the same account can act as a customer or a
+        /// professional. Toggles the account type, makes sure the matching profile
+        /// exists, and issues a fresh token carrying the new role claims.
+        /// </summary>
+        public async Task<WorkaResponse<UserResponseDTO>> SwitchAccountTypeAsync(string userId)
+        {
+            try
+            {
+                if (!Guid.TryParse(userId, out var userGuid))
+                {
+                    return new WorkaResponse<UserResponseDTO>("Invalid user identity.");
+                }
+
+                var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.UserId == userGuid);
+                if (user == null)
+                {
+                    return new WorkaResponse<UserResponseDTO>("User not found.");
+                }
+
+                user.AccountType = user.AccountType == AccountTypeEnum.Customer
+                    ? AccountTypeEnum.Professional
+                    : AccountTypeEnum.Customer;
+
+                await _dbContext.SaveChangesAsync();
+                await EnsureProfileForUserAsync(user);
+
+                var userResponse = ToUserResponse(user);
+                var token = BuildToken(user);
+                return new WorkaResponse<UserResponseDTO>(userResponse, token);
+            }
+            catch (Exception ex)
+            {
+                return WorkaResponse<UserResponseDTO>.Fail(ex, "Error switching workspace.");
+            }
+        }
+
         private static string HashResetToken(string token)
         {
             var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(token));

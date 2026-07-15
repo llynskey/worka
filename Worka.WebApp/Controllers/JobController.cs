@@ -103,7 +103,8 @@ namespace Worka.WebApp.Controllers
         [HttpGet("~/Jobs")]
         public async Task<IActionResult> GetAllJobs()
         {
-            var result = await _jobService.GetAllJobsAsync();
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var result = await _jobService.GetAllJobsAsync(userId);
             return result.Success ? Ok(result) : BadRequest(result);
         }
     }

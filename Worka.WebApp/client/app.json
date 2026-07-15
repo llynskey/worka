@@ -31,7 +31,7 @@
       "versionCode": 1
     },
     "web": {
-      "favicon": "./assets/favicon.png",
+      "favicon": "./assets/logo.png",
       "bundler": "metro",
       "name": "Worka — get things done in your language",
       "shortName": "Worka",

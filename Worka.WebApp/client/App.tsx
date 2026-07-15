@@ -1,5 +1,5 @@
 import React from 'react';
-import { Platform, SafeAreaView, Text, View } from 'react-native';
+import { Image, Platform, SafeAreaView, Text, View } from 'react-native';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createDrawerNavigator, DrawerContentComponentProps } from '@react-navigation/drawer';
@@ -16,8 +16,35 @@ import JobTypeScreen from './Screens/JobTypeScreen';
 import LoadingScreen from './Screens/LoadingScreen';
 
 import SharedDrawerContent from './components/SharedDrawerContent';
+import NotifyHost from './components/NotifyHost';
+import AppFooter from './components/AppFooter';
 import { AuthContext, AuthProvider } from './auth/AuthContext';
 import { I18nProvider, useI18n } from './i18n/I18nContext';
+
+// Wordmark in the navbar instead of plain text.
+const HeaderLogo: React.FC<{ badge?: string }> = ({ badge }) => (
+  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+    <Image
+      source={require('./assets/logo.png')}
+      style={{ width: 96, height: 26 }}
+      resizeMode="contain"
+      accessibilityLabel="Worka"
+    />
+    {badge ? (
+      <Text
+        style={{
+          color: '#62645c',
+          fontSize: 11,
+          fontWeight: '800',
+          textTransform: 'uppercase',
+          letterSpacing: 1,
+        }}
+      >
+        {badge}
+      </Text>
+    ) : null}
+  </View>
+);
 
 export type RootStackParamList = {
   Login: undefined;
@@ -80,7 +107,7 @@ const CustomerDrawer: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
       screenOptions={{
         swipeEnabled: false,
         headerShown: true,
-        headerTitle: 'Worka',
+        headerTitle: () => <HeaderLogo />,
       }}
     >
       <CustomerDrawerScreen
@@ -114,7 +141,7 @@ const WorkerDrawer: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
       screenOptions={{
         swipeEnabled: false,
         headerShown: true,
-        headerTitle: 'Worka Pro',
+        headerTitle: () => <HeaderLogo badge={t('drawer.professionalBadge')} />,
       }}
     >
       <WorkerDrawerScreen
@@ -193,6 +220,8 @@ const AppInner: React.FC = () => {
           <NeutralScreen />
         )}
       </NavigationContainer>
+      {user ? <AppFooter /> : null}
+      <NotifyHost />
     </SafeAreaView>
   );
 };

@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import useAutoRefresh from '../../Utils/useAutoRefresh';
 import { api, formatDate, getErrorMessage, unwrap } from '../../api/workaApi';
 import { formatDistance, getDistanceKm, requestCurrentLocation } from '../../Utils/locationUtils';
 import { useI18n } from '../../i18n/I18nContext';
@@ -134,6 +135,9 @@ const JobMap = () => {
       refresh();
     }, [refresh])
   );
+
+  // Open jobs stay current without a manual reload.
+  useAutoRefresh(loadJobs, 30000);
 
   // Ask for location automatically; the manual button only appears if the
   // silent attempt fails (e.g. permission not yet granted).

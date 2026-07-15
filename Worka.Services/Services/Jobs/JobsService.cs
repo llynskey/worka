@@ -269,11 +269,12 @@ namespace Worka.Services.Jobs
                     return new WorkaResponse<List<JobResponseDTO>>("Professional profile not found.");
                 }
 
-                var quoteJobIds = await _dbContext.Quotes
+                var quoteIdsByJob = await _dbContext.Quotes
                     .Where(quote => quote.ProfessionalId == professional.ProfessionalId)
-                    .Select(quote => quote.JobId)
-                    .Distinct()
+                    .Select(quote => new { quote.JobId, quote.QuoteId })
                     .ToListAsync();
+                var quoteJobIds = quoteIdsByJob.Select(q => q.JobId).Distinct().ToList();
+                var myQuoteIds = quoteIdsByJob.Select(q => q.QuoteId).ToHashSet();
 
                 if (!quoteJobIds.Any())
                 {
@@ -285,7 +286,9 @@ namespace Worka.Services.Jobs
                     .OrderByDescending(job => job.CreatedAt)
                     .ToListAsync();
 
-                return new WorkaResponse<List<JobResponseDTO>>(jobs.Select(job => new JobResponseDTO(job)).ToList());
+                return new WorkaResponse<List<JobResponseDTO>>(
+                    jobs.Select(job => new JobResponseDTO(job, maskLocation: !IsBookedByProfessional(job, myQuoteIds)))
+                        .ToList());
             }
             catch (Exception ex)
             {
@@ -293,7 +296,7 @@ namespace Worka.Services.Jobs
             }
         }
 
-        public async Task<WorkaResponse<List<JobResponseDTO>>> GetAllJobsAsync()
+        public async Task<WorkaResponse<List<JobResponseDTO>>> GetAllJobsAsync(string userId = null)
         {
             try
             {
@@ -301,12 +304,36 @@ namespace Worka.Services.Jobs
                     .OrderByDescending(job => job.CreatedAt)
                     .ToListAsync();
 
-                return new WorkaResponse<List<JobResponseDTO>>(jobs.Select(job => new JobResponseDTO(job)).ToList());
+                // The marketplace list only ever shows the area. The exact
+                // address is reserved for the professional whose quote was
+                // accepted and paid.
+                var myQuoteIds = new HashSet<Guid>();
+                if (Guid.TryParse(userId, out var userGuid))
+                {
+                    var professional = await _dbContext.Professionals
+                        .FirstOrDefaultAsync(p => p.UserId == userGuid);
+                    if (professional != null)
+                    {
+                        myQuoteIds = (await _dbContext.Quotes
+                            .Where(quote => quote.ProfessionalId == professional.ProfessionalId)
+                            .Select(quote => quote.QuoteId)
+                            .ToListAsync()).ToHashSet();
+                    }
+                }
+
+                return new WorkaResponse<List<JobResponseDTO>>(
+                    jobs.Select(job => new JobResponseDTO(job, maskLocation: !IsBookedByProfessional(job, myQuoteIds)))
+                        .ToList());
             }
             catch (Exception ex)
             {
                 return WorkaResponse<List<JobResponseDTO>>.Fail(ex, "An error occurred while retrieving all jobs.");
             }
+        }
+
+        private static bool IsBookedByProfessional(Job job, HashSet<Guid> professionalQuoteIds)
+        {
+            return job.AcceptedQuoteId.HasValue && professionalQuoteIds.Contains(job.AcceptedQuoteId.Value);
         }
 
         private static bool IsValidLatitude(double? value)
