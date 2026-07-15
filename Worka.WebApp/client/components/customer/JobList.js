@@ -175,6 +175,7 @@ const CustomerJobList = ({ navigation }) => {
         });
         const checkout = unwrap(response.data);
         if (!checkout?.checkoutUrl) {
+          setCheckoutPreview(null);
           notify(t('checkout.startErrorTitle'), t('checkout.noLink'));
           return;
         }
@@ -184,8 +185,12 @@ const CustomerJobList = ({ navigation }) => {
           return;
         }
 
+        setCheckoutPreview(null);
         await Linking.openURL(checkout.checkoutUrl);
       } catch (err) {
+        // Close the checkout sheet first: on iOS a native Modal sits above
+        // the toast layer, so an error shown behind it would be invisible.
+        setCheckoutPreview(null);
         notify(t('checkout.startErrorTitle'), getErrorMessage(err, t('common.tryAgain')));
       }
     },

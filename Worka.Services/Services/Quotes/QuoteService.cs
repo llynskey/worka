@@ -41,10 +41,19 @@ namespace Worka.Services.Quotes
                     return new WorkaResponse<QuoteResponseDTO>("Professional profile not found.");
                 }
 
-                var jobExists = await _dbContext.Jobs.AnyAsync(job => job.JobId == jobGuid);
-                if (!jobExists)
+                var job = await _dbContext.Jobs.FirstOrDefaultAsync(j => j.JobId == jobGuid);
+                if (job == null)
                 {
                     return new WorkaResponse<QuoteResponseDTO>("Job not found.");
+                }
+
+                // With mode switching, one account can hold both profiles —
+                // but it must never quote on (and later book) its own job.
+                var jobOwner = await _dbContext.Customers
+                    .FirstOrDefaultAsync(c => c.CustomerId == job.CustomerId);
+                if (jobOwner != null && jobOwner.UserId == userGuid)
+                {
+                    return new WorkaResponse<QuoteResponseDTO>("You cannot quote on your own job.");
                 }
 
                 var quote = new Quote

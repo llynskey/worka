@@ -11,6 +11,20 @@ import {
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { registerNotifyHost } from '../Utils/notify';
 
+// On web, react-native-web portals <Modal> to the end of <body>, which
+// stacks it above anything inside the app root. Toasts must win that
+// battle or payment errors fired from inside a modal are invisible —
+// so the toast layer gets its own portal with a higher z-index.
+let createPortal = null;
+if (Platform.OS === 'web') {
+  try {
+    // eslint-disable-next-line global-require
+    createPortal = require('react-dom').createPortal;
+  } catch {
+    createPortal = null;
+  }
+}
+
 const TOAST_DURATION = 4200;
 
 const Toast = ({ toast, onDismiss }) => {
@@ -93,15 +107,20 @@ const NotifyHost = () => {
     [confirm]
   );
 
+  const toastLayer =
+    toasts.length > 0 ? (
+      <View pointerEvents="box-none" style={styles.toastLayer}>
+        {toasts.map((toast) => (
+          <Toast key={toast.id} toast={toast} onDismiss={dismissToast} />
+        ))}
+      </View>
+    ) : null;
+
   return (
     <>
-      {toasts.length > 0 ? (
-        <View pointerEvents="box-none" style={styles.toastLayer}>
-          {toasts.map((toast) => (
-            <Toast key={toast.id} toast={toast} onDismiss={dismissToast} />
-          ))}
-        </View>
-      ) : null}
+      {Platform.OS === 'web' && createPortal && typeof document !== 'undefined' && toastLayer
+        ? createPortal(toastLayer, document.body)
+        : toastLayer}
 
       <Modal visible={!!confirm} transparent animationType="fade" onRequestClose={() => closeConfirm(false)}>
         <View style={styles.confirmBackdrop}>
@@ -125,13 +144,14 @@ const NotifyHost = () => {
 
 const styles = StyleSheet.create({
   toastLayer: {
-    position: 'absolute',
+    position: Platform.OS === 'web' ? 'fixed' : 'absolute',
     top: Platform.OS === 'web' ? 16 : 54,
     left: 16,
     right: 16,
     alignItems: 'center',
     gap: 8,
-    zIndex: 9999,
+    // Above react-native-web's Modal portals (z-index 9999).
+    zIndex: 100000,
     ...(Platform.OS === 'web' ? { pointerEvents: 'none' } : null),
   },
   toast: {

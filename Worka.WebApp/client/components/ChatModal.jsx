@@ -208,11 +208,17 @@ const styles = StyleSheet.create({
   card: {
     height: '85%',
     maxHeight: 680,
+    // Bottom sheet on phones, centred column on wide screens.
+    width: '100%',
+    maxWidth: 560,
+    alignSelf: 'center',
     backgroundColor: '#fff',
     borderTopLeftRadius: 8,
     borderTopRightRadius: 8,
     overflow: 'hidden',
     padding: 16,
+    // Clear the iPhone home indicator — Modals ignore SafeAreaView.
+    paddingBottom: Platform.OS === 'ios' ? 30 : 16,
   },
   header: {
     flexDirection: 'row',

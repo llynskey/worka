@@ -319,6 +319,15 @@ namespace Worka.Services.Jobs
                             .Select(quote => quote.QuoteId)
                             .ToListAsync()).ToHashSet();
                     }
+
+                    // Mode switching means the caller may also be a customer:
+                    // never surface their own postings in the marketplace.
+                    var ownCustomer = await _dbContext.Customers
+                        .FirstOrDefaultAsync(c => c.UserId == userGuid);
+                    if (ownCustomer != null)
+                    {
+                        jobs = jobs.Where(job => job.CustomerId != ownCustomer.CustomerId).ToList();
+                    }
                 }
 
                 return new WorkaResponse<List<JobResponseDTO>>(

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Image, Platform, SafeAreaView, Text, View } from 'react-native';
+import { Image, Platform, SafeAreaView, Text, View, useWindowDimensions } from 'react-native';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createDrawerNavigator, DrawerContentComponentProps } from '@react-navigation/drawer';
@@ -165,6 +165,7 @@ const WorkerDrawer: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
 
 const AppInner: React.FC = () => {
   const { user, role, loading, signOut } = React.useContext(AuthContext);
+  const { height: windowHeight } = useWindowDimensions();
 
   React.useEffect(() => {
     if (Platform.OS !== 'web' || typeof document === 'undefined') {
@@ -202,9 +203,13 @@ const AppInner: React.FC = () => {
 
   if (loading) return <LoadingScreen />;
 
+  // Use the measured window height rather than 100vh: on iPhone Safari,
+  // 100vh includes the zone behind the floating address bar, which used to
+  // hide the footer. useWindowDimensions tracks the *visible* viewport and
+  // updates when the toolbar collapses/expands.
   const webViewportStyle =
     Platform.OS === 'web'
-      ? ({ height: '100vh', maxHeight: '100vh', overflow: 'hidden' } as any)
+      ? ({ height: windowHeight, maxHeight: windowHeight, overflow: 'hidden' } as any)
       : null;
 
   return (

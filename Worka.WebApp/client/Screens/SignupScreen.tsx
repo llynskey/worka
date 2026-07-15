@@ -9,6 +9,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  useWindowDimensions,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
@@ -41,6 +42,7 @@ const accountTypes = [
 const SignupScreen: React.FC<Props> = ({ navigation }) => {
   const { signInWithToken } = useContext(AuthContext);
   const { t } = useI18n();
+  const { height: viewportHeight } = useWindowDimensions();
   const [hidePassword, setHidePassword] = useState(true);
   const [loading, setLoading] = useState(false);
   const [accountType, setAccountType] = useState<0 | 1>(0);
@@ -108,7 +110,13 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
         behavior={Platform.select({ ios: 'padding', android: undefined })}
       >
         <ScrollView
-          style={Platform.OS === 'web' ? ({ height: '100vh', maxHeight: '100vh' } as any) : undefined}
+          style={
+            // Measured height, not 100vh — keeps the bottom of the form
+            // clear of iPhone Safari's floating toolbar.
+            Platform.OS === 'web'
+              ? ({ height: viewportHeight, maxHeight: viewportHeight } as any)
+              : undefined
+          }
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={styles.screenScroll}
         >

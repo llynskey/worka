@@ -21,7 +21,6 @@ import { useI18n } from "../i18n/I18nContext";
 import { translations } from "../i18n/translations";
 import LanguageCycler from "../components/LanguageCycler";
 import Reveal from "../components/Reveal";
-import SelectField from "../components/SelectField";
 
 // Stable English `value` strings are sent to the API; the labels shown to
 // the user resolve through t(option.key) at render time.
@@ -90,7 +89,7 @@ const webPressTransition =
 const AuthScreen: React.FC = () => {
   const { signInWithToken } = useContext(AuthContext);
   const { t, language, languages, setLanguage } = useI18n();
-  const { width } = useWindowDimensions();
+  const { width, height: viewportHeight } = useWindowDimensions();
 
   // Hero headline cycles through every supported language, starting with the
   // visitor's own — a quiet demo of what Worka does.
@@ -339,21 +338,32 @@ const AuthScreen: React.FC = () => {
     }
   };
 
-  const renderLanguageSelect = () => (
-    <SelectField
-      compact
-      icon="chevron-down"
-      options={languages.map((lang) => ({
-        value: lang.code,
-        label: lang.label,
-        description: lang.code.toUpperCase(),
-      }))}
-      value={language}
-      onChange={(code) => setLanguage(code as string)}
-      placeholder={t("settings.language")}
-      searchPlaceholder={t("common.search")}
-    />
-  );
+  const renderLanguageChips = () =>
+    languages.map((lang) => {
+      const active = lang.code === language;
+      return (
+        <Pressable
+          key={lang.code}
+          accessibilityRole="button"
+          accessibilityLabel={`Switch language to ${lang.label}`}
+          onPress={() => setLanguage(lang.code)}
+          style={({ pressed }) => [
+            styles.languageChip,
+            active && styles.languageChipActive,
+            pressed && styles.pressed,
+          ]}
+        >
+          <Text
+            style={[
+              styles.languageChipText,
+              active && styles.languageChipTextActive,
+            ]}
+          >
+            {lang.code.toUpperCase()}
+          </Text>
+        </Pressable>
+      );
+    });
 
   const renderBenefits = (stacked = false) => (
     <View style={[styles.benefitList, stacked && styles.benefitListStacked]}>
@@ -400,10 +410,11 @@ const AuthScreen: React.FC = () => {
 
   // The app root is pinned to the viewport with overflow hidden, so on web the
   // ScrollView must own an explicit viewport-bounded height or it silently
-  // clips instead of scrolling.
+  // clips instead of scrolling. Measured height (not 100vh) so iPhone
+  // Safari's floating toolbar never covers the bottom of the page.
   const webScrollStyle =
     Platform.OS === "web"
-      ? ({ height: "100vh", maxHeight: "100vh" } as any)
+      ? ({ height: viewportHeight, maxHeight: viewportHeight } as any)
       : null;
 
   return (
@@ -447,7 +458,7 @@ const AuthScreen: React.FC = () => {
 
               <View style={styles.navRight}>
                 {!isPhone && (
-                  <View style={styles.navLangs}>{renderLanguageSelect()}</View>
+                  <View style={styles.navLangs}>{renderLanguageChips()}</View>
                 )}
 
                 <Pressable
@@ -476,7 +487,7 @@ const AuthScreen: React.FC = () => {
             {isPhone && (
               <View style={styles.languageRow}>
                 <MaterialCommunityIcons name="web" size={16} color="#555" />
-                {renderLanguageSelect()}
+                {renderLanguageChips()}
               </View>
             )}
           </View>
@@ -1331,6 +1342,29 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flexWrap: "wrap",
     gap: 8,
+  },
+  languageChip: {
+    ...webPressTransition,
+    minHeight: 34,
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    backgroundColor: "#fff",
+  },
+  languageChipActive: {
+    backgroundColor: "#111",
+    borderColor: "#111",
+  },
+  languageChipText: {
+    color: "#111",
+    fontSize: 12,
+    fontWeight: "900",
+    letterSpacing: 0.4,
+  },
+  languageChipTextActive: {
+    color: "#fff",
   },
   main: {
     width: "100%",
