@@ -1239,8 +1239,31 @@ const AuthScreen: React.FC = () => {
               <Text style={styles.footerLegalText}>
                 © {new Date().getFullYear()} Worka
               </Text>
+              <View style={styles.footerLegalLinks}>
+                <Pressable
+                  accessibilityRole="link"
+                  onPress={() => Linking.openURL("https://worka.site/privacy.html")}
+                  style={({ pressed }) => [pressed && styles.pressed]}
+                >
+                  <Text style={styles.footerLegalLink}>Privacy</Text>
+                </Pressable>
+                <Text style={styles.footerLegalText}>·</Text>
+                <Pressable
+                  accessibilityRole="link"
+                  onPress={() => Linking.openURL("https://worka.site/terms.html")}
+                  style={({ pressed }) => [pressed && styles.pressed]}
+                >
+                  <Text style={styles.footerLegalLink}>Terms</Text>
+                </Pressable>
+              </View>
               <Text style={styles.footerMark}>LSL</Text>
             </View>
+
+            <Text style={styles.footerStatutory}>
+              Worka is operated by Lynskey Software Limited, registered in
+              England &amp; Wales (Company No. 17337667). Registered office: 4–6
+              Greatorex Street, London, E1 5NF.
+            </Text>
           </View>
         </View>
       </ScrollView>
@@ -1898,6 +1921,24 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "900",
     letterSpacing: 4,
+  },
+  footerLegalLinks: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  footerLegalLink: {
+    color: "#62645c",
+    fontSize: 12,
+    fontWeight: "800",
+    textDecorationLine: "underline",
+  },
+  footerStatutory: {
+    marginTop: 12,
+    color: "#a9aba2",
+    fontSize: 11,
+    lineHeight: 17,
+    fontWeight: "600",
   },
 });
 

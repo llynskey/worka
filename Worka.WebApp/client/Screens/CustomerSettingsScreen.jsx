@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Linking, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AuthContext } from '../auth/AuthContext';
@@ -194,6 +194,18 @@ const CustomerSettingsScreen = ({ navigation }) => {
         <Text style={styles.settingTitle}>Support</Text>
         <Text style={styles.settingText}>support@worka.site</Text>
         <Text style={styles.settingText}>Typical response time: one business day.</Text>
+        <View style={styles.legalLinksRow}>
+          <TouchableOpacity onPress={() => Linking.openURL('https://worka.site/privacy.html')}>
+            <Text style={styles.legalLink}>Privacy Policy</Text>
+          </TouchableOpacity>
+          <Text style={styles.settingText}>·</Text>
+          <TouchableOpacity onPress={() => Linking.openURL('https://worka.site/terms.html')}>
+            <Text style={styles.legalLink}>Terms of Service</Text>
+          </TouchableOpacity>
+        </View>
+        <Text style={styles.operatedByText}>
+          Worka is operated by Lynskey Software Limited (Company No. 17337667).
+        </Text>
       </View>
 
       <TouchableOpacity style={styles.signOutButton} onPress={signOut}>
@@ -207,6 +219,25 @@ const CustomerSettingsScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
+  legalLinksRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 12,
+  },
+  legalLink: {
+    color: '#111',
+    fontSize: 13,
+    fontWeight: '800',
+    textDecorationLine: 'underline',
+  },
+  operatedByText: {
+    marginTop: 10,
+    color: '#a9aba2',
+    fontSize: 11,
+    lineHeight: 16,
+    fontWeight: '600',
+  },
   signOutButton: {
     minHeight: 48,
     flexDirection: 'row',
