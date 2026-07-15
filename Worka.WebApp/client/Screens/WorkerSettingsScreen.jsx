@@ -232,10 +232,9 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   legalLink: {
-    color: '#111',
-    fontSize: 13,
-    fontWeight: '800',
-    textDecorationLine: 'underline',
+    color: '#8a8d84',
+    fontSize: 12,
+    fontWeight: '600',
   },
   signOutButton: {
     minHeight: 48,

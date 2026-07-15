@@ -442,7 +442,7 @@ const AuthScreen: React.FC = () => {
             paddingTop: isPhone ? 18 : 24,
             // Phones get extra clearance so the footer never hides behind
             // Safari's floating bottom toolbar (100vh includes that zone).
-            paddingBottom: isPhone ? 96 : 32,
+            paddingBottom: isPhone ? 60 : 32,
           },
         ]}
         keyboardShouldPersistTaps="handled"
@@ -1922,10 +1922,10 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   footerLegalLink: {
-    color: "#62645c",
+    color: "#8a8d84",
     fontSize: 12,
-    fontWeight: "800",
-    textDecorationLine: "underline",
+    fontWeight: "600",
+    letterSpacing: 0.2,
   },
 });
 
