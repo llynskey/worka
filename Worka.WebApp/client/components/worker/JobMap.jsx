@@ -105,6 +105,9 @@ const JobMap = () => {
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const isNarrow = windowWidth < 700;
   const mapHeight = Math.min(300, Math.round(windowHeight * 0.45));
+  // Desktop: give the map/list row a definite height the map fills exactly, so
+  // it isn't a giant empty box. Bounded so header + bars + map fit the viewport.
+  const desktopMapHeight = Math.max(320, Math.min(560, windowHeight - 300));
 
   const unit = useDistanceUnit();
   const [radius, setRadius] = useState(unit === 'mi' ? 15 : 25);
@@ -384,9 +387,9 @@ const JobMap = () => {
       {locationBarBlock}
       {radiusBlock}
 
-      <View style={styles.mapLayout}>
+      <View style={[styles.mapLayout, { height: desktopMapHeight }]}>
         <View style={styles.mapPane}>
-          <WebMapFrame job={selectedJob} userLocation={currentLocation} />
+          <WebMapFrame job={selectedJob} minHeight={desktopMapHeight} userLocation={currentLocation} />
         </View>
 
         <ScrollView style={styles.listPane} contentContainerStyle={styles.listContent}>
@@ -563,7 +566,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   mapLayout: {
-    flex: 1,
     minHeight: 0,
     flexDirection: Platform.OS === 'web' ? 'row' : 'column',
     gap: 14,
