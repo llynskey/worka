@@ -14,6 +14,11 @@ ENV CI=1
 
 RUN npx expo export --platform web
 
+# Inject static SEO / crawlability metadata into the exported shell so
+# non-JS crawlers (search, safe-browsing, web-filter categorisation) see real
+# content instead of an empty SPA body.
+RUN node scripts/inject-meta.mjs
+
 FROM caddy:2-alpine AS final
 COPY deploy/Caddyfile /etc/caddy/Caddyfile
 COPY --from=build /app/dist /srv
