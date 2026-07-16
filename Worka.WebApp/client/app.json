@@ -31,6 +31,7 @@
       "versionCode": 1
     },
     "web": {
+      "favicon": "./assets/favicon.png",
       "bundler": "metro",
       "name": "Fixa — get things done in your language",
       "shortName": "Fixa",

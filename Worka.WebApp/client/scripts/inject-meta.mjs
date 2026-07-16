@@ -64,7 +64,6 @@ const jsonLd = [
 const HEAD_EXTRA = `
     <meta name="description" content="${DESCRIPTION}" />
     <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="canonical" href="${URL_BASE}" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Fixa" />
