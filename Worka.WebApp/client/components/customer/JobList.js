@@ -10,6 +10,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import notify, { confirmAction } from '../../Utils/notify';
@@ -42,6 +43,11 @@ const statusLabel = (status) => {
 
 const CustomerJobList = ({ navigation }) => {
   const { t } = useI18n();
+  const { width } = useWindowDimensions();
+  // On wide desktop viewports use more of the width: a roomier container, a
+  // four-across stat row and a two-column job grid instead of one long column.
+  const wide = width >= 1000;
+  const cols = wide ? 2 : 1;
   const [account, setAccount] = useState(null);
   const [jobs, setJobs] = useState([]);
   const [quotes, setQuotes] = useState([]);
@@ -325,8 +331,11 @@ const CustomerJobList = ({ navigation }) => {
     <FlatList
       data={visibleJobs}
       keyExtractor={(item) => String(item.jobId)}
+      key={`cols-${cols}`}
+      numColumns={cols}
+      columnWrapperStyle={cols > 1 ? styles.columnWrap : undefined}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} />}
-      contentContainerStyle={styles.listContent}
+      contentContainerStyle={[styles.listContent, wide && styles.listContentWide]}
       ListFooterComponent={<AppFooter />}
       ListHeaderComponent={
         <View>
@@ -369,7 +378,7 @@ const CustomerJobList = ({ navigation }) => {
 
           <View style={styles.statsGrid}>
             {stats.map((stat) => (
-              <View key={stat.label} style={styles.statCard}>
+              <View key={stat.label} style={[styles.statCard, wide && styles.statCardWide]}>
                 <Text style={styles.statValue}>{stat.value}</Text>
                 <Text style={styles.statLabel}>{stat.label}</Text>
               </View>
@@ -444,15 +453,17 @@ const CustomerJobList = ({ navigation }) => {
         )
       }
       renderItem={({ item }) => (
-        <JobCard
-          job={item}
-          quotes={quotesByJob[item.jobId] ?? []}
-          onAcceptQuote={(quote) => setCheckoutPreview({ job: item, quote })}
-          onEditJob={openEditJob}
-          onDeleteJob={deleteJob}
-          onCompleteJob={completeJob}
-          onReviewJob={openReview}
-        />
+        <View style={cols > 1 ? styles.gridCell : undefined}>
+          <JobCard
+            job={item}
+            quotes={quotesByJob[item.jobId] ?? []}
+            onAcceptQuote={(quote) => setCheckoutPreview({ job: item, quote })}
+            onEditJob={openEditJob}
+            onDeleteJob={deleteJob}
+            onCompleteJob={completeJob}
+            onReviewJob={openReview}
+          />
+        </View>
       )}
     />
 
@@ -660,6 +671,17 @@ const styles = StyleSheet.create({
     maxWidth: 880,
     alignSelf: 'center',
   },
+  listContentWide: {
+    maxWidth: 1180,
+  },
+  columnWrap: {
+    gap: 14,
+    alignItems: 'stretch',
+  },
+  gridCell: {
+    flex: 1,
+    minWidth: 0,
+  },
   hero: {
     backgroundColor: '#18201d',
     borderRadius: 8,
@@ -721,6 +743,10 @@ const styles = StyleSheet.create({
     padding: 14,
     borderWidth: 1,
     borderColor: '#e3dfd2',
+  },
+  statCardWide: {
+    flexBasis: '22%',
+    minWidth: 160,
   },
   statValue: {
     fontSize: 24,
