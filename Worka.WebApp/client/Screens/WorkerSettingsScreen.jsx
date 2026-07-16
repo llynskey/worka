@@ -236,7 +236,7 @@ const WorkerSettingsScreen = ({ navigation }) => {
         <Text style={styles.signOutText}>{t('common.signOut')}</Text>
       </TouchableOpacity>
 
-      <Text style={styles.versionText}>Worka v1.0.0</Text>
+      <Text style={styles.versionText}>Fixa v1.0.0</Text>
 
       <AppFooter />
     </ScrollView>

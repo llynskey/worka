@@ -155,7 +155,7 @@ namespace Worka.Tests
             });
             Assert.True(de.Success);
             var german = Assert.Single(email.Sent);
-            Assert.Equal("Setze dein Worka-Passwort zurück", german.Subject);
+            Assert.Equal("Setze dein Fixa-Passwort zurück", german.Subject);
             Assert.Contains("innerhalb einer Stunde", german.Body);
             Assert.Contains("?reset=", german.Body);
 
@@ -169,7 +169,7 @@ namespace Worka.Tests
             });
             Assert.True(en.Success);
             var english = Assert.Single(email.Sent);
-            Assert.Equal("Reset your Worka password", english.Subject);
+            Assert.Equal("Reset your Fixa password", english.Subject);
         }
 
         [Fact]

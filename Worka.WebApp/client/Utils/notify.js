@@ -2,7 +2,7 @@ import { Alert, Platform } from 'react-native';
 
 /**
  * Brand-themed notifications. When NotifyHost is mounted (app root) all
- * notify()/confirmAction() calls render Worka-styled toasts and dialogs.
+ * notify()/confirmAction() calls render Fixa-styled toasts and dialogs.
  * If the host is not mounted yet we fall back to the platform primitives
  * so nothing is silently lost.
  */

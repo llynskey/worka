@@ -1,6 +1,6 @@
 export default {
   // Landing
-  'landing.eyebrow': 'Worka für Expats',
+  'landing.eyebrow': 'Fixa für Expats',
   'landing.heroTitle': 'Erledige Dinge mit jemandem, der deine Sprache spricht.',
   'landing.heroText':
     'Finde vertrauenswürdige Menschen vor Ort für Reparaturen, Umzüge, Reinigung, Behördenkram, Installationen und alltägliche Aufgaben – mit passender Sprache von Anfang an.',
@@ -33,25 +33,25 @@ export default {
   'waitlist.optCanWork': 'Ich kann für Expats arbeiten',
   'waitlist.optUpdates': 'Ich möchte Neuigkeiten',
   'waitlist.anythingElse': 'Noch etwas? (optional)',
-  'waitlist.messagePlaceholder': 'Welche Arbeit oder Sprachbarriere soll Worka zuerst lösen?',
+  'waitlist.messagePlaceholder': 'Welche Arbeit oder Sprachbarriere soll Fixa zuerst lösen?',
   'waitlist.errName': 'Gib deinen Namen an, damit wir wissen, wen wir kontaktieren.',
   'waitlist.errEmail': 'Gib eine gültige E-Mail-Adresse ein.',
   'waitlist.errLanguage': 'Sag uns, welche Sprache du brauchst oder anbieten kannst.',
   'waitlist.errSubmit': 'Dein Interesse konnte nicht registriert werden. Bitte versuche es erneut.',
   'waitlist.doneKicker': 'Registrierung abgeschlossen',
   'waitlist.doneTitle': 'Du stehst auf der Liste.',
-  'waitlist.doneText': 'Danke. Wir nutzen deine Sprache und deinen Standort, um die ersten Worka-Startgebiete festzulegen.',
+  'waitlist.doneText': 'Danke. Wir nutzen deine Sprache und deinen Standort, um die ersten Fixa-Startgebiete festzulegen.',
   'waitlist.addAnother': 'Weitere Person hinzufügen',
-  'waitlist.createAccount': 'Ein Worka-Konto erstellen',
+  'waitlist.createAccount': 'Ein Fixa-Konto erstellen',
   'waitlist.createAccountNow': 'Jetzt Konto erstellen',
 
   // Settings (shared language card)
   'settings.language': 'Sprache',
-  'settings.languageHint': 'Wähle die Sprache, die Worka für dich verwendet.',
+  'settings.languageHint': 'Wähle die Sprache, die Fixa für dich verwendet.',
 
   // Quotes / fees (existing)
-  'quote.feeLine': 'Worka-Gebühr {fee}. Du zahlst {total}. Die Fachkraft erhält {price}.',
-  'quote.detailFeeLine': 'Du zahlst {total}. Die Fachkraft erhält {price}. Worka verdient {fee}.',
+  'quote.feeLine': 'Fixa-Gebühr {fee}. Du zahlst {total}. Die Fachkraft erhält {price}.',
+  'quote.detailFeeLine': 'Du zahlst {total}. Die Fachkraft erhält {price}. Fixa verdient {fee}.',
   'quote.securePayment': 'Der sichere Checkout unterstützt Wallets und Karten, sofern in Stripe aktiviert. Auszahlungen an Fachkräfte laufen über Stripe Connect.',
   'quote.by': 'Angebot von {name}',
 
@@ -69,7 +69,7 @@ export default {
   'common.viewDetails': 'Details ansehen',
 
   // App chrome
-  'app.opening': 'Worka wird geöffnet...',
+  'app.opening': 'Fixa wird geöffnet...',
   'app.accountTypeNotSet': 'Kontotyp nicht festgelegt. Melde dich ab und wieder an oder schreibe an support@worka.site.',
 
   // Statuses (display only — logic uses English tokens)
@@ -126,11 +126,11 @@ export default {
 
   // Customer jobs dashboard
   'jobs.loadError': 'Deine Aufträge konnten nicht geladen werden.',
-  'jobs.loadingWorkspace': 'Dein Worka-Arbeitsbereich wird geladen...',
+  'jobs.loadingWorkspace': 'Dein Fixa-Arbeitsbereich wird geladen...',
   'jobs.couldNotLoad': 'Aufträge konnten nicht geladen werden',
   'jobs.customerEyebrow': 'Kundenmarktplatz',
   'jobs.greeting': 'Schön, dich zu sehen, {name}.',
-  'jobs.pipeline': 'Deine Worka-Pipeline',
+  'jobs.pipeline': 'Deine Fixa-Pipeline',
   'jobs.heroText': 'Stelle Aufträge ein, vergleiche Angebote und buche die passende Fachkraft.',
   'jobs.postJob': 'Auftrag einstellen',
   'jobs.statOpen': 'Offene Aufträge',
@@ -188,9 +188,9 @@ export default {
 
   // Checkout
   'checkout.reviewPay': 'Prüfen & bezahlen',
-  'checkout.proFallback': 'Worka-Fachkraft',
+  'checkout.proFallback': 'Fixa-Fachkraft',
   'checkout.quote': 'Angebot',
-  'checkout.serviceFee': 'Worka-Servicegebühr',
+  'checkout.serviceFee': 'Fixa-Servicegebühr',
   'checkout.total': 'Gesamt',
   'checkout.secureLine': 'Sichere Zahlung durch Stripe. Apple Pay, Google Pay und Karten werden unterstützt.',
   'checkout.paySecurely': 'Sicher {amount} bezahlen',
@@ -242,7 +242,7 @@ export default {
   'post.postedText': 'Fachkräfte können jetzt Angebote senden.',
   'post.postErrorTitle': 'Auftrag konnte nicht eingestellt werden',
   'post.newJob': 'Neuer Auftrag',
-  'post.heroTitle': 'Sag Worka, was zu tun ist.',
+  'post.heroTitle': 'Sag Fixa, was zu tun ist.',
   'post.heroSubtitle': 'Klare Angaben helfen Fachkräften, schneller zu kalkulieren.',
   'post.currencyLabel': 'Währung für Angebote',
   'post.photoTitle': 'Referenzfoto',
@@ -282,10 +282,10 @@ export default {
   'directory.anyLanguage': 'Beliebige Sprache',
   'directory.applyFilters': 'Filter anwenden',
   'directory.emptyTitle': 'Keine Fachkräfte gefunden',
-  'directory.emptyText': 'Versuche, das Gebiet zu erweitern oder den Preisfilter zu entfernen. Jede Woche kommen neue Fachkräfte zu Worka.',
+  'directory.emptyText': 'Versuche, das Gebiet zu erweitern oder den Preisfilter zu entfernen. Jede Woche kommen neue Fachkräfte zu Fixa.',
   'directory.generalServices': 'Allgemeine Dienstleistungen für zu Hause',
   'directory.payoutReady': 'Auszahlung bereit',
-  'directory.payoutReadyBookable': 'Auszahlung bereit – über Worka buchbar',
+  'directory.payoutReadyBookable': 'Auszahlung bereit – über Fixa buchbar',
   'directory.areaNotListed': 'Gebiet noch nicht angegeben',
   'directory.quotesSent': 'Gesendete Angebote',
   'directory.avgPrice': 'Durchschnittspreis',
@@ -335,7 +335,7 @@ export default {
   'bids.emptyText': 'Sende ein Angebot aus „Verfügbare Aufträge", um deine Angebotspipeline aufzubauen.',
   'bids.jobUnavailable': 'Auftrag nicht verfügbar',
   'bids.payoutText': 'Der Kunde hat dieses Angebot gebucht. Dein Anteil beträgt {amount} und wird über Stripe Connect ausgezahlt, sobald dein Auszahlungskonto bereit ist.',
-  'bids.pendingText': 'Der Kunde kann dieses Angebot prüfen und sicher über Worka bezahlen.',
+  'bids.pendingText': 'Der Kunde kann dieses Angebot prüfen und sicher über Fixa bezahlen.',
   'bids.editQuote': 'Angebot bearbeiten',
   'bids.withdraw': 'Zurückziehen',
   'bids.withdrawConfirmTitle': 'Dieses Angebot zurückziehen?',
@@ -438,7 +438,7 @@ export default {
   'settings.customerTitle': 'Kundeneinstellungen',
   'settings.customerSubtitle': 'Marktplatz-Benachrichtigungen und Kontozugang anpassen.',
   'settings.proTitle': 'Fachkraft-Einstellungen',
-  'settings.proSubtitle': 'Steuere, wie Worka Aufträge und Angebots-Updates anzeigt.',
+  'settings.proSubtitle': 'Steuere, wie Fixa Aufträge und Angebots-Updates anzeigt.',
   'settings.quoteAlerts': 'Angebots-Benachrichtigungen',
   'settings.quoteAlertsText': 'Benachrichtige mich, wenn eine Fachkraft ein Angebot sendet.',
   'settings.bookingUpdates': 'Buchungs-Updates',
@@ -479,13 +479,13 @@ export default {
   'settings.terms': 'Nutzungsbedingungen',
 
   // Auth
-  'auth.accountKicker': 'Worka-Konto',
+  'auth.accountKicker': 'Fixa-Konto',
   'auth.welcomeBack': 'Willkommen zurück.',
   'auth.createTitle': 'Erstelle dein Konto.',
   'auth.forgotTitle': 'Setze dein Passwort zurück.',
   'auth.newPasswordTitle': 'Wähle ein neues Passwort.',
-  'auth.loginText': 'Melde dich an, um zu Worka zu gelangen.',
-  'auth.signupText': 'Wähle, wie du Worka nutzen möchtest, und füge dann deine Daten hinzu.',
+  'auth.loginText': 'Melde dich an, um zu Fixa zu gelangen.',
+  'auth.signupText': 'Wähle, wie du Fixa nutzen möchtest, und füge dann deine Daten hinzu.',
   'auth.forgotText': 'Gib deine E-Mail ein und wir senden dir einen Link zum Zurücksetzen.',
   'auth.resetText': 'Gib das neue Passwort für dein Konto ein.',
   'auth.login': 'Anmelden',
@@ -533,7 +533,7 @@ export default {
 
   // Entfernung / Arbeitsort
   'settings.distanceUnit': 'Entfernungseinheit',
-  'settings.distanceUnitHint': 'Lege fest, wie Entfernungen in Worka angezeigt werden.',
+  'settings.distanceUnitHint': 'Lege fest, wie Entfernungen in Fixa angezeigt werden.',
   'settings.miles': 'Meilen',
   'settings.kilometres': 'Kilometer',
   'account.workLocation': 'Arbeitsort',

@@ -27,7 +27,7 @@ const HeaderLogo: React.FC<{ badge?: string }> = ({ badge }) => (
       source={require('./assets/logo.png')}
       style={{ width: 96, height: 26 }}
       resizeMode="contain"
-      accessibilityLabel="Worka"
+      accessibilityLabel="Fixa"
     />
     {badge ? (
       <Text

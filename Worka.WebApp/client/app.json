@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Worka",
+    "name": "Fixa",
     "slug": "worka",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -33,8 +33,8 @@
     "web": {
       "favicon": "./assets/logo.png",
       "bundler": "metro",
-      "name": "Worka — get things done in your language",
-      "shortName": "Worka",
+      "name": "Fixa — get things done in your language",
+      "shortName": "Fixa",
       "description": "Find trusted local professionals who speak your language for repairs, moving, cleaning, paperwork, and everyday jobs.",
       "themeColor": "#ffffff",
       "backgroundColor": "#ffffff"
@@ -43,7 +43,7 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Worka needs photo access so you can attach reference images to your jobs."
+          "photosPermission": "Fixa needs photo access so you can attach reference images to your jobs."
         }
       ]
     ],

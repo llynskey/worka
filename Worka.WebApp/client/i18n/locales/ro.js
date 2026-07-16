@@ -1,6 +1,6 @@
 export default {
   // Landing
-  'landing.eyebrow': 'Worka pentru expați',
+  'landing.eyebrow': 'Fixa pentru expați',
   'landing.heroTitle': 'Rezolvă treburile cu cineva care vorbește limba ta.',
   'landing.heroText':
     'Găsește oameni locali de încredere pentru reparații, mutări, curățenie, acte, instalări și treburi de zi cu zi — cu potrivire lingvistică de la început.',
@@ -33,25 +33,25 @@ export default {
   'waitlist.optCanWork': 'Pot lucra pentru expați',
   'waitlist.optUpdates': 'Vreau noutăți',
   'waitlist.anythingElse': 'Altceva? (opțional)',
-  'waitlist.messagePlaceholder': 'Ce lucrare sau barieră de limbă ar trebui să rezolve Worka mai întâi?',
+  'waitlist.messagePlaceholder': 'Ce lucrare sau barieră de limbă ar trebui să rezolve Fixa mai întâi?',
   'waitlist.errName': 'Adaugă-ți numele ca să știm pe cine contactăm.',
   'waitlist.errEmail': 'Introdu o adresă de e-mail validă.',
   'waitlist.errLanguage': 'Spune-ne ce limbă ai nevoie sau poți oferi.',
   'waitlist.errSubmit': 'Nu am putut înregistra interesul tău. Încearcă din nou.',
   'waitlist.doneKicker': 'Înregistrare finalizată',
   'waitlist.doneTitle': 'Ești pe listă.',
-  'waitlist.doneText': 'Mulțumim. Vom folosi limba și locația ta pentru a alege primele zone de lansare Worka.',
+  'waitlist.doneText': 'Mulțumim. Vom folosi limba și locația ta pentru a alege primele zone de lansare Fixa.',
   'waitlist.addAnother': 'Adaugă altă persoană',
-  'waitlist.createAccount': 'Creează un cont Worka',
+  'waitlist.createAccount': 'Creează un cont Fixa',
   'waitlist.createAccountNow': 'Creează cont acum',
 
   // Settings (shared language card)
   'settings.language': 'Limbă',
-  'settings.languageHint': 'Alege limba în care Worka vorbește cu tine.',
+  'settings.languageHint': 'Alege limba în care Fixa vorbește cu tine.',
 
   // Quotes / fees (existing)
-  'quote.feeLine': 'Comision Worka {fee}. Plătești {total}. Profesionistul primește {price}.',
-  'quote.detailFeeLine': 'Plătești {total}. Profesionistul primește {price}. Worka câștigă {fee}.',
+  'quote.feeLine': 'Comision Fixa {fee}. Plătești {total}. Profesionistul primește {price}.',
+  'quote.detailFeeLine': 'Plătești {total}. Profesionistul primește {price}. Fixa câștigă {fee}.',
   'quote.securePayment': 'Plata securizată acceptă carduri și portofele conform Stripe. Plățile către profesionist trec prin Stripe Connect.',
   'quote.by': 'Ofertă de la {name}',
 
@@ -69,7 +69,7 @@ export default {
   'common.viewDetails': 'Vezi detalii',
 
   // App chrome
-  'app.opening': 'Se deschide Worka...',
+  'app.opening': 'Se deschide Fixa...',
   'app.accountTypeNotSet': 'Tipul contului nu este setat. Deconectează-te și intră din nou, sau scrie la support@worka.site.',
 
   // Statuses
@@ -126,11 +126,11 @@ export default {
 
   // Customer jobs dashboard
   'jobs.loadError': 'Nu am putut încărca lucrările tale.',
-  'jobs.loadingWorkspace': 'Se încarcă spațiul tău Worka...',
+  'jobs.loadingWorkspace': 'Se încarcă spațiul tău Fixa...',
   'jobs.couldNotLoad': 'Nu s-au putut încărca lucrările',
   'jobs.customerEyebrow': 'Piața pentru clienți',
   'jobs.greeting': 'Mă bucur să te văd, {name}.',
-  'jobs.pipeline': 'Activitatea ta pe Worka',
+  'jobs.pipeline': 'Activitatea ta pe Fixa',
   'jobs.heroText': 'Publică lucrări, compară oferte și rezervă profesionistul potrivit.',
   'jobs.postJob': 'Publică o lucrare',
   'jobs.statOpen': 'Lucrări deschise',
@@ -188,9 +188,9 @@ export default {
 
   // Checkout
   'checkout.reviewPay': 'Verifică și plătește',
-  'checkout.proFallback': 'Profesionist Worka',
+  'checkout.proFallback': 'Profesionist Fixa',
   'checkout.quote': 'Ofertă',
-  'checkout.serviceFee': 'Comision de serviciu Worka',
+  'checkout.serviceFee': 'Comision de serviciu Fixa',
   'checkout.total': 'Total',
   'checkout.secureLine': 'Plată securizată prin Stripe. Se acceptă Apple Pay, Google Pay și carduri.',
   'checkout.paySecurely': 'Plătește {amount} în siguranță',
@@ -242,7 +242,7 @@ export default {
   'post.postedText': 'Profesioniștii pot trimite acum oferte.',
   'post.postErrorTitle': 'Nu s-a putut publica lucrarea',
   'post.newJob': 'Lucrare nouă',
-  'post.heroTitle': 'Spune-i lui Worka ce trebuie făcut.',
+  'post.heroTitle': 'Spune-i lui Fixa ce trebuie făcut.',
   'post.heroSubtitle': 'Detaliile clare îi ajută pe profesioniști să oferteze mai repede.',
   'post.currencyLabel': 'Moneda ofertelor',
   'post.photoTitle': 'Foto de referință',
@@ -282,10 +282,10 @@ export default {
   'directory.anyLanguage': 'Orice limbă',
   'directory.applyFilters': 'Aplică filtrele',
   'directory.emptyTitle': 'Niciun profesionist găsit',
-  'directory.emptyText': 'Lărgește zona sau elimină filtrul de preț. În fiecare săptămână se alătură profesioniști noi pe Worka.',
+  'directory.emptyText': 'Lărgește zona sau elimină filtrul de preț. În fiecare săptămână se alătură profesioniști noi pe Fixa.',
   'directory.generalServices': 'Servicii generale pentru casă',
   'directory.payoutReady': 'Gata de plată',
-  'directory.payoutReadyBookable': 'Gata de plată — poate fi rezervat prin Worka',
+  'directory.payoutReadyBookable': 'Gata de plată — poate fi rezervat prin Fixa',
   'directory.areaNotListed': 'Zonă nespecificată',
   'directory.quotesSent': 'Oferte trimise',
   'directory.avgPrice': 'Preț mediu',
@@ -335,7 +335,7 @@ export default {
   'bids.emptyText': 'Trimite o ofertă din Lucrări disponibile ca să pornești.',
   'bids.jobUnavailable': 'Lucrare indisponibilă',
   'bids.payoutText': 'Clientul a rezervat această ofertă. Partea ta este {amount} și se plătește prin Stripe Connect după ce contul tău de plăți este gata.',
-  'bids.pendingText': 'Clientul poate vedea această ofertă și poate plăti în siguranță prin Worka.',
+  'bids.pendingText': 'Clientul poate vedea această ofertă și poate plăti în siguranță prin Fixa.',
   'bids.editQuote': 'Editează oferta',
   'bids.withdraw': 'Retrage',
   'bids.withdrawConfirmTitle': 'Retragi această ofertă?',
@@ -438,7 +438,7 @@ export default {
   'settings.customerTitle': 'Setări client',
   'settings.customerSubtitle': 'Reglează alertele pieței și accesul la cont.',
   'settings.proTitle': 'Setări profesionist',
-  'settings.proSubtitle': 'Controlează cum îți arată Worka lucrările și noutățile ofertelor.',
+  'settings.proSubtitle': 'Controlează cum îți arată Fixa lucrările și noutățile ofertelor.',
   'settings.quoteAlerts': 'Alerte de oferte',
   'settings.quoteAlertsText': 'Anunță-mă când un profesionist trimite o ofertă.',
   'settings.bookingUpdates': 'Noutăți despre rezervări',
@@ -479,13 +479,13 @@ export default {
   'settings.terms': 'Termenii serviciului',
 
   // Auth
-  'auth.accountKicker': 'Cont Worka',
+  'auth.accountKicker': 'Cont Fixa',
   'auth.welcomeBack': 'Bine ai revenit.',
   'auth.createTitle': 'Creează-ți contul.',
   'auth.forgotTitle': 'Resetează-ți parola.',
   'auth.newPasswordTitle': 'Alege o parolă nouă.',
-  'auth.loginText': 'Autentifică-te pentru a continua pe Worka.',
-  'auth.signupText': 'Alege cum vei folosi Worka, apoi adaugă-ți datele.',
+  'auth.loginText': 'Autentifică-te pentru a continua pe Fixa.',
+  'auth.signupText': 'Alege cum vei folosi Fixa, apoi adaugă-ți datele.',
   'auth.forgotText': 'Introdu e-mailul și îți trimitem un link de resetare.',
   'auth.resetText': 'Introdu noua parolă a contului tău.',
   'auth.login': 'Autentificare',
@@ -533,7 +533,7 @@ export default {
 
   // Distanță / locul de muncă
   'settings.distanceUnit': 'Unitate de distanță',
-  'settings.distanceUnitHint': 'Alege cum sunt afișate distanțele în Worka.',
+  'settings.distanceUnitHint': 'Alege cum sunt afișate distanțele în Fixa.',
   'settings.miles': 'Mile',
   'settings.kilometres': 'Kilometri',
   'account.workLocation': 'Locul de muncă',

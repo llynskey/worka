@@ -93,7 +93,7 @@ const AuthScreen: React.FC = () => {
   const { width, height: viewportHeight } = useWindowDimensions();
 
   // Hero headline cycles through every supported language, starting with the
-  // visitor's own — a quiet demo of what Worka does.
+  // visitor's own — a quiet demo of what Fixa does.
   const heroTitles = React.useMemo(() => {
     const codes = [language, ...languages.map((l) => l.code).filter((c) => c !== language)];
     return codes.map((code) => translations[code]?.["landing.heroTitle"]).filter(Boolean);
@@ -435,7 +435,7 @@ const AuthScreen: React.FC = () => {
                 source={require("../assets/logo.png")}
                 style={[styles.logo, isPhone && styles.logoPhone]}
                 resizeMode="contain"
-                accessibilityLabel="Worka"
+                accessibilityLabel="Fixa"
               />
 
               <View style={styles.navRight}>
@@ -1170,7 +1170,7 @@ const AuthScreen: React.FC = () => {
                   source={require("../assets/logo.png")}
                   style={styles.footerLogo}
                   resizeMode="contain"
-                  accessibilityLabel="Worka"
+                  accessibilityLabel="Fixa"
                 />
                 <Text style={styles.footerTagline}>{t("landing.footerTagline")}</Text>
               </View>
@@ -1206,7 +1206,7 @@ const AuthScreen: React.FC = () => {
 
             <View style={styles.footerLegal}>
               <Text style={styles.footerLegalText}>
-                © {new Date().getFullYear()} Worka
+                © {new Date().getFullYear()} Fixa
               </Text>
               <View style={styles.footerLegalLinks}>
                 <Pressable

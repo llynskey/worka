@@ -237,8 +237,8 @@ namespace Worka.Services.Payments
                             UnitAmount = ToMinorUnits(total),
                             ProductData = new SessionLineItemPriceDataProductDataOptions
                             {
-                                Name = $"Worka booking: {job.Name}",
-                                Description = $"Quote {FormatAmount(quoteAmount, currency)} + Worka service fee {FormatAmount(serviceFee, currency)}"
+                                Name = $"Fixa booking: {job.Name}",
+                                Description = $"Quote {FormatAmount(quoteAmount, currency)} + Fixa service fee {FormatAmount(serviceFee, currency)}"
                             }
                         }
                     }

@@ -1,6 +1,6 @@
 export default {
   // Landing
-  'landing.eyebrow': 'Worka voor expats',
+  'landing.eyebrow': 'Fixa voor expats',
   'landing.heroTitle': 'Laat klussen doen door iemand die jouw taal spreekt.',
   'landing.heroText':
     'Vind betrouwbare mensen in de buurt voor reparaties, verhuizingen, schoonmaak, papierwerk, installaties en dagelijkse klussen — met de juiste taal vanaf het begin.',
@@ -33,25 +33,25 @@ export default {
   'waitlist.optCanWork': 'Ik kan voor expats werken',
   'waitlist.optUpdates': 'Ik wil updates',
   'waitlist.anythingElse': 'Nog iets? (optioneel)',
-  'waitlist.messagePlaceholder': 'Welke klus of taalbarrière moet Worka als eerste oplossen?',
+  'waitlist.messagePlaceholder': 'Welke klus of taalbarrière moet Fixa als eerste oplossen?',
   'waitlist.errName': 'Voeg je naam toe zodat we weten wie we moeten benaderen.',
   'waitlist.errEmail': 'Voer een geldig e-mailadres in.',
   'waitlist.errLanguage': 'Vertel ons welke taal je nodig hebt of kunt bieden.',
   'waitlist.errSubmit': 'Je interesse kon niet worden aangemeld. Probeer het opnieuw.',
   'waitlist.doneKicker': 'Aanmelding voltooid',
   'waitlist.doneTitle': 'Je staat op de lijst.',
-  'waitlist.doneText': 'Bedankt. We gebruiken je taal en locatie om de eerste lanceergebieden van Worka te bepalen.',
+  'waitlist.doneText': 'Bedankt. We gebruiken je taal en locatie om de eerste lanceergebieden van Fixa te bepalen.',
   'waitlist.addAnother': 'Nog iemand toevoegen',
-  'waitlist.createAccount': 'Een Worka-account aanmaken',
+  'waitlist.createAccount': 'Een Fixa-account aanmaken',
   'waitlist.createAccountNow': 'Nu account aanmaken',
 
   // Settings (shared language card)
   'settings.language': 'Taal',
-  'settings.languageHint': 'Kies de taal die Worka voor jou gebruikt.',
+  'settings.languageHint': 'Kies de taal die Fixa voor jou gebruikt.',
 
   // Quotes / fees (existing)
-  'quote.feeLine': 'Worka-kosten {fee}. Jij betaalt {total}. De professional ontvangt {price}.',
-  'quote.detailFeeLine': 'Jij betaalt {total}. De professional ontvangt {price}. Worka verdient {fee}.',
+  'quote.feeLine': 'Fixa-kosten {fee}. Jij betaalt {total}. De professional ontvangt {price}.',
+  'quote.detailFeeLine': 'Jij betaalt {total}. De professional ontvangt {price}. Fixa verdient {fee}.',
   'quote.securePayment': 'Veilig afrekenen ondersteunt wallets en kaarten waar ingeschakeld in Stripe. Uitbetalingen aan professionals lopen via Stripe Connect.',
   'quote.by': 'Offerte van {name}',
 
@@ -69,7 +69,7 @@ export default {
   'common.viewDetails': 'Details bekijken',
 
   // App chrome
-  'app.opening': 'Worka wordt geopend...',
+  'app.opening': 'Fixa wordt geopend...',
   'app.accountTypeNotSet': 'Accounttype niet ingesteld. Log uit en weer in, of mail naar support@worka.site.',
 
   // Statuses (display only — logic uses English tokens)
@@ -126,11 +126,11 @@ export default {
 
   // Customer jobs dashboard
   'jobs.loadError': 'Je klussen konden niet worden geladen.',
-  'jobs.loadingWorkspace': 'Je Worka-werkruimte wordt geladen...',
+  'jobs.loadingWorkspace': 'Je Fixa-werkruimte wordt geladen...',
   'jobs.couldNotLoad': 'Klussen konden niet worden geladen',
   'jobs.customerEyebrow': 'Marktplaats voor klanten',
   'jobs.greeting': 'Fijn je te zien, {name}.',
-  'jobs.pipeline': 'Jouw Worka-pijplijn',
+  'jobs.pipeline': 'Jouw Fixa-pijplijn',
   'jobs.heroText': 'Plaats klussen, vergelijk offertes en boek de juiste professional.',
   'jobs.postJob': 'Klus plaatsen',
   'jobs.statOpen': 'Openstaande klussen',
@@ -188,9 +188,9 @@ export default {
 
   // Checkout
   'checkout.reviewPay': 'Controleren en betalen',
-  'checkout.proFallback': 'Worka-professional',
+  'checkout.proFallback': 'Fixa-professional',
   'checkout.quote': 'Offerte',
-  'checkout.serviceFee': 'Worka-servicekosten',
+  'checkout.serviceFee': 'Fixa-servicekosten',
   'checkout.total': 'Totaal',
   'checkout.secureLine': 'Veilig betalen via Stripe. Apple Pay, Google Pay en kaarten ondersteund.',
   'checkout.paySecurely': 'Betaal {amount} veilig',
@@ -242,7 +242,7 @@ export default {
   'post.postedText': 'Professionals kunnen nu offertes sturen.',
   'post.postErrorTitle': 'Klus kon niet worden geplaatst',
   'post.newJob': 'Nieuwe klus',
-  'post.heroTitle': 'Vertel Worka wat er moet gebeuren.',
+  'post.heroTitle': 'Vertel Fixa wat er moet gebeuren.',
   'post.heroSubtitle': 'Duidelijke details helpen professionals sneller te offreren.',
   'post.currencyLabel': 'Valuta voor offertes',
   'post.photoTitle': 'Referentiefoto',
@@ -282,10 +282,10 @@ export default {
   'directory.anyLanguage': 'Elke taal',
   'directory.applyFilters': 'Filters toepassen',
   'directory.emptyTitle': 'Geen professionals gevonden',
-  'directory.emptyText': 'Probeer het gebied te vergroten of de prijsfilter te wissen. Elke week sluiten nieuwe professionals zich aan bij Worka.',
+  'directory.emptyText': 'Probeer het gebied te vergroten of de prijsfilter te wissen. Elke week sluiten nieuwe professionals zich aan bij Fixa.',
   'directory.generalServices': 'Algemene diensten aan huis',
   'directory.payoutReady': 'Klaar voor uitbetaling',
-  'directory.payoutReadyBookable': 'Klaar voor uitbetaling — boekbaar via Worka',
+  'directory.payoutReadyBookable': 'Klaar voor uitbetaling — boekbaar via Fixa',
   'directory.areaNotListed': 'Gebied nog niet vermeld',
   'directory.quotesSent': 'Verzonden offertes',
   'directory.avgPrice': 'Gem. prijs',
@@ -335,7 +335,7 @@ export default {
   'bids.emptyText': 'Stuur een offerte vanuit Beschikbare klussen om je offertepijplijn op te bouwen.',
   'bids.jobUnavailable': 'Klus niet beschikbaar',
   'bids.payoutText': 'De klant heeft deze offerte geboekt. Jouw deel is {amount} en wordt uitbetaald via Stripe Connect zodra je uitbetaalaccount klaar is.',
-  'bids.pendingText': 'De klant kan deze offerte bekijken en veilig betalen via Worka.',
+  'bids.pendingText': 'De klant kan deze offerte bekijken en veilig betalen via Fixa.',
   'bids.editQuote': 'Offerte bewerken',
   'bids.withdraw': 'Intrekken',
   'bids.withdrawConfirmTitle': 'Deze offerte intrekken?',
@@ -438,7 +438,7 @@ export default {
   'settings.customerTitle': 'Klantinstellingen',
   'settings.customerSubtitle': 'Stel marktplaatsmeldingen en accounttoegang af.',
   'settings.proTitle': 'Professional-instellingen',
-  'settings.proSubtitle': 'Bepaal hoe Worka klussen en offerte-updates toont.',
+  'settings.proSubtitle': 'Bepaal hoe Fixa klussen en offerte-updates toont.',
   'settings.quoteAlerts': 'Offertemeldingen',
   'settings.quoteAlertsText': 'Waarschuw me wanneer een professional een offerte stuurt.',
   'settings.bookingUpdates': 'Boekingsupdates',
@@ -479,13 +479,13 @@ export default {
   'settings.terms': 'Servicevoorwaarden',
 
   // Auth
-  'auth.accountKicker': 'Worka-account',
+  'auth.accountKicker': 'Fixa-account',
   'auth.welcomeBack': 'Welkom terug.',
   'auth.createTitle': 'Maak je account aan.',
   'auth.forgotTitle': 'Stel je wachtwoord opnieuw in.',
   'auth.newPasswordTitle': 'Kies een nieuw wachtwoord.',
-  'auth.loginText': 'Log in om verder te gaan naar Worka.',
-  'auth.signupText': 'Kies hoe je Worka gebruikt en voeg dan je gegevens toe.',
+  'auth.loginText': 'Log in om verder te gaan naar Fixa.',
+  'auth.signupText': 'Kies hoe je Fixa gebruikt en voeg dan je gegevens toe.',
   'auth.forgotText': 'Voer je e-mail in en we sturen je een resetlink.',
   'auth.resetText': 'Voer het nieuwe wachtwoord voor je account in.',
   'auth.login': 'Inloggen',
@@ -533,7 +533,7 @@ export default {
 
   // Afstand / werklocatie
   'settings.distanceUnit': 'Afstandseenheid',
-  'settings.distanceUnitHint': 'Kies hoe afstanden in Worka worden getoond.',
+  'settings.distanceUnitHint': 'Kies hoe afstanden in Fixa worden getoond.',
   'settings.miles': 'Mijl',
   'settings.kilometres': 'Kilometer',
   'account.workLocation': 'Werklocatie',

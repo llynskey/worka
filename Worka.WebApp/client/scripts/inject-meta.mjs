@@ -9,15 +9,16 @@ import { readFile, writeFile } from 'node:fs/promises';
 
 const FILE = new URL('../dist/index.html', import.meta.url);
 
-const TITLE = 'Worka — get things done in your language';
+const TITLE = 'Fixa — get things done in your language';
 const DESCRIPTION =
-  'Worka connects expats and locals with trusted home-service professionals who speak your language — repairs, moving, cleaning, paperwork, installs and everyday jobs. Post a job, compare quotes, and pay securely.';
+  'Fixa connects expats and locals with trusted home-service professionals who speak your language — repairs, moving, cleaning, paperwork, installs and everyday jobs. Post a job, compare quotes, and pay securely.';
 const URL_BASE = 'https://worka.site/';
 
 const HEAD_EXTRA = `
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="canonical" href="${URL_BASE}" />
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="Worka" />
+    <meta property="og:site_name" content="Fixa" />
     <meta property="og:title" content="${TITLE}" />
     <meta property="og:description" content="${DESCRIPTION}" />
     <meta property="og:url" content="${URL_BASE}" />
@@ -28,7 +29,7 @@ const HEAD_EXTRA = `
     <script type="application/ld+json">${JSON.stringify({
       '@context': 'https://schema.org',
       '@type': 'Organization',
-      name: 'Worka',
+      name: 'Fixa',
       url: URL_BASE,
       description: DESCRIPTION,
       areaServed: 'GB',
@@ -38,9 +39,9 @@ const HEAD_EXTRA = `
 const BODY_EXTRA = `
     <noscript>
       <div style="max-width:680px;margin:40px auto;padding:0 20px;font-family:system-ui,-apple-system,sans-serif;color:#111;line-height:1.6">
-        <h1>Worka — get things done in your language</h1>
-        <p>Worka is a home-services marketplace for expats and locals. Customers post everyday jobs — repairs, moving, cleaning, paperwork, installations — and compare quotes from trusted local professionals who speak their language. Professionals browse open jobs, send quotes, and get paid securely through Stripe.</p>
-        <p>Available in English, Spanish, French, German, Italian, Portuguese, Dutch and Romanian. Please enable JavaScript to use the Worka app.</p>
+        <h1>Fixa — get things done in your language</h1>
+        <p>Fixa is a home-services marketplace for expats and locals. Customers post everyday jobs — repairs, moving, cleaning, paperwork, installations — and compare quotes from trusted local professionals who speak their language. Professionals browse open jobs, send quotes, and get paid securely through Stripe.</p>
+        <p>Available in English, Spanish, French, German, Italian, Portuguese, Dutch and Romanian. Please enable JavaScript to use the Fixa app.</p>
         <p><a href="${URL_BASE}privacy.html">Privacy</a> &middot; <a href="${URL_BASE}terms.html">Terms</a></p>
       </div>
     </noscript>

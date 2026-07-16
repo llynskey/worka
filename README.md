@@ -1,8 +1,8 @@
-# Worka
+# Fixa
 
-Worka is a two-sided home-services marketplace for customers and local professionals, running on web, iOS, and Android from a single Expo codebase with a .NET 8 + PostgreSQL API.
+Fixa is a two-sided home-services marketplace for customers and local professionals, running on web, iOS, and Android from a single Expo codebase with a .NET 8 + PostgreSQL API.
 
-Customers post jobs, compare quotes, and pay to book through Stripe. Professionals build a profile, browse open jobs (list and map), send quotes, and get paid out via Stripe Connect. Worka takes a configurable service fee on every paid booking (default 10%, minimum £2).
+Customers post jobs, compare quotes, and pay to book through Stripe. Professionals build a profile, browse open jobs (list and map), send quotes, and get paid out via Stripe Connect. Fixa takes a configurable service fee on every paid booking (default 10%, minimum £2).
 
 ## Architecture
 
