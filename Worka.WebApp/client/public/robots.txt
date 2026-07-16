@@ -1,4 +1,4 @@
-# Worka — https://fixa.site
+# Fixa — https://fixa.site
 User-agent: *
 Allow: /
 
