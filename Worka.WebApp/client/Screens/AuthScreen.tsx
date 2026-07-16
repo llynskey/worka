@@ -1168,7 +1168,7 @@ const AuthScreen: React.FC = () => {
               <View style={styles.footerContact}>
                 <Pressable
                   accessibilityRole="link"
-                  onPress={() => Linking.openURL("mailto:support@worka.site")}
+                  onPress={() => Linking.openURL("mailto:support@fixa.site")}
                   style={({ pressed }) => [
                     styles.footerLink,
                     pressed && styles.pressed,
@@ -1179,7 +1179,7 @@ const AuthScreen: React.FC = () => {
                     size={16}
                     color="#111"
                   />
-                  <Text style={styles.footerLinkText}>support@worka.site</Text>
+                  <Text style={styles.footerLinkText}>support@fixa.site</Text>
                 </Pressable>
                 <View style={styles.footerLink}>
                   <MaterialCommunityIcons
@@ -1201,7 +1201,7 @@ const AuthScreen: React.FC = () => {
               <View style={styles.footerLegalLinks}>
                 <Pressable
                   accessibilityRole="link"
-                  onPress={() => Linking.openURL("https://worka.site/privacy.html")}
+                  onPress={() => Linking.openURL("https://fixa.site/privacy.html")}
                   style={({ pressed }) => [pressed && styles.pressed]}
                 >
                   <Text style={styles.footerLegalLink}>{t("landing.privacy")}</Text>
@@ -1209,7 +1209,7 @@ const AuthScreen: React.FC = () => {
                 <Text style={styles.footerLegalText}>·</Text>
                 <Pressable
                   accessibilityRole="link"
-                  onPress={() => Linking.openURL("https://worka.site/terms.html")}
+                  onPress={() => Linking.openURL("https://fixa.site/terms.html")}
                   style={({ pressed }) => [pressed && styles.pressed]}
                 >
                   <Text style={styles.footerLegalLink}>{t("landing.terms")}</Text>

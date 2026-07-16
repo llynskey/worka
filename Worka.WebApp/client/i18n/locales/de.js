@@ -70,7 +70,7 @@ export default {
 
   // App chrome
   'app.opening': 'Fixa wird geöffnet...',
-  'app.accountTypeNotSet': 'Kontotyp nicht festgelegt. Melde dich ab und wieder an oder schreibe an support@worka.site.',
+  'app.accountTypeNotSet': 'Kontotyp nicht festgelegt. Melde dich ab und wieder an oder schreibe an support@fixa.site.',
 
   // Statuses (display only — logic uses English tokens)
   'status.open': 'Offen',

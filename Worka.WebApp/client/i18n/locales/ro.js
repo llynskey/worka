@@ -70,7 +70,7 @@ export default {
 
   // App chrome
   'app.opening': 'Se deschide Fixa...',
-  'app.accountTypeNotSet': 'Tipul contului nu este setat. Deconectează-te și intră din nou, sau scrie la support@worka.site.',
+  'app.accountTypeNotSet': 'Tipul contului nu este setat. Deconectează-te și intră din nou, sau scrie la support@fixa.site.',
 
   // Statuses
   'status.open': 'Deschis',

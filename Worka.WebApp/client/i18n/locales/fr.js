@@ -70,7 +70,7 @@ export default {
 
   // App chrome
   'app.opening': 'Ouverture de Fixa...',
-  'app.accountTypeNotSet': 'Type de compte non défini. Déconnectez-vous puis reconnectez-vous, ou écrivez à support@worka.site.',
+  'app.accountTypeNotSet': 'Type de compte non défini. Déconnectez-vous puis reconnectez-vous, ou écrivez à support@fixa.site.',
 
   // Statuses
   'status.open': 'Ouvert',

@@ -16,11 +16,11 @@ const AppFooter = () => {
     <View style={styles.wrap}>
       <View style={styles.footer}>
         <View style={styles.links}>
-          <TouchableOpacity onPress={() => Linking.openURL('https://worka.site/privacy.html')}>
+          <TouchableOpacity onPress={() => Linking.openURL('https://fixa.site/privacy.html')}>
             <Text style={styles.link}>{t('landing.privacy')}</Text>
           </TouchableOpacity>
           <Text style={styles.dot}>·</Text>
-          <TouchableOpacity onPress={() => Linking.openURL('https://worka.site/terms.html')}>
+          <TouchableOpacity onPress={() => Linking.openURL('https://fixa.site/terms.html')}>
             <Text style={styles.link}>{t('landing.terms')}</Text>
           </TouchableOpacity>
         </View>

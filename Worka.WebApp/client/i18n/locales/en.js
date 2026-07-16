@@ -70,7 +70,7 @@ export default {
 
   // App chrome
   'app.opening': 'Opening Fixa...',
-  'app.accountTypeNotSet': 'Account type not set. Sign out and back in, or email support@worka.site.',
+  'app.accountTypeNotSet': 'Account type not set. Sign out and back in, or email support@fixa.site.',
 
   // Statuses (display only — logic uses English tokens)
   'status.open': 'Open',

@@ -218,14 +218,14 @@ const WorkerSettingsScreen = ({ navigation }) => {
 
       <View style={styles.card}>
         <Text style={styles.settingTitle}>{t('settings.support')}</Text>
-        <Text style={styles.settingText}>pros@worka.site</Text>
+        <Text style={styles.settingText}>pros@fixa.site</Text>
         <Text style={styles.settingText}>{t('settings.supportProText')}</Text>
         <View style={styles.legalLinksRow}>
-          <TouchableOpacity onPress={() => Linking.openURL('https://worka.site/privacy.html')}>
+          <TouchableOpacity onPress={() => Linking.openURL('https://fixa.site/privacy.html')}>
             <Text style={styles.legalLink}>{t('settings.privacyPolicy')}</Text>
           </TouchableOpacity>
           <Text style={styles.settingText}>·</Text>
-          <TouchableOpacity onPress={() => Linking.openURL('https://worka.site/terms.html')}>
+          <TouchableOpacity onPress={() => Linking.openURL('https://fixa.site/terms.html')}>
             <Text style={styles.legalLink}>{t('settings.terms')}</Text>
           </TouchableOpacity>
         </View>

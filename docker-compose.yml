@@ -35,12 +35,12 @@ services:
       Stripe__DefaultCountry: ${Stripe__DefaultCountry:-GB}
       Worka__ServiceFeePercent: ${Worka__ServiceFeePercent:-10}
       Worka__ServiceFeeMinimum: ${Worka__ServiceFeeMinimum:-2}
-      Worka__PublicUrl: ${Worka__PublicUrl:-https://worka.site}
+      Worka__PublicUrl: ${Worka__PublicUrl:-https://fixa.site}
       Smtp__Host: ${Smtp__Host:-}
       Smtp__Port: ${Smtp__Port:-587}
       Smtp__Username: ${Smtp__Username:-}
       Smtp__Password: ${Smtp__Password:-}
-      Smtp__From: ${Smtp__From:-no-reply@worka.site}
+      Smtp__From: ${Smtp__From:-no-reply@fixa.site}
       Smtp__UseSsl: ${Smtp__UseSsl:-true}
     depends_on:
       postgres:

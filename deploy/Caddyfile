@@ -1,4 +1,4 @@
-worka.site {
+fixa.site {
 	encode zstd gzip
 
 	header {
@@ -18,11 +18,11 @@ worka.site {
 	}
 }
 
-www.worka.site {
-	redir https://worka.site{uri} permanent
+www.fixa.site {
+	redir https://fixa.site{uri} permanent
 }
 
-api.worka.site {
+api.fixa.site {
 	encode zstd gzip
 
 	header {

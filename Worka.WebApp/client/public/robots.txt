@@ -1,5 +1,5 @@
-# Worka — https://worka.site
+# Worka — https://fixa.site
 User-agent: *
 Allow: /
 
-Sitemap: https://worka.site/sitemap.xml
+Sitemap: https://fixa.site/sitemap.xml

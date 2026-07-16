@@ -30,7 +30,7 @@ Set `JwtSecret` to the generated `openssl rand -hex 32` value.
 
 ## HTTPS
 
-Domains are configured in `deploy/Caddyfile` (currently `worka.site`, `www.worka.site`, and `api.worka.site`). Point DNS `A` records for all three at the VPS IPv4 address. The `api.` subdomain is what the native iOS/Android apps call; web traffic stays same-origin through `/api`.
+Domains are configured in `deploy/Caddyfile` (currently `fixa.site`, `www.fixa.site`, and `api.fixa.site`). Point DNS `A` records for all three at the VPS IPv4 address. The `api.` subdomain is what the native iOS/Android apps call; web traffic stays same-origin through `/api`.
 
 Make sure ports `80` and `443` are open in the VPS firewall and any OVH network firewall. Caddy will request and renew Let's Encrypt certificates automatically. Certificate data is stored in the `caddy_data` Docker volume, so it survives rebuilds.
 
@@ -61,10 +61,10 @@ Smtp__Host=smtp-relay.brevo.com    # or your provider's host
 Smtp__Port=587
 Smtp__Username=<from provider>
 Smtp__Password=<from provider>
-Smtp__From=no-reply@worka.site
+Smtp__From=no-reply@fixa.site
 ```
 
-Restart the api container and confirm `https://worka.site/api/health` reports `"email": "configured"`. Do NOT run your own mail server on the VPS — OVH blocks port 25 by default and a fresh IP has no sending reputation, so resets would land in spam.
+Restart the api container and confirm `https://fixa.site/api/health` reports `"email": "configured"`. Do NOT run your own mail server on the VPS — OVH blocks port 25 by default and a fresh IP has no sending reputation, so resets would land in spam.
 
 ## Automatic deployment (GitHub Actions)
 

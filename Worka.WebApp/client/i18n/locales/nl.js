@@ -70,7 +70,7 @@ export default {
 
   // App chrome
   'app.opening': 'Fixa wordt geopend...',
-  'app.accountTypeNotSet': 'Accounttype niet ingesteld. Log uit en weer in, of mail naar support@worka.site.',
+  'app.accountTypeNotSet': 'Accounttype niet ingesteld. Log uit en weer in, of mail naar support@fixa.site.',
 
   // Statuses (display only — logic uses English tokens)
   'status.open': 'Open',

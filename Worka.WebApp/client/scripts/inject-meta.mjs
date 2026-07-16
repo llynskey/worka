@@ -12,7 +12,7 @@ const FILE = new URL('../dist/index.html', import.meta.url);
 const TITLE = 'Fixa — get things done in your language';
 const DESCRIPTION =
   'Fixa connects expats and locals with trusted home-service professionals who speak your language — repairs, moving, cleaning, paperwork, installs and everyday jobs. Post a job, compare quotes, and pay securely.';
-const URL_BASE = 'https://worka.site/';
+const URL_BASE = 'https://fixa.site/';
 
 const HEAD_EXTRA = `
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />

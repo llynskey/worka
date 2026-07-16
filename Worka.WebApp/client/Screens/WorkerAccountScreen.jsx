@@ -137,7 +137,7 @@ const WorkerAccountScreen = () => {
       const origin =
         Platform.OS === 'web' && typeof window !== 'undefined'
           ? window.location.origin
-          : 'https://worka.site';
+          : 'https://fixa.site';
 
       const response = await api.post('/payments/stripe/onboarding', {
         returnUrl: `${origin}/?stripe=return`,
