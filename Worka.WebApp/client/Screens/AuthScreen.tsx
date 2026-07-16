@@ -1,7 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Image,
   KeyboardAvoidingView,
   Linking,
   Platform,
@@ -21,6 +20,7 @@ import { useI18n } from "../i18n/I18nContext";
 import { translations } from "../i18n/translations";
 import LanguageCycler from "../components/LanguageCycler";
 import LanguageMarquee from "../components/LanguageMarquee";
+import Logo from "../components/Logo";
 import Reveal from "../components/Reveal";
 
 // Stable English `value` strings are sent to the API; the labels shown to
@@ -431,12 +431,7 @@ const AuthScreen: React.FC = () => {
         <View style={styles.shell}>
           <View style={[styles.header, isPhone && styles.headerPhone]}>
             <View style={styles.nav}>
-              <Image
-                source={require("../assets/logo.png")}
-                style={[styles.logo, isPhone && styles.logoPhone]}
-                resizeMode="contain"
-                accessibilityLabel="Fixa"
-              />
+              <Logo height={isPhone ? 40 : 52} />
 
               <View style={styles.navRight}>
                 <Pressable
@@ -1166,12 +1161,7 @@ const AuthScreen: React.FC = () => {
               ]}
             >
               <View style={styles.footerBrand}>
-                <Image
-                  source={require("../assets/logo.png")}
-                  style={styles.footerLogo}
-                  resizeMode="contain"
-                  accessibilityLabel="Fixa"
-                />
+                <Logo height={30} />
                 <Text style={styles.footerTagline}>{t("landing.footerTagline")}</Text>
               </View>
 

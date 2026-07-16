@@ -1,5 +1,5 @@
 import React from 'react';
-import { Image, Platform, SafeAreaView, Text, View, useWindowDimensions } from 'react-native';
+import { Platform, SafeAreaView, Text, View, useWindowDimensions } from 'react-native';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createDrawerNavigator, DrawerContentComponentProps } from '@react-navigation/drawer';
@@ -16,6 +16,7 @@ import JobTypeScreen from './Screens/JobTypeScreen';
 import LoadingScreen from './Screens/LoadingScreen';
 
 import SharedDrawerContent from './components/SharedDrawerContent';
+import Logo from './components/Logo';
 import NotifyHost from './components/NotifyHost';
 import { AuthContext, AuthProvider } from './auth/AuthContext';
 import { I18nProvider, useI18n } from './i18n/I18nContext';
@@ -23,12 +24,7 @@ import { I18nProvider, useI18n } from './i18n/I18nContext';
 // Wordmark in the navbar instead of plain text.
 const HeaderLogo: React.FC<{ badge?: string }> = ({ badge }) => (
   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-    <Image
-      source={require('./assets/logo.png')}
-      style={{ width: 96, height: 26 }}
-      resizeMode="contain"
-      accessibilityLabel="Fixa"
-    />
+    <Logo height={24} />
     {badge ? (
       <Text
         style={{

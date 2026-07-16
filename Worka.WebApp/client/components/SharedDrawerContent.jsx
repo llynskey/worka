@@ -1,11 +1,12 @@
 import React, { useContext, useState } from 'react';
-import { ActivityIndicator, Image, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { DrawerContentScrollView } from '@react-navigation/drawer';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { api, getErrorMessage } from '../api/workaApi';
 import notify from '../Utils/notify';
 import { AuthContext } from '../auth/AuthContext';
 import { useI18n } from '../i18n/I18nContext';
+import Logo from './Logo';
 
 // Icon per navigable route; keeps the nav list visual and scannable.
 const ROUTE_ICONS = {
@@ -53,7 +54,7 @@ export default function SharedDrawerContent(props) {
     <DrawerContentScrollView {...props} contentContainerStyle={styles.drawerScroll}>
       <View style={styles.drawerContainer}>
         <View style={styles.brandBlock}>
-          <Image source={require('../assets/logo.png')} style={styles.logo} resizeMode="contain" />
+          <Logo height={34} />
           <View style={styles.workspaceRow}>
             <View style={styles.workspaceDot} />
             <Text style={styles.workspaceLabel}>
