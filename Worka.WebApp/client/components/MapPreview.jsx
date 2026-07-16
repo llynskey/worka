@@ -41,18 +41,21 @@ const openExternalMap = (latitude, longitude) => {
   Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`);
 };
 
-const PlaceholderCard = ({ height, label }) => (
-  <View style={[styles.placeholder, { height }]}>
+const PlaceholderCard = ({ height, label, fill = false }) => (
+  <View style={[styles.placeholder, fill ? styles.fillMap : { height }]}>
     <MaterialCommunityIcons name="map-marker-outline" size={30} color="#111" />
     <Text style={styles.placeholderText}>{label}</Text>
   </View>
 );
 
-const MapPreview = ({ latitude, longitude, userLocation = null, height = 240, locationLabel = '' }) => {
+// `fill` makes the map grow to its container (used by the desktop Job Map so the
+// map box fills the pane exactly — no empty space, no viewport overflow);
+// otherwise it renders at the fixed `height`.
+const MapPreview = ({ latitude, longitude, userLocation = null, height = 240, locationLabel = '', fill = false }) => {
   const { t } = useI18n();
 
   if (!hasCoordinates({ latitude, longitude })) {
-    return <PlaceholderCard height={height} label={t('map.notSet')} />;
+    return <PlaceholderCard height={height} fill={fill} label={t('map.notSet')} />;
   }
 
   const lat = Number(latitude);
@@ -64,7 +67,7 @@ const MapPreview = ({ latitude, longitude, userLocation = null, height = 240, lo
     mapNode = (
       <Image
         source={{ uri: getStaticMapUrl({ latitude: lat, longitude: lng, userLocation: validUserLocation }) }}
-        style={[styles.staticImage, { height }]}
+        style={[styles.staticImage, fill ? styles.fillMap : { height }]}
         resizeMode="cover"
       />
     );
@@ -72,16 +75,12 @@ const MapPreview = ({ latitude, longitude, userLocation = null, height = 240, lo
     mapNode = React.createElement('iframe', {
       src: getOsmEmbedUrl({ latitude: lat, longitude: lng }),
       title: locationLabel ? `Map of ${locationLabel}` : 'Job location map',
-      style: {
-        border: 0,
-        width: '100%',
-        height,
-        display: 'block',
-        borderRadius: 8,
-      },
+      style: fill
+        ? { border: 0, width: '100%', flex: 1, minHeight: 0, display: 'block', borderRadius: 8 }
+        : { border: 0, width: '100%', height, display: 'block', borderRadius: 8 },
     });
   } else {
-    mapNode = <PlaceholderCard height={height} label={locationLabel || t('map.previewUnavailable')} />;
+    mapNode = <PlaceholderCard height={height} fill={fill} label={locationLabel || t('map.previewUnavailable')} />;
   }
 
   const distanceLabel = validUserLocation
@@ -89,7 +88,7 @@ const MapPreview = ({ latitude, longitude, userLocation = null, height = 240, lo
     : '';
 
   return (
-    <View style={styles.wrap}>
+    <View style={fill ? styles.wrapFill : styles.wrap}>
       {mapNode}
       <View style={styles.metaRow}>
         <MaterialCommunityIcons name="map-marker-outline" size={17} color="#62645c" />
@@ -116,6 +115,16 @@ const MapPreview = ({ latitude, longitude, userLocation = null, height = 240, lo
 
 const styles = StyleSheet.create({
   wrap: {
+    width: '100%',
+  },
+  wrapFill: {
+    flex: 1,
+    minHeight: 0,
+    width: '100%',
+  },
+  fillMap: {
+    flex: 1,
+    minHeight: 0,
     width: '100%',
   },
   staticImage: {

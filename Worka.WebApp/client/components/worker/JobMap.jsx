@@ -63,12 +63,12 @@ const openExternalMap = (job, currentLocation) => {
   Linking.openURL(url);
 };
 
-const WebMapFrame = ({ job, minHeight = 420, userLocation = null }) => {
+const WebMapFrame = ({ job, minHeight = 420, fill = false, userLocation = null }) => {
   const { t } = useI18n();
 
   if (!job || !hasCoordinates(job)) {
     return (
-      <View style={[styles.mapPlaceholder, { minHeight }]}>
+      <View style={[styles.mapPlaceholder, fill ? styles.mapPlaceholderFill : { minHeight }]}>
         <MaterialCommunityIcons name="map-marker-off-outline" size={36} color="#111" />
         <Text style={styles.placeholderTitle}>{t('map.chooseLocatedJob')}</Text>
         <Text style={styles.placeholderText}>{t('map.placeholderText')}</Text>
@@ -79,13 +79,15 @@ const WebMapFrame = ({ job, minHeight = 420, userLocation = null }) => {
   // MapPreview renders the branded static map with a pin on the job and,
   // when set, a second pin on the worker's current location plus distance.
   // (The interactive Mapbox embed cannot draw markers, which made the map
-  // ambiguous — pins beat panning here.)
+  // ambiguous — pins beat panning here.) `fill` makes it grow to the pane so
+  // the desktop map box has no empty space and never overflows the viewport.
   return (
     <MapPreview
       latitude={job.latitude}
       longitude={job.longitude}
       userLocation={userLocation}
       locationLabel={getLocationLabel(job, t('map.notSet'))}
+      fill={fill}
       height={Math.max(minHeight - 56, 180)}
     />
   );
@@ -105,9 +107,6 @@ const JobMap = () => {
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const isNarrow = windowWidth < 700;
   const mapHeight = Math.min(300, Math.round(windowHeight * 0.45));
-  // Desktop: give the map/list row a definite height the map fills exactly, so
-  // it isn't a giant empty box. Bounded so header + bars + map fit the viewport.
-  const desktopMapHeight = Math.max(320, Math.min(560, windowHeight - 300));
 
   const unit = useDistanceUnit();
   const [radius, setRadius] = useState(unit === 'mi' ? 15 : 25);
@@ -387,9 +386,9 @@ const JobMap = () => {
       {locationBarBlock}
       {radiusBlock}
 
-      <View style={[styles.mapLayout, { height: desktopMapHeight }]}>
+      <View style={styles.mapLayout}>
         <View style={styles.mapPane}>
-          <WebMapFrame job={selectedJob} minHeight={desktopMapHeight} userLocation={currentLocation} />
+          <WebMapFrame job={selectedJob} fill userLocation={currentLocation} />
         </View>
 
         <ScrollView style={styles.listPane} contentContainerStyle={styles.listContent}>
@@ -566,6 +565,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   mapLayout: {
+    flex: 1,
     minHeight: 0,
     flexDirection: Platform.OS === 'web' ? 'row' : 'column',
     gap: 14,
@@ -596,6 +596,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 24,
     backgroundColor: '#fff',
+  },
+  // Fill mode (desktop): grow to the pane instead of forcing a 420px floor,
+  // so the map row can shrink to fit the viewport without overflowing.
+  mapPlaceholderFill: {
+    flex: 1,
+    minHeight: 0,
   },
   placeholderTitle: {
     color: '#111',
