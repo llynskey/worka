@@ -1,0 +1,9 @@
+# Keep Python cache out of git.
+__pycache__/
+*.pyc
+
+# The root .gitignore ignores *.sql (DB dumps); re-include the seed artifacts,
+# which are meant to be versioned and run on the server.
+!seed.sql
+!cleanup.sql
+!create_test_schema.sql
