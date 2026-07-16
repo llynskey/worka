@@ -1,0 +1,7 @@
+# docker-mailserver writes its runtime state and generated secrets into this
+# directory (bind-mounted to /tmp/docker-mailserver). Keep the provisioning
+# scripts under version control; ignore everything the container generates.
+*
+!.gitignore
+!user-patches.sh
+!print-dns.sh

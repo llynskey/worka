@@ -52,19 +52,62 @@ https://your-domain.example/api/payments/stripe/webhook
 
 Apple Pay, Google Pay, browser location, and the cleanest checkout return flow all need a real HTTPS domain, not just the raw server IP over HTTP.
 
-## Email (password resets)
+## Email (self-hosted mail server)
 
-Create a free account with an SMTP provider (Brevo: 300 emails/day free, or SMTP2GO: 1,000/month free), verify your sending domain with the DNS records they give you (SPF + DKIM), then set in `.env.production`:
+The stack runs its own mail server (`mailserver` service — docker-mailserver: Postfix + Dovecot + OpenDKIM). It sends the app's transactional email and hosts real mailboxes you can log into over IMAP:
+
+- `no-reply@fixa.site` — the API's sending account
+- `support@fixa.site` — general inbox (`postmaster@` and `abuse@` alias here)
+- `pros@fixa.site` — professional-facing inbox
+
+Mailboxes, aliases and the DKIM key are **provisioned automatically on first boot** by `deploy/mail/user-patches.sh` from the `MAIL_*_PASSWORD` values in `.env.production`. The API is already wired to relay through the container (`Smtp__Host=mail.fixa.site`, port 587 STARTTLS, authenticating as `no-reply@fixa.site`). So the container side is "pull + build + up".
+
+What **cannot** be automated (do these once, by hand):
+
+**1. Set the mailbox passwords** in `.env.production`:
 
 ```bash
-Smtp__Host=smtp-relay.brevo.com    # or your provider's host
-Smtp__Port=587
-Smtp__Username=<from provider>
-Smtp__Password=<from provider>
-Smtp__From=no-reply@fixa.site
+MAIL_NOREPLY_PASSWORD=...
+MAIL_SUPPORT_PASSWORD=...
+MAIL_PROS_PASSWORD=...
 ```
 
-Restart the api container and confirm `https://fixa.site/api/health` reports `"email": "configured"`. Do NOT run your own mail server on the VPS — OVH blocks port 25 by default and a fresh IP has no sending reputation, so resets would land in spam.
+**2. DNS records** (at your registrar). Bring the stack up once so the DKIM key exists, then run the helper to get every value to paste:
+
+```bash
+docker compose --env-file .env.production up -d --build
+./deploy/mail/print-dns.sh
+```
+
+It prints, for `fixa.site`:
+
+| Type | Name | Value |
+|------|------|-------|
+| A | `mail` | your server IPv4 |
+| MX | `@` | `10 mail.fixa.site.` |
+| TXT | `@` | `v=spf1 mx ~all` |
+| TXT | `mail._domainkey` | the DKIM public key it prints |
+| TXT | `_dmarc` | `v=DMARC1; p=quarantine; rua=mailto:postmaster@fixa.site; adkim=s; aspf=s` |
+
+**3. Reverse DNS (PTR)** — in the **OVH** panel, set the PTR for the VPS IP to `mail.fixa.site`. Gmail/Outlook reject mail whose PTR doesn't match.
+
+**4. Outbound port 25** — confirm OVH allows outbound TCP 25 from the VPS (open a support ticket if it's throttled/blocked); receiving also needs inbound `25`, and mail apps need `587`, `465`, `993` open in the VPS/OVH firewall.
+
+**TLS:** the container serves TLS using the `mail.fixa.site` certificate that Caddy obtains (see the `mail.fixa.site` block in `deploy/Caddyfile`) and reads it from the shared `caddy_data` volume. On the very first boot the mailserver may restart a few times until Caddy has issued that cert — that's expected. This needs the `mail` A record (step 2) in place first.
+
+**Verify:**
+
+```bash
+curl http://localhost/api/health          # expect "email": "configured"
+dig MX fixa.site +short
+dig TXT mail._domainkey.fixa.site +short
+```
+
+Then send a test to <https://www.mail-tester.com> and aim for 10/10 before relying on resets.
+
+**Mail apps (IMAP/SMTP):** server `mail.fixa.site`, IMAP `993` (SSL) or `143` (STARTTLS), SMTP `587` (STARTTLS), username = the full email address, password = the `MAIL_*_PASSWORD` you set.
+
+> Prefer not to self-host? Set `Smtp__Host` to an external relay (Brevo/SMTP2GO) in `.env.production`, add their SPF/DKIM records, and you can remove the `mailserver` service. Self-hosting from a fresh IP means deliverability depends entirely on PTR + SPF/DKIM/DMARC being correct.
 
 ## Automatic deployment (GitHub Actions)
 

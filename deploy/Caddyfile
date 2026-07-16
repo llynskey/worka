@@ -1,3 +1,10 @@
+{
+	# ACME contact + pin Let's Encrypt so the on-disk certificate path is
+	# deterministic (the mail container reads mail.fixa.site's cert from here).
+	email admin@fixa.site
+	acme_ca https://acme-v02.api.letsencrypt.org/directory
+}
+
 fixa.site {
 	encode zstd gzip
 
@@ -20,6 +27,14 @@ fixa.site {
 
 www.fixa.site {
 	redir https://fixa.site{uri} permanent
+}
+
+# Exists solely so Caddy obtains and auto-renews a TLS certificate for
+# mail.fixa.site. The docker-mailserver container reads that certificate from the
+# shared caddy_data volume (SSL_TYPE=manual). Requires a DNS A record for
+# mail.fixa.site pointing at this server.
+mail.fixa.site {
+	respond "Fixa mail" 200
 }
 
 api.fixa.site {

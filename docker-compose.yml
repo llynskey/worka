@@ -36,10 +36,14 @@ services:
       Worka__ServiceFeePercent: ${Worka__ServiceFeePercent:-10}
       Worka__ServiceFeeMinimum: ${Worka__ServiceFeeMinimum:-2}
       Worka__PublicUrl: ${Worka__PublicUrl:-https://fixa.site}
-      Smtp__Host: ${Smtp__Host:-}
+      # The API relays through the self-hosted mail container over submission
+      # (587 + STARTTLS), authenticating as the auto-provisioned no-reply mailbox.
+      # The mailserver has a network alias of mail.fixa.site so the TLS hostname
+      # matches its Caddy-issued certificate.
+      Smtp__Host: ${Smtp__Host:-mail.fixa.site}
       Smtp__Port: ${Smtp__Port:-587}
-      Smtp__Username: ${Smtp__Username:-}
-      Smtp__Password: ${Smtp__Password:-}
+      Smtp__Username: ${Smtp__Username:-no-reply@fixa.site}
+      Smtp__Password: ${MAIL_NOREPLY_PASSWORD:?Set MAIL_NOREPLY_PASSWORD in .env.production}
       Smtp__From: ${Smtp__From:-no-reply@fixa.site}
       Smtp__UseSsl: ${Smtp__UseSsl:-true}
     depends_on:
@@ -50,6 +54,59 @@ services:
     restart: unless-stopped
     volumes:
       - worka_uploads:/app/wwwroot/uploads
+
+  # Self-hosted mail (Postfix + Dovecot + OpenDKIM). Sends the app's
+  # transactional email and hosts real mailboxes (support@, pros@, no-reply@)
+  # reachable over IMAP. Mailboxes, aliases and the DKIM key are provisioned
+  # automatically on first boot by deploy/mail/user-patches.sh from the
+  # MAIL_*_PASSWORD values in .env.production — so a fresh `docker compose up`
+  # comes up configured. DNS (MX/SPF/DKIM/DMARC), reverse DNS (PTR) and
+  # unblocking outbound port 25 are one-time manual steps — see docs/DEPLOYMENT.md.
+  mailserver:
+    image: ghcr.io/docker-mailserver/docker-mailserver:14.0
+    hostname: mail.fixa.site
+    environment:
+      OVERRIDE_HOSTNAME: mail.fixa.site
+      POSTMASTER_ADDRESS: postmaster@fixa.site
+      # Trust the internal Docker network so the API can relay without extra hops.
+      PERMIT_DOCKER: connected-networks
+      SPOOF_PROTECTION: 1
+      # Lean footprint for a small VPS: DKIM/DMARC/SPF on, heavy scanners off.
+      ENABLE_OPENDKIM: 1
+      ENABLE_OPENDMARC: 1
+      ENABLE_POLICYD_SPF: 1
+      ENABLE_RSPAMD: 0
+      ENABLE_AMAVIS: 0
+      ENABLE_SPAMASSASSIN: 0
+      ENABLE_CLAMAV: 0
+      ENABLE_FAIL2BAN: 0
+      ONE_DIR: 1
+      # TLS: read the mail.fixa.site certificate that Caddy obtains and renews.
+      # Override the paths in .env.production if your ACME issuer dir differs.
+      SSL_TYPE: manual
+      SSL_CERT_PATH: ${MAIL_SSL_CERT_PATH:-/etc/caddycerts/caddy/certificates/acme-v02.api.letsencrypt.org-directory/mail.fixa.site/mail.fixa.site.crt}
+      SSL_KEY_PATH: ${MAIL_SSL_KEY_PATH:-/etc/caddycerts/caddy/certificates/acme-v02.api.letsencrypt.org-directory/mail.fixa.site/mail.fixa.site.key}
+      # Passwords for the auto-provisioned mailboxes.
+      MAIL_NOREPLY_PASSWORD: ${MAIL_NOREPLY_PASSWORD:?Set MAIL_NOREPLY_PASSWORD in .env.production}
+      MAIL_SUPPORT_PASSWORD: ${MAIL_SUPPORT_PASSWORD:?Set MAIL_SUPPORT_PASSWORD in .env.production}
+      MAIL_PROS_PASSWORD: ${MAIL_PROS_PASSWORD:?Set MAIL_PROS_PASSWORD in .env.production}
+    ports:
+      - "25:25"     # inbound SMTP (receiving) + server-to-server
+      - "465:465"   # submission (implicit TLS)
+      - "587:587"   # submission (STARTTLS) — used by the API
+      - "143:143"   # IMAP (STARTTLS)
+      - "993:993"   # IMAPS — used by mail apps
+    volumes:
+      - dms_mail:/var/mail
+      - dms_state:/var/mail-state
+      - dms_logs:/var/log/mail
+      - ./deploy/mail:/tmp/docker-mailserver
+      - caddy_data:/etc/caddycerts:ro
+    networks:
+      default:
+        aliases:
+          - mail.fixa.site
+    restart: unless-stopped
 
   postgres:
     image: postgres:16-alpine
@@ -71,3 +128,6 @@ volumes:
   worka_uploads:
   caddy_data:
   caddy_config:
+  dms_mail:
+  dms_state:
+  dms_logs:
