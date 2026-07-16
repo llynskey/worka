@@ -1,4 +1,19 @@
 export default {
+  // List controls (search / filter / sort)
+  'list.searchJobs': 'Search jobs, locations…',
+  'list.searchPros': 'Search by name, trade or language…',
+  'list.all': 'All',
+  'list.sort': 'Sort',
+  'list.nearest': 'Nearest',
+  'list.newest': 'Newest',
+  'list.oldest': 'Oldest',
+  'list.priceLow': 'Price ↑',
+  'list.priceHigh': 'Price ↓',
+  'list.rated': 'Top rated',
+  'list.results': '{count} results',
+  'list.noMatchTitle': 'No matches',
+  'list.noMatchText': 'Try a different search or filter.',
+
   // Landing
   'landing.eyebrow': 'Fixa for expats',
   'landing.heroTitle': 'Get things done by someone who speaks your language.',

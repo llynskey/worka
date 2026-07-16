@@ -23,6 +23,9 @@ import { useI18n } from '../../i18n/I18nContext';
 import { categoryLabel } from '../../i18n/categories';
 import AppFooter from '../AppFooter';
 import JobDetailsModal from './JobDetailsModal';
+import ListControls from '../ListControls';
+
+const CATEGORY_VALUES = ['plumbing', 'electrical', 'painting', 'cleaning', 'garden', 'repairs'];
 
 const categoryImages = {
   Plumbing: 'https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?auto=format&fit=crop&w=900&q=80',
@@ -48,6 +51,9 @@ const WorkerJobList = () => {
   const [currentLocation, setCurrentLocation] = useState(null);
   const [locating, setLocating] = useState(false);
   const [locationError, setLocationError] = useState('');
+  const [search, setSearch] = useState('');
+  const [category, setCategory] = useState(null);
+  const [sortBy, setSortBy] = useState('nearest');
 
   // Ask for location automatically; the manual button only appears if the
   // silent attempt fails (e.g. permission not yet granted).
@@ -118,6 +124,46 @@ const WorkerJobList = () => {
       return aDistance - bDistance;
     });
   }, [currentLocation, jobs]);
+
+  // Search + category filter + sort applied on top of the open jobs, so the
+  // list stays usable when the marketplace holds a large number of jobs.
+  const filteredJobs = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    let list = openJobs;
+    if (category) {
+      list = list.filter((j) => String(j.category ?? '').toLowerCase() === category);
+    }
+    if (q) {
+      list = list.filter((j) =>
+        [j.jobName, j.jobDescription, j.locationLabel, j.address, categoryLabel(t, j.category)].some((v) =>
+          String(v ?? '').toLowerCase().includes(q)
+        )
+      );
+    }
+    const arr = [...list];
+    if (sortBy === 'newest') arr.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    else if (sortBy === 'oldest') arr.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+    else
+      arr.sort(
+        (a, b) =>
+          (getDistanceKm(currentLocation, a) ?? Infinity) - (getDistanceKm(currentLocation, b) ?? Infinity)
+      );
+    return arr;
+  }, [openJobs, search, category, sortBy, currentLocation, t]);
+
+  const categoryChips = useMemo(
+    () => CATEGORY_VALUES.map((c) => ({ value: c, label: categoryLabel(t, c) })),
+    [t]
+  );
+  const sortChips = useMemo(
+    () => [
+      { value: 'nearest', label: t('list.nearest') },
+      { value: 'newest', label: t('list.newest') },
+      { value: 'oldest', label: t('list.oldest') },
+    ],
+    [t]
+  );
+  const filtersActive = !!search.trim() || !!category;
 
   const useCurrentLocation = async () => {
     try {
@@ -194,12 +240,13 @@ const WorkerJobList = () => {
   return (
     <>
       <FlatList
-        data={openJobs}
+        data={filteredJobs}
         keyExtractor={(item) => String(item.jobId)}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} />}
         contentContainerStyle={styles.listContent}
         ListFooterComponent={<AppFooter />}
         ListHeaderComponent={
+          <View>
           <View style={styles.hero}>
             <Text style={styles.eyebrow}>{t('work.eyebrow')}</Text>
             <Text style={styles.heroTitle}>
@@ -236,13 +283,36 @@ const WorkerJobList = () => {
             )}
             {locationError ? <Text style={styles.locationError}>{locationError}</Text> : null}
           </View>
+          <ListControls
+            search={search}
+            onSearch={setSearch}
+            searchPlaceholder={t('list.searchJobs')}
+            categories={categoryChips}
+            selectedCategory={category}
+            onSelectCategory={setCategory}
+            allLabel={t('list.all')}
+            sorts={sortChips}
+            sortValue={sortBy}
+            onSort={setSortBy}
+            sortLabel={t('list.sort')}
+            countLabel={t('list.results', { count: filteredJobs.length })}
+          />
+          </View>
         }
         ListEmptyComponent={
-          <View style={styles.emptyState}>
-            <MaterialCommunityIcons name="briefcase-check-outline" size={40} color="#111" />
-            <Text style={styles.emptyTitle}>{t('work.emptyTitle')}</Text>
-            <Text style={styles.mutedText}>{t('work.emptyText')}</Text>
-          </View>
+          filtersActive ? (
+            <View style={styles.emptyState}>
+              <MaterialCommunityIcons name="magnify-close" size={40} color="#111" />
+              <Text style={styles.emptyTitle}>{t('list.noMatchTitle')}</Text>
+              <Text style={styles.mutedText}>{t('list.noMatchText')}</Text>
+            </View>
+          ) : (
+            <View style={styles.emptyState}>
+              <MaterialCommunityIcons name="briefcase-check-outline" size={40} color="#111" />
+              <Text style={styles.emptyTitle}>{t('work.emptyTitle')}</Text>
+              <Text style={styles.mutedText}>{t('work.emptyText')}</Text>
+            </View>
+          )
         }
         renderItem={({ item }) => {
           const existingQuote = quoteByJob[item.jobId];
