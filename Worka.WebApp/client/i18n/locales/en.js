@@ -3,6 +3,7 @@ export default {
   'list.searchJobs': 'Search jobs, locations…',
   'list.searchPros': 'Search by name, trade or language…',
   'list.all': 'All',
+  'list.language': 'Language',
   'list.sort': 'Sort',
   'list.nearest': 'Nearest',
   'list.newest': 'Newest',

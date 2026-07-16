@@ -24,11 +24,18 @@ const ListControls = ({
   selectedCategory = null,
   onSelectCategory,
   allLabel = 'All',
+  languages = [],
+  selectedLanguage = null,
+  onSelectLanguage,
+  languageLabel = 'Language',
+  languageAllLabel = 'All',
   sorts = [],
   sortValue,
   onSort,
   sortLabel = 'Sort',
   countLabel,
+  viewMode,
+  onViewMode,
 }) => (
   <View style={styles.wrap}>
     <View style={styles.searchRow}>
@@ -63,6 +70,23 @@ const ListControls = ({
       </ScrollView>
     ) : null}
 
+    {languages.length > 0 ? (
+      <View style={styles.sortRow}>
+        <Text style={styles.sortLabel}>{languageLabel}</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
+          <Chip label={languageAllLabel} active={!selectedLanguage} onPress={() => onSelectLanguage?.(null)} />
+          {languages.map((l) => (
+            <Chip
+              key={l.value}
+              label={l.label}
+              active={selectedLanguage === l.value}
+              onPress={() => onSelectLanguage?.(l.value)}
+            />
+          ))}
+        </ScrollView>
+      </View>
+    ) : null}
+
     {sorts.length > 0 ? (
       <View style={styles.sortRow}>
         <Text style={styles.sortLabel}>{sortLabel}</Text>
@@ -74,7 +98,29 @@ const ListControls = ({
       </View>
     ) : null}
 
-    {countLabel ? <Text style={styles.count}>{countLabel}</Text> : null}
+    {countLabel || onViewMode ? (
+      <View style={styles.footerRow}>
+        <Text style={styles.count}>{countLabel || ''}</Text>
+        {onViewMode ? (
+          <View style={styles.viewToggle}>
+            <TouchableOpacity
+              onPress={() => onViewMode('list')}
+              style={[styles.viewBtn, viewMode === 'list' && styles.viewBtnActive]}
+              accessibilityLabel="List view"
+            >
+              <MaterialCommunityIcons name="view-agenda-outline" size={18} color={viewMode === 'list' ? '#fff' : '#111'} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => onViewMode('grid')}
+              style={[styles.viewBtn, viewMode === 'grid' && styles.viewBtnActive]}
+              accessibilityLabel="Grid view"
+            >
+              <MaterialCommunityIcons name="view-grid-outline" size={18} color={viewMode === 'grid' ? '#fff' : '#111'} />
+            </TouchableOpacity>
+          </View>
+        ) : null}
+      </View>
+    ) : null}
   </View>
 );
 
@@ -147,6 +193,30 @@ const styles = StyleSheet.create({
     color: '#62645c',
     fontWeight: '700',
     fontSize: 13,
+  },
+  footerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
+  },
+  viewToggle: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  viewBtn: {
+    width: 34,
+    height: 30,
+    borderRadius: 7,
+    borderWidth: 1,
+    borderColor: '#e3dfd2',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+  },
+  viewBtnActive: {
+    backgroundColor: '#111',
+    borderColor: '#111',
   },
 });
 

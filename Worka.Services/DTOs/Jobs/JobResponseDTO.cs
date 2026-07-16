@@ -32,6 +32,13 @@ namespace Worka.Services.DTOs.Jobs
 
         public string Currency { get; set; }
 
+        /// <summary>
+        /// Comma-separated ISO language codes the job's customer speaks, so the
+        /// marketplace can surface and filter jobs by language fit. Set by the
+        /// service (not derived from the Job row).
+        /// </summary>
+        public string CustomerLanguages { get; set; } = string.Empty;
+
         /// <summary>True when the location has been reduced to an area for privacy.</summary>
         public bool LocationApproximate { get; set; }
 

@@ -286,9 +286,7 @@ namespace Worka.Services.Jobs
                     .OrderByDescending(job => job.CreatedAt)
                     .ToListAsync();
 
-                return new WorkaResponse<List<JobResponseDTO>>(
-                    jobs.Select(job => new JobResponseDTO(job, maskLocation: !IsBookedByProfessional(job, myQuoteIds)))
-                        .ToList());
+                return new WorkaResponse<List<JobResponseDTO>>(await BuildJobDtosAsync(jobs, myQuoteIds));
             }
             catch (Exception ex)
             {
@@ -330,9 +328,7 @@ namespace Worka.Services.Jobs
                     }
                 }
 
-                return new WorkaResponse<List<JobResponseDTO>>(
-                    jobs.Select(job => new JobResponseDTO(job, maskLocation: !IsBookedByProfessional(job, myQuoteIds)))
-                        .ToList());
+                return new WorkaResponse<List<JobResponseDTO>>(await BuildJobDtosAsync(jobs, myQuoteIds));
             }
             catch (Exception ex)
             {
@@ -343,6 +339,26 @@ namespace Worka.Services.Jobs
         private static bool IsBookedByProfessional(Job job, HashSet<Guid> professionalQuoteIds)
         {
             return job.AcceptedQuoteId.HasValue && professionalQuoteIds.Contains(job.AcceptedQuoteId.Value);
+        }
+
+        // Builds job DTOs and attaches each job customer's languages (comma-separated
+        // ISO codes) so the marketplace can show and filter by language fit.
+        private async Task<List<JobResponseDTO>> BuildJobDtosAsync(List<Job> jobs, HashSet<Guid> myQuoteIds)
+        {
+            var customerIds = jobs.Select(job => job.CustomerId).Distinct().ToList();
+            var languagesByCustomer = await _dbContext.Customers
+                .Where(customer => customerIds.Contains(customer.CustomerId))
+                .Select(customer => new { customer.CustomerId, customer.Languages })
+                .ToDictionaryAsync(entry => entry.CustomerId, entry => entry.Languages);
+
+            return jobs.Select(job =>
+            {
+                var dto = new JobResponseDTO(job, maskLocation: !IsBookedByProfessional(job, myQuoteIds));
+                dto.CustomerLanguages = languagesByCustomer.TryGetValue(job.CustomerId, out var langs)
+                    ? (langs ?? string.Empty)
+                    : string.Empty;
+                return dto;
+            }).ToList();
         }
 
         private static bool IsValidLatitude(double? value)

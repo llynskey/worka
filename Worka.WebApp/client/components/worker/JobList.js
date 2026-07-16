@@ -11,6 +11,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import notify from '../../Utils/notify';
@@ -53,7 +54,12 @@ const WorkerJobList = () => {
   const [locationError, setLocationError] = useState('');
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState(null);
+  const [language, setLanguage] = useState(null);
   const [sortBy, setSortBy] = useState('nearest');
+  const [viewMode, setViewMode] = useState('list');
+  const { width } = useWindowDimensions();
+  const wide = width >= 1000;
+  const cols = viewMode === 'grid' && wide ? 2 : 1;
 
   // Ask for location automatically; the manual button only appears if the
   // silent attempt fails (e.g. permission not yet granted).
@@ -133,6 +139,15 @@ const WorkerJobList = () => {
     if (category) {
       list = list.filter((j) => String(j.category ?? '').toLowerCase() === category);
     }
+    if (language) {
+      list = list.filter((j) =>
+        String(j.customerLanguages ?? '')
+          .toLowerCase()
+          .split(',')
+          .map((c) => c.trim())
+          .includes(language)
+      );
+    }
     if (q) {
       list = list.filter((j) =>
         [j.jobName, j.jobDescription, j.locationLabel, j.address, categoryLabel(t, j.category)].some((v) =>
@@ -149,11 +164,35 @@ const WorkerJobList = () => {
           (getDistanceKm(currentLocation, a) ?? Infinity) - (getDistanceKm(currentLocation, b) ?? Infinity)
       );
     return arr;
-  }, [openJobs, search, category, sortBy, currentLocation, t]);
+  }, [openJobs, search, category, language, sortBy, currentLocation, t]);
 
   const categoryChips = useMemo(
     () => CATEGORY_VALUES.map((c) => ({ value: c, label: categoryLabel(t, c) })),
     [t]
+  );
+  // Languages actually present in the open jobs (the customers' spoken languages).
+  const languageChips = useMemo(() => {
+    const set = new Set();
+    openJobs.forEach((j) =>
+      String(j.customerLanguages ?? '')
+        .split(',')
+        .forEach((c) => {
+          const code = c.trim().toLowerCase();
+          if (code) set.add(code);
+        })
+    );
+    return [...set].sort().map((code) => ({ value: code, label: code.toUpperCase() }));
+  }, [openJobs]);
+  // The professional's own languages, to flag jobs that are a language fit.
+  const workerLangs = useMemo(
+    () =>
+      new Set(
+        String(account?.languages ?? '')
+          .split(',')
+          .map((c) => c.trim().toLowerCase())
+          .filter(Boolean)
+      ),
+    [account]
   );
   const sortChips = useMemo(
     () => [
@@ -163,7 +202,7 @@ const WorkerJobList = () => {
     ],
     [t]
   );
-  const filtersActive = !!search.trim() || !!category;
+  const filtersActive = !!search.trim() || !!category || !!language;
 
   const useCurrentLocation = async () => {
     try {
@@ -242,8 +281,11 @@ const WorkerJobList = () => {
       <FlatList
         data={filteredJobs}
         keyExtractor={(item) => String(item.jobId)}
+        key={`v-${cols}`}
+        numColumns={cols}
+        columnWrapperStyle={cols > 1 ? styles.columnWrap : undefined}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} />}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[styles.listContent, wide && styles.listContentWide]}
         ListFooterComponent={<AppFooter />}
         ListHeaderComponent={
           <View>
@@ -291,11 +333,18 @@ const WorkerJobList = () => {
             selectedCategory={category}
             onSelectCategory={setCategory}
             allLabel={t('list.all')}
+            languages={languageChips}
+            selectedLanguage={language}
+            onSelectLanguage={setLanguage}
+            languageLabel={t('list.language')}
+            languageAllLabel={t('list.all')}
             sorts={sortChips}
             sortValue={sortBy}
             onSort={setSortBy}
             sortLabel={t('list.sort')}
             countLabel={t('list.results', { count: filteredJobs.length })}
+            viewMode={viewMode}
+            onViewMode={wide ? setViewMode : undefined}
           />
           </View>
         }
@@ -319,7 +368,13 @@ const WorkerJobList = () => {
           const distance = getDistanceKm(currentLocation, item);
           const distanceLabel = formatDistance(distance);
           const image = resolveUploadUrl(item.photoUrl) || categoryImages[item.category] || categoryImages.Repairs;
+          const jobLangs = String(item.customerLanguages ?? '')
+            .split(',')
+            .map((c) => c.trim().toLowerCase())
+            .filter(Boolean);
+          const langMatch = jobLangs.some((c) => workerLangs.has(c));
           return (
+            <View style={cols > 1 ? styles.gridCell : undefined}>
             <View style={styles.card}>
               <ImageBackground source={{ uri: image }} style={styles.cardImage} imageStyle={styles.cardImageRadius}>
                 <View style={styles.cardImageOverlay}>
@@ -365,6 +420,14 @@ const WorkerJobList = () => {
                     {Number.isFinite(Number(item.latitude)) ? t('work.located') : t('work.needsLocation')}
                   </Text>
                 </View>
+                {jobLangs.length > 0 ? (
+                  <View style={[styles.detailChip, langMatch && styles.langChipMatch]}>
+                    <MaterialCommunityIcons name="translate" size={15} color={langMatch ? '#24513b' : '#111'} />
+                    <Text style={[styles.detailChipText, langMatch && styles.langChipMatchText]}>
+                      {jobLangs.map((c) => c.toUpperCase()).join(', ')}
+                    </Text>
+                  </View>
+                ) : null}
               </View>
 
               {existingQuote ? (
@@ -384,6 +447,7 @@ const WorkerJobList = () => {
                 <MaterialCommunityIcons name="file-search-outline" size={18} color="#111" />
                 <Text style={styles.detailsButtonText}>{t('common.viewDetails')}</Text>
               </TouchableOpacity>
+            </View>
             </View>
           );
         }}
@@ -482,6 +546,24 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 880,
     alignSelf: 'center',
+  },
+  listContentWide: {
+    maxWidth: 1180,
+  },
+  columnWrap: {
+    gap: 14,
+    alignItems: 'stretch',
+  },
+  gridCell: {
+    flex: 1,
+    minWidth: 0,
+  },
+  langChipMatch: {
+    borderColor: '#bfe0cb',
+    backgroundColor: '#e8f5ed',
+  },
+  langChipMatchText: {
+    color: '#24513b',
   },
   hero: {
     backgroundColor: '#18201d',
