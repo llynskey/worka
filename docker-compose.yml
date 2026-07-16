@@ -27,7 +27,10 @@ services:
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_URLS: http://+:8080
       JwtSecret: ${JwtSecret:?Set JwtSecret in .env.production}
-      ConnectionStrings__Postgres: ${ConnectionStrings__Postgres:?Set ConnectionStrings__Postgres in .env.production}
+      # Built here from the plain POSTGRES_* vars so .env.production never has to
+      # hold a semicolon-laden connection string (unquoted ';' in a .env value
+      # gets truncated by Compose). Guaranteed to match the postgres service creds.
+      ConnectionStrings__Postgres: "Host=postgres;Port=5432;Database=${POSTGRES_DB:?Set POSTGRES_DB in .env.production};Username=${POSTGRES_USER:?Set POSTGRES_USER in .env.production};Password=${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env.production}"
       Stripe__SecretKey: ${Stripe__SecretKey:-}
       Stripe__WebhookSecret: ${Stripe__WebhookSecret:-}
       Stripe__ConnectClientId: ${Stripe__ConnectClientId:-}
