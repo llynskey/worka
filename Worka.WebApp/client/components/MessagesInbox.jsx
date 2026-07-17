@@ -254,7 +254,7 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   eyebrow: {
-    color: '#d6f36a',
+    color: '#9fd8b6',
     fontSize: 12,
     fontWeight: '900',
     textTransform: 'uppercase',
@@ -267,7 +267,7 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
   heroBadge: {
-    backgroundColor: '#d6f36a',
+    backgroundColor: '#9fd8b6',
     borderRadius: 999,
     paddingHorizontal: 12,
     paddingVertical: 6,

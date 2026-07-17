@@ -1,7 +1,6 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
-  FlatList,
   Modal,
   RefreshControl,
   ScrollView,
@@ -15,12 +14,14 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { api, formatDate, formatMoney, getErrorMessage, unwrap } from '../../api/workaApi';
 import AppFooter from '../AppFooter';
 import Avatar from '../Avatar';
+import Reveal from '../Reveal';
 import Stars from '../Stars';
 import SelectField from '../SelectField';
 import useAutoRefresh from '../../Utils/useAutoRefresh';
 import { SPOKEN_LANGUAGES, languageLabel } from '../../i18n/spokenLanguages';
 import { useI18n } from '../../i18n/I18nContext';
 import { categoryLabel } from '../../i18n/categories';
+import { colors, radius, shadow, space, useLayout } from '../../Utils/theme';
 
 const parseLanguages = (value) =>
   String(value ?? '')
@@ -34,6 +35,7 @@ const specialtyChips = ['Plumbing', 'Electrical', 'Painting', 'Cleaning', 'Garde
 
 const ProDirectory = () => {
   const { t } = useI18n();
+  const { isDesktop, isPhone, isWide } = useLayout();
   const [pros, setPros] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -43,9 +45,30 @@ const ProDirectory = () => {
   const [specialty, setSpecialty] = useState('');
   const [languageFilter, setLanguageFilter] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
+  const [sortBy, setSortBy] = useState('rating');
+  const [scrollTick, setScrollTick] = useState(0);
   const [selectedPro, setSelectedPro] = useState(null);
   const [proReviews, setProReviews] = useState([]);
   const [reviewsLoading, setReviewsLoading] = useState(false);
+
+  // Client-side sort over whatever the directory returns.
+  const sortedPros = useMemo(() => {
+    const list = [...pros];
+    const num = (v, fallback) => (v == null ? fallback : Number(v));
+    switch (sortBy) {
+      case 'priceLow':
+        return list.sort((a, b) => num(a.minQuotePrice, Infinity) - num(b.minQuotePrice, Infinity));
+      case 'reviews':
+        return list.sort((a, b) => num(b.reviewCount, 0) - num(a.reviewCount, 0));
+      case 'rating':
+      default:
+        return list.sort(
+          (a, b) => num(b.averageRating, 0) - num(a.averageRating, 0) || num(b.reviewCount, 0) - num(a.reviewCount, 0)
+        );
+    }
+  }, [pros, sortBy]);
+
+  const gridCols = isWide ? 3 : isDesktop ? 2 : 1;
 
   const openProDetails = useCallback(async (pro) => {
     setSelectedPro(pro);
@@ -105,192 +128,219 @@ const ProDirectory = () => {
     );
   }
 
+  const renderCard = (item, i) => (
+    <Reveal
+      key={item.professionalId}
+      tick={scrollTick}
+      delay={Math.min(i, 8) * 45}
+      style={[styles.gridCell, gridCols === 1 && styles.gridCellFull, gridCols === 2 && styles.gridCellHalf, gridCols === 3 && styles.gridCellThird]}
+    >
+      <TouchableOpacity style={styles.card} activeOpacity={0.85} onPress={() => openProDetails(item)}>
+        <View style={styles.cardHeader}>
+          <Avatar photoUrl={item.photoUrl} firstName={item.firstName} lastName={item.lastName} size={46} />
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text style={styles.cardName} numberOfLines={1}>
+              {item.firstName} {item.lastName}
+            </Text>
+            <Text style={styles.cardSpecialty} numberOfLines={1}>{item.specialty || t('directory.generalServices')}</Text>
+            <View style={styles.cardStars}>
+              <Stars value={item.averageRating} count={item.reviewCount} emptyLabel={t('reviews.none')} />
+            </View>
+          </View>
+        </View>
+
+        {item.readyForPayments ? (
+          <View style={styles.verifiedPill}>
+            <MaterialCommunityIcons name="shield-check-outline" size={14} color={colors.accent} />
+            <Text style={styles.verifiedText}>{t('directory.payoutReady')}</Text>
+          </View>
+        ) : null}
+
+        {item.languages ? (
+          <View style={styles.langChipRow}>
+            {parseLanguages(item.languages).map((code) => (
+              <View key={code} style={styles.langChip}>
+                <Text style={styles.langChipText}>{languageLabel(code)}</Text>
+              </View>
+            ))}
+          </View>
+        ) : null}
+
+        {item.bio ? (
+          <Text style={styles.cardBio} numberOfLines={3}>
+            {item.bio}
+          </Text>
+        ) : null}
+
+        <View style={styles.metaRow}>
+          <MaterialCommunityIcons name="map-marker-outline" size={16} color={colors.muted} />
+          <Text style={styles.metaText} numberOfLines={1}>{item.serviceArea || t('directory.areaNotListed')}</Text>
+        </View>
+
+        <View style={styles.statsRow}>
+          <View style={styles.statBox}>
+            <Text style={styles.statValue}>{item.quoteCount}</Text>
+            <Text style={styles.statLabel}>{t('directory.quotesSent')}</Text>
+          </View>
+          <View style={styles.statBox}>
+            <Text style={styles.statValue}>
+              {item.averageQuotePrice != null ? formatMoney(item.averageQuotePrice) : '—'}
+            </Text>
+            <Text style={styles.statLabel}>{t('directory.avgPrice')}</Text>
+          </View>
+          <View style={styles.statBox}>
+            <Text style={styles.statValue}>
+              {item.minQuotePrice != null ? formatMoney(item.minQuotePrice) : '—'}
+            </Text>
+            <Text style={styles.statLabel}>{t('directory.from')}</Text>
+          </View>
+        </View>
+
+        <View style={styles.viewProfileRow}>
+          <Text style={styles.viewProfileText}>{t('directory.viewProfile')}</Text>
+          <MaterialCommunityIcons name="chevron-right" size={20} color={colors.ink} />
+        </View>
+      </TouchableOpacity>
+    </Reveal>
+  );
+
   return (
     <>
-    <FlatList
-      data={pros}
-      keyExtractor={(item) => String(item.professionalId)}
+    <ScrollView
+      style={styles.screen}
+      contentContainerStyle={styles.content}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} />}
-      contentContainerStyle={styles.listContent}
-      ListFooterComponent={<AppFooter />}
       keyboardShouldPersistTaps="handled"
-      ListHeaderComponent={
-        <View>
-          <View style={styles.hero}>
-            <Text style={styles.eyebrow}>{t('tabs.pros')}</Text>
-            <Text style={styles.heroTitle}>{t('directory.heroTitle')}</Text>
-            <Text style={styles.heroText}>{t('directory.heroText')}</Text>
-          </View>
+      onScroll={(event) => {
+        const bucket = Math.round(event.nativeEvent.contentOffset.y / 60);
+        setScrollTick((current) => (current === bucket ? current : bucket));
+      }}
+      scrollEventThrottle={80}
+    >
+      <View style={styles.hero}>
+        <Text style={styles.eyebrow}>{t('tabs.pros')}</Text>
+        <Text style={styles.heroTitle}>{t('directory.heroTitle')}</Text>
+        <Text style={styles.heroText}>{t('directory.heroText')}</Text>
+      </View>
 
-          <View style={styles.filterCard}>
-            <View style={styles.filterRow}>
-              <View style={styles.searchBox}>
-                <MaterialCommunityIcons name="magnify" size={19} color="#62645c" />
-                <TextInput
-                  style={styles.searchInput}
-                  value={search}
-                  onChangeText={setSearch}
-                  placeholder={t('directory.searchPlaceholder')}
-                  placeholderTextColor="#686b64"
-                  returnKeyType="search"
-                  onSubmitEditing={refresh}
-                />
-              </View>
-            </View>
-
-            <View style={styles.filterRow}>
-              <View style={[styles.searchBox, styles.filterHalf]}>
-                <MaterialCommunityIcons name="map-marker-outline" size={19} color="#62645c" />
-                <TextInput
-                  style={styles.searchInput}
-                  value={area}
-                  onChangeText={setArea}
-                  placeholder={t('directory.areaPlaceholder')}
-                  placeholderTextColor="#686b64"
-                  returnKeyType="search"
-                  onSubmitEditing={refresh}
-                />
-              </View>
-              <View style={[styles.searchBox, styles.filterHalf]}>
-                <MaterialCommunityIcons name="cash" size={19} color="#62645c" />
-                <TextInput
-                  style={styles.searchInput}
-                  value={maxPrice}
-                  onChangeText={setMaxPrice}
-                  placeholder={t('directory.maxPricePlaceholder')}
-                  placeholderTextColor="#686b64"
-                  keyboardType="numeric"
-                  returnKeyType="search"
-                  onSubmitEditing={refresh}
-                />
-              </View>
-            </View>
-
-            <Text style={styles.filterGroupLabel}>{t('directory.serviceLabel')}</Text>
-            <View style={styles.chipRow}>
-              {specialtyChips.map((chip) => {
-                const active = specialty === chip;
-                return (
-                  <TouchableOpacity
-                    key={chip}
-                    style={[styles.chip, active && styles.chipActive]}
-                    onPress={() => setSpecialty(active ? '' : chip)}
-                  >
-                    <Text style={[styles.chipText, active && styles.chipTextActive]}>{categoryLabel(t, chip)}</Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-
-            <View style={styles.filterDivider} />
-
-            <SelectField
-              label={t('directory.languageLabel')}
-              options={SPOKEN_LANGUAGES.map((language) => ({
-                value: language.code,
-                label: language.label,
-              }))}
-              value={languageFilter}
-              onChange={(code) => setLanguageFilter(code || '')}
-              placeholder={t('directory.anyLanguage')}
-              searchPlaceholder={t('common.search')}
-              allowClear
-              clearLabel={t('directory.anyLanguage')}
+      <View style={styles.filterCard}>
+        <View style={[styles.filterRow, isDesktop && styles.filterRowWrap]}>
+          <View style={[styles.searchBox, isDesktop && styles.searchBoxGrow]}>
+            <MaterialCommunityIcons name="magnify" size={19} color={colors.muted} />
+            <TextInput
+              style={styles.searchInput}
+              value={search}
+              onChangeText={setSearch}
+              placeholder={t('directory.searchPlaceholder')}
+              placeholderTextColor="#686b64"
+              returnKeyType="search"
+              onSubmitEditing={refresh}
             />
-
-            <TouchableOpacity style={styles.applyButton} onPress={refresh}>
-              <MaterialCommunityIcons name="filter-check-outline" size={18} color="#fff" />
-              <Text style={styles.applyButtonText}>{t('directory.applyFilters')}</Text>
-            </TouchableOpacity>
           </View>
-
-          {error ? (
-            <View style={styles.errorBox}>
-              <MaterialCommunityIcons name="cloud-alert-outline" size={20} color="#111" />
-              <Text style={styles.errorText}>{error}</Text>
-            </View>
-          ) : null}
+          <View style={[styles.searchBox, styles.filterHalf]}>
+            <MaterialCommunityIcons name="map-marker-outline" size={19} color={colors.muted} />
+            <TextInput
+              style={styles.searchInput}
+              value={area}
+              onChangeText={setArea}
+              placeholder={t('directory.areaPlaceholder')}
+              placeholderTextColor="#686b64"
+              returnKeyType="search"
+              onSubmitEditing={refresh}
+            />
+          </View>
+          <View style={[styles.searchBox, styles.filterHalf]}>
+            <MaterialCommunityIcons name="cash" size={19} color={colors.muted} />
+            <TextInput
+              style={styles.searchInput}
+              value={maxPrice}
+              onChangeText={setMaxPrice}
+              placeholder={t('directory.maxPricePlaceholder')}
+              placeholderTextColor="#686b64"
+              keyboardType="numeric"
+              returnKeyType="search"
+              onSubmitEditing={refresh}
+            />
+          </View>
         </View>
-      }
-      ListEmptyComponent={
+
+        <Text style={styles.filterGroupLabel}>{t('directory.serviceLabel')}</Text>
+        <View style={styles.chipRow}>
+          {specialtyChips.map((chip) => {
+            const active = specialty === chip;
+            return (
+              <TouchableOpacity
+                key={chip}
+                style={[styles.chip, active && styles.chipActive]}
+                onPress={() => setSpecialty(active ? '' : chip)}
+              >
+                <Text style={[styles.chipText, active && styles.chipTextActive]}>{categoryLabel(t, chip)}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
+        <View style={styles.filterDivider} />
+
+        <SelectField
+          label={t('directory.languageLabel')}
+          options={SPOKEN_LANGUAGES.map((language) => ({
+            value: language.code,
+            label: language.label,
+          }))}
+          value={languageFilter}
+          onChange={(code) => setLanguageFilter(code || '')}
+          placeholder={t('directory.anyLanguage')}
+          searchPlaceholder={t('common.search')}
+          allowClear
+          clearLabel={t('directory.anyLanguage')}
+        />
+
+        <TouchableOpacity style={styles.applyButton} onPress={refresh}>
+          <MaterialCommunityIcons name="filter-check-outline" size={18} color="#fff" />
+          <Text style={styles.applyButtonText}>{t('directory.applyFilters')}</Text>
+        </TouchableOpacity>
+      </View>
+
+      {error ? (
+        <View style={styles.errorBox}>
+          <MaterialCommunityIcons name="cloud-alert-outline" size={20} color="#111" />
+          <Text style={styles.errorText}>{error}</Text>
+        </View>
+      ) : null}
+
+      <View style={styles.resultRow}>
+        <Text style={styles.resultCount}>{t('directory.results', { count: sortedPros.length })}</Text>
+        <View style={styles.sortControl}>
+          <SelectField
+            options={[
+              { value: 'rating', label: t('directory.sortRating') },
+              { value: 'reviews', label: t('directory.sortReviews') },
+              { value: 'priceLow', label: t('directory.sortPriceLow') },
+            ]}
+            value={sortBy}
+            onChange={(v) => setSortBy(v || 'rating')}
+            placeholder={t('directory.sortRating')}
+          />
+        </View>
+      </View>
+
+      {sortedPros.length === 0 ? (
         <View style={styles.emptyState}>
           <MaterialCommunityIcons name="account-search-outline" size={40} color="#111" />
           <Text style={styles.emptyTitle}>{t('directory.emptyTitle')}</Text>
           <Text style={styles.mutedText}>{t('directory.emptyText')}</Text>
         </View>
-      }
-      renderItem={({ item }) => (
-        <TouchableOpacity style={styles.card} activeOpacity={0.85} onPress={() => openProDetails(item)}>
-          <View style={styles.cardHeader}>
-            <Avatar photoUrl={item.photoUrl} firstName={item.firstName} lastName={item.lastName} size={46} />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.cardName}>
-                {item.firstName} {item.lastName}
-              </Text>
-              <Text style={styles.cardSpecialty}>{item.specialty || t('directory.generalServices')}</Text>
-              <View style={styles.cardStars}>
-                <Stars value={item.averageRating} count={item.reviewCount} emptyLabel={t('reviews.none')} />
-              </View>
-            </View>
-            {item.readyForPayments ? (
-              <View style={styles.verifiedPill}>
-                <MaterialCommunityIcons name="shield-check-outline" size={14} color="#24513b" />
-                <Text style={styles.verifiedText}>{t('directory.payoutReady')}</Text>
-              </View>
-            ) : null}
-          </View>
-
-          {item.languages ? (
-            <View style={styles.langChipRow}>
-              {parseLanguages(item.languages).map((code) => (
-                <View key={code} style={styles.langChip}>
-                  <Text style={styles.langChipText}>{languageLabel(code)}</Text>
-                </View>
-              ))}
-            </View>
-          ) : null}
-
-          {item.bio ? (
-            <Text style={styles.cardBio} numberOfLines={3}>
-              {item.bio}
-            </Text>
-          ) : null}
-
-          <View style={styles.metaRow}>
-            <MaterialCommunityIcons name="map-marker-outline" size={16} color="#62645c" />
-            <Text style={styles.metaText}>{item.serviceArea || t('directory.areaNotListed')}</Text>
-          </View>
-
-          <View style={styles.statsRow}>
-            <View style={styles.statBox}>
-              <Text style={styles.statValue}>{item.quoteCount}</Text>
-              <Text style={styles.statLabel}>{t('directory.quotesSent')}</Text>
-            </View>
-            <View style={styles.statBox}>
-              <Text style={styles.statValue}>
-                {item.averageQuotePrice != null ? formatMoney(item.averageQuotePrice) : '—'}
-              </Text>
-              <Text style={styles.statLabel}>{t('directory.avgPrice')}</Text>
-            </View>
-            <View style={styles.statBox}>
-              <Text style={styles.statValue}>
-                {item.minQuotePrice != null ? formatMoney(item.minQuotePrice) : '—'}
-              </Text>
-              <Text style={styles.statLabel}>{t('directory.from')}</Text>
-            </View>
-          </View>
-
-          <View style={styles.viewProfileRow}>
-            <Text style={styles.viewProfileText}>{t('directory.viewProfile')}</Text>
-            <MaterialCommunityIcons name="chevron-right" size={20} color="#111" />
-          </View>
-        </TouchableOpacity>
+      ) : (
+        <View style={styles.grid}>{sortedPros.map(renderCard)}</View>
       )}
-    />
 
-    <Modal visible={!!selectedPro} transparent animationType="slide" onRequestClose={() => setSelectedPro(null)}>
-      <View style={styles.proModalBackdrop}>
-        <View style={styles.proModalCard}>
+      <AppFooter />
+    </ScrollView>
+
+    <Modal visible={!!selectedPro} transparent animationType={isDesktop ? 'fade' : 'slide'} onRequestClose={() => setSelectedPro(null)}>
+      <View style={[styles.proModalBackdrop, isDesktop && styles.proModalBackdropCentered]}>
+        <View style={[styles.proModalCard, isDesktop && styles.proModalCardWide]}>
           <ScrollView contentContainerStyle={styles.proModalContent} showsVerticalScrollIndicator={false}>
             {selectedPro ? (
               <>
@@ -416,12 +466,24 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.46)',
     justifyContent: 'flex-end',
   },
+  proModalBackdropCentered: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
   proModalCard: {
     maxHeight: '92%',
     backgroundColor: '#fff',
     borderTopLeftRadius: 8,
     borderTopRightRadius: 8,
     overflow: 'hidden',
+  },
+  proModalCardWide: {
+    width: '100%',
+    maxWidth: 620,
+    maxHeight: '88%',
+    borderRadius: radius.lg,
+    ...shadow.raised,
   },
   proModalContent: {
     padding: 18,
@@ -486,25 +548,68 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
   },
-  listContent: {
-    padding: 16,
+  screen: {
+    flex: 1,
+    minHeight: 0,
+    backgroundColor: colors.paper,
+  },
+  content: {
+    padding: space.lg,
     paddingBottom: 28,
     flexGrow: 1,
-    backgroundColor: '#f7f5ef',
+    backgroundColor: colors.paper,
     width: '100%',
-    maxWidth: 880,
+    maxWidth: 1240,
     alignSelf: 'center',
   },
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    columnGap: space.lg,
+  },
+  gridCell: {
+    flexGrow: 1,
+    maxWidth: '100%',
+  },
+  gridCellFull: {
+    flexBasis: '100%',
+    minWidth: '100%',
+  },
+  gridCellHalf: {
+    flexBasis: '48%',
+    minWidth: 300,
+  },
+  gridCellThird: {
+    flexBasis: '31%',
+    minWidth: 280,
+  },
+  resultRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    marginBottom: 12,
+  },
+  resultCount: {
+    color: colors.muted,
+    fontWeight: '800',
+    fontSize: 14,
+  },
+  sortControl: {
+    minWidth: 190,
+  },
   hero: {
-    backgroundColor: '#18201d',
-    borderRadius: 8,
-    padding: 18,
-    marginBottom: 14,
+    backgroundColor: colors.hero,
+    borderRadius: radius.md,
+    padding: 20,
+    marginBottom: space.lg,
+    ...shadow.card,
   },
   eyebrow: {
-    color: '#d6f36a',
+    color: colors.accentOnDark,
     fontSize: 12,
     fontWeight: '900',
+    letterSpacing: 0.6,
     textTransform: 'uppercase',
     marginBottom: 8,
   },
@@ -513,9 +618,10 @@ const styles = StyleSheet.create({
     fontSize: 26,
     fontWeight: '900',
     marginBottom: 8,
+    letterSpacing: -0.3,
   },
   heroText: {
-    color: '#d8ded8',
+    color: colors.onHero,
     fontSize: 15,
     lineHeight: 21,
   },
@@ -529,15 +635,22 @@ const styles = StyleSheet.create({
   },
   filterRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 10,
     marginBottom: 10,
   },
+  filterRowWrap: {
+    alignItems: 'stretch',
+  },
   filterHalf: {
-    flex: 1,
-    minWidth: 130,
+    flexGrow: 1,
+    flexBasis: 150,
+    minWidth: 140,
   },
   searchBox: {
-    flex: 1,
+    flexGrow: 1,
+    flexBasis: 220,
+    minWidth: 180,
     minHeight: 48,
     flexDirection: 'row',
     alignItems: 'center',
@@ -547,6 +660,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 12,
     backgroundColor: '#fbfaf6',
+  },
+  searchBoxGrow: {
+    flexBasis: 260,
   },
   searchInput: {
     flex: 1,

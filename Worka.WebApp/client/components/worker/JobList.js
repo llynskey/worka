@@ -583,7 +583,7 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   eyebrow: {
-    color: '#d6f36a',
+    color: '#9fd8b6',
     fontSize: 12,
     fontWeight: '900',
     letterSpacing: 0,

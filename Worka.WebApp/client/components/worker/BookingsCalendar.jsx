@@ -286,7 +286,7 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   eyebrow: {
-    color: '#d6f36a',
+    color: '#9fd8b6',
     fontSize: 12,
     fontWeight: '900',
     textTransform: 'uppercase',
@@ -397,7 +397,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#111',
   },
   dayDotSelected: {
-    backgroundColor: '#d6f36a',
+    backgroundColor: '#9fd8b6',
   },
   sectionTitle: {
     color: '#111',
