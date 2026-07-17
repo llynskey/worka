@@ -97,11 +97,16 @@ const JobMap = () => {
   const [distanceOpen, setDistanceOpen] = useState(true);
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const isNarrow = windowWidth < 700;
-  const mapHeight = Math.min(300, Math.round(windowHeight * 0.45));
   const scrollRef = useRef(null);
   const itemOffsets = useRef({});
   const [shellH, setShellH] = useState(0);
   const [topH, setTopH] = useState(0);
+  // On mobile the map shares the screen with the list, so size it to ~a third of
+  // the available height (measured) rather than a near-fixed 300px, which left
+  // the list a sliver on shorter phones. Desktop keeps a taller fixed map.
+  const mapHeight = isNarrow
+    ? Math.max(170, Math.min(300, Math.round((shellH || windowHeight * 0.7) * 0.34)))
+    : Math.min(300, Math.round(windowHeight * 0.45));
 
   const unit = useDistanceUnit();
   // Discrete distance presets that step up to National and Everywhere (no cap),
@@ -362,12 +367,12 @@ const JobMap = () => {
   }
 
   const headerBlock = (
-    <View style={styles.header}>
+    <View style={[styles.header, isNarrow && styles.headerNarrow]}>
       <View style={styles.headerCopy}>
         <Text style={styles.eyebrow}>
           {t('map.eyebrow')} · {locatedJobs.length}
         </Text>
-        <Text style={styles.title} numberOfLines={1}>{t('map.title')}</Text>
+        <Text style={[styles.title, isNarrow && styles.titleNarrow]} numberOfLines={1}>{t('map.title')}</Text>
       </View>
       <TouchableOpacity style={styles.refreshButton} onPress={refresh} disabled={refreshing}>
         {refreshing ? (
@@ -611,7 +616,7 @@ const styles = StyleSheet.create({
   },
   narrowTop: {
     paddingHorizontal: 16,
-    paddingTop: 16,
+    paddingTop: 12,
   },
   narrowListScroll: {
     flex: 1,
@@ -619,6 +624,7 @@ const styles = StyleSheet.create({
   },
   narrowListContent: {
     paddingHorizontal: 16,
+    paddingTop: 12,
     paddingBottom: 28,
     gap: 10,
   },
@@ -639,7 +645,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderWidth: 1,
     borderColor: '#111',
-    marginBottom: 14,
   },
   narrowList: {
     width: '100%',
@@ -657,6 +662,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 14,
+  },
+  headerNarrow: {
+    paddingVertical: 7,
+    marginBottom: 8,
   },
   locationBar: {
     backgroundColor: '#fff',
