@@ -368,24 +368,6 @@ const JobMap = () => {
     );
   }
 
-  const headerBlock = (
-    <View style={[styles.header, isNarrow && styles.headerNarrow]}>
-      <View style={styles.headerCopy}>
-        <Text style={styles.eyebrow}>
-          {t('map.eyebrow')} · {locatedJobs.length}
-        </Text>
-        <Text style={[styles.title, isNarrow && styles.titleNarrow]} numberOfLines={1}>{t('map.title')}</Text>
-      </View>
-      <TouchableOpacity style={styles.refreshButton} onPress={refresh} disabled={refreshing}>
-        {refreshing ? (
-          <ActivityIndicator color="#111" />
-        ) : (
-          <MaterialCommunityIcons name="refresh" size={20} color="#111" />
-        )}
-      </TouchableOpacity>
-    </View>
-  );
-
   const locationBarBlock = (
     <View style={[styles.locationBar, isNarrow && styles.locationBarNarrow]}>
       <View style={isNarrow ? styles.locationBarCopyNarrow : styles.locationBarCopy}>
@@ -422,8 +404,11 @@ const JobMap = () => {
 
   const radiusText = presetLabel(radius);
 
-  const radiusCard = (
-    <View style={styles.filterCard}>
+  // The distance controls, shown inside the combined map-controls card once a
+  // location is set. Reveals smoothly on web when the origin is found.
+  const distanceInner = (
+    <>
+      <View style={styles.filterDivider} />
       <TouchableOpacity style={styles.filterHeader} activeOpacity={0.7} onPress={() => setDistanceOpen((v) => !v)}>
         <Text style={styles.filterLabel}>
           {t('map.distance')}
@@ -431,20 +416,6 @@ const JobMap = () => {
         </Text>
         <View style={styles.filterHeaderRight}>
           <Text style={styles.filterCount}>{shownJobs.length}</Text>
-          {isNarrow ? (
-            <TouchableOpacity
-              style={styles.filterRefresh}
-              onPress={refresh}
-              disabled={refreshing}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            >
-              {refreshing ? (
-                <ActivityIndicator color="#111" size="small" />
-              ) : (
-                <MaterialCommunityIcons name="refresh" size={18} color="#111" />
-              )}
-            </TouchableOpacity>
-          ) : null}
           <MaterialCommunityIcons name={distanceOpen ? 'chevron-up' : 'chevron-down'} size={20} color="#111" />
         </View>
       </TouchableOpacity>
@@ -461,12 +432,10 @@ const JobMap = () => {
           ))}
         </ScrollView>
       ) : null}
-    </View>
+    </>
   );
 
-  // Smoothly reveal the distance section once a location is found (web animates
-  // the collapse/expand; native just shows it when there's an origin).
-  const radiusBlock =
+  const distanceReveal =
     Platform.OS === 'web'
       ? React.createElement(
           'div',
@@ -474,15 +443,38 @@ const JobMap = () => {
             style: {
               overflow: 'hidden',
               transition: 'max-height 320ms ease, opacity 320ms ease',
-              maxHeight: origin ? 260 : 0,
+              maxHeight: origin ? 320 : 0,
               opacity: origin ? 1 : 0,
             },
           },
-          radiusCard
+          distanceInner
         )
       : origin
-        ? radiusCard
+        ? distanceInner
         : null;
+
+  // One combined section: the map header (browse-by-location) and the distance
+  // controls live in a single card.
+  const mapControls = (
+    <View style={styles.filterCard}>
+      <View style={styles.controlsHeaderRow}>
+        <View style={styles.headerCopy}>
+          <Text style={styles.eyebrow}>
+            {t('map.eyebrow')} · {locatedJobs.length}
+          </Text>
+          <Text style={[styles.title, isNarrow && styles.titleNarrow]} numberOfLines={1}>{t('map.title')}</Text>
+        </View>
+        <TouchableOpacity style={styles.refreshButton} onPress={refresh} disabled={refreshing}>
+          {refreshing ? (
+            <ActivityIndicator color="#111" />
+          ) : (
+            <MaterialCommunityIcons name="refresh" size={20} color="#111" />
+          )}
+        </TouchableOpacity>
+      </View>
+      {distanceReveal}
+    </View>
+  );
 
   const listBody = (
     <>
@@ -558,7 +550,7 @@ const JobMap = () => {
       <>
         <View style={styles.narrowShell} onLayout={(e) => setShellH(e.nativeEvent.layout.height)}>
           <View style={styles.narrowTop} onLayout={(e) => setTopH(e.nativeEvent.layout.height)}>
-            {radiusBlock}
+            {mapControls}
             <View style={[styles.mapPaneNarrow, { height: mapHeight }]}>
               <JobsMapView
                 jobs={locatedJobs}
@@ -589,8 +581,7 @@ const JobMap = () => {
   return (
     <>
       <View style={styles.shell}>
-        {headerBlock}
-        {radiusBlock}
+        {mapControls}
 
         <View style={styles.mapLayout}>
           <View style={styles.mapPane}>
@@ -716,6 +707,13 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     paddingBottom: 4,
     marginBottom: 14,
+  },
+  controlsHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    paddingBottom: 4,
   },
   filterHeader: {
     flexDirection: 'row',
