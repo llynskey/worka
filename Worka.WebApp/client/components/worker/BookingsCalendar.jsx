@@ -13,6 +13,7 @@ import { api, formatMoney, getErrorMessage, unwrap } from '../../api/workaApi';
 import useAutoRefresh from '../../Utils/useAutoRefresh';
 import AppFooter from '../AppFooter';
 import { useI18n } from '../../i18n/I18nContext';
+import { colors, radius, shadow, space, useLayout } from '../../Utils/theme';
 
 const MONTH_LOCALES = { en: 'en-GB', es: 'es-ES', fr: 'fr-FR', ro: 'ro-RO' };
 
@@ -26,6 +27,7 @@ const dayKey = (date) =>
  */
 const BookingsCalendar = () => {
   const { t, language } = useI18n();
+  const { isDesktop } = useLayout();
   const [jobs, setJobs] = useState([]);
   const [quotes, setQuotes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -114,7 +116,7 @@ const BookingsCalendar = () => {
   }, [monthDate]);
 
   const weekdays = t('calendar.weekdays').split(',');
-  const monthLabel = monthDate.toLocaleDateString(MONTH_LOCALES[language] ?? 'en-GB', {
+  const monthLabel = monthDate.toLocaleDateString(MONTH_LOCALES[language] ?? language ?? 'en-GB', {
     month: 'long',
     year: 'numeric',
   });
@@ -156,6 +158,8 @@ const BookingsCalendar = () => {
         </View>
       ) : null}
 
+      <View style={[styles.layout, isDesktop && styles.layoutRow]}>
+      <View style={styles.calendarCol}>
       <View style={styles.calendarCard}>
         <View style={styles.monthRow}>
           <TouchableOpacity
@@ -191,7 +195,7 @@ const BookingsCalendar = () => {
           <View key={`week-${weekIndex}`} style={styles.weekRow}>
             {week.map((date, dayIndex) => {
               if (!date) {
-                return <View key={`blank-${dayIndex}`} style={styles.dayCell} />;
+                return <View key={`blank-${dayIndex}`} style={[styles.dayCell, isDesktop && styles.dayCellTall]} />;
               }
 
               const key = dayKey(date);
@@ -202,7 +206,7 @@ const BookingsCalendar = () => {
               return (
                 <TouchableOpacity
                   key={key}
-                  style={[styles.dayCell, selected && styles.dayCellSelected]}
+                  style={[styles.dayCell, isDesktop && styles.dayCellTall, selected && styles.dayCellSelected]}
                   onPress={() => setSelectedDay(key)}
                 >
                   <Text
@@ -227,7 +231,9 @@ const BookingsCalendar = () => {
           </View>
         ))}
       </View>
+      </View>
 
+      <View style={styles.dayCol}>
       <Text style={styles.sectionTitle}>
         {selectedBookings.length === 0
           ? t('calendar.noBookingsDay')
@@ -259,6 +265,8 @@ const BookingsCalendar = () => {
           </View>
         </View>
       ))}
+      </View>
+      </View>
 
       <AppFooter />
     </ScrollView>
@@ -276,30 +284,48 @@ const styles = StyleSheet.create({
     paddingBottom: 28,
     flexGrow: 1,
     width: '100%',
-    maxWidth: 720,
+    maxWidth: 1100,
     alignSelf: 'center',
   },
+  layout: {
+    width: '100%',
+  },
+  layoutRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: space.lg,
+  },
+  calendarCol: {
+    flex: 1,
+    minWidth: 0,
+  },
+  dayCol: {
+    width: 340,
+    flexShrink: 0,
+  },
   hero: {
-    backgroundColor: '#18201d',
-    borderRadius: 8,
-    padding: 18,
-    marginBottom: 14,
+    backgroundColor: colors.hero,
+    borderRadius: radius.md,
+    padding: 16,
+    marginBottom: space.lg,
+    ...shadow.card,
   },
   eyebrow: {
-    color: '#9fd8b6',
+    color: colors.accentOnDark,
     fontSize: 12,
     fontWeight: '900',
+    letterSpacing: 0.6,
     textTransform: 'uppercase',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   heroTitle: {
     color: '#fff',
-    fontSize: 26,
+    fontSize: 22,
     fontWeight: '900',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   heroText: {
-    color: '#d8ded8',
+    color: colors.onHero,
     fontSize: 15,
     lineHeight: 21,
   },
@@ -370,6 +396,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: 8,
     paddingVertical: 4,
+  },
+  dayCellTall: {
+    minHeight: 64,
   },
   dayCellSelected: {
     backgroundColor: '#111',
