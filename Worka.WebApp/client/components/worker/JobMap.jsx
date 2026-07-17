@@ -94,9 +94,11 @@ const JobMap = () => {
   const [quoteJob, setQuoteJob] = useState(null);
   const [quoteForm, setQuoteForm] = useState({ price: '', description: '' });
   const [submittingQuote, setSubmittingQuote] = useState(false);
-  const [distanceOpen, setDistanceOpen] = useState(true);
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const isNarrow = windowWidth < 700;
+  // On mobile the distance controls start retracted so the map gets more room;
+  // tapping the distance row expands them. Desktop shows them by default.
+  const [distanceOpen, setDistanceOpen] = useState(!isNarrow);
   const scrollRef = useRef(null);
   const itemOffsets = useRef({});
   const [shellH, setShellH] = useState(0);
@@ -105,7 +107,7 @@ const JobMap = () => {
   // the available height (measured) rather than a near-fixed 300px, which left
   // the list a sliver on shorter phones. Desktop keeps a taller fixed map.
   const mapHeight = isNarrow
-    ? Math.max(170, Math.min(300, Math.round((shellH || windowHeight * 0.7) * 0.34)))
+    ? Math.max(180, Math.min(340, Math.round((shellH || windowHeight * 0.7) * (distanceOpen ? 0.36 : 0.48))))
     : Math.min(300, Math.round(windowHeight * 0.45));
 
   const unit = useDistanceUnit();
@@ -429,6 +431,20 @@ const JobMap = () => {
         </Text>
         <View style={styles.filterHeaderRight}>
           <Text style={styles.filterCount}>{shownJobs.length}</Text>
+          {isNarrow ? (
+            <TouchableOpacity
+              style={styles.filterRefresh}
+              onPress={refresh}
+              disabled={refreshing}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              {refreshing ? (
+                <ActivityIndicator color="#111" size="small" />
+              ) : (
+                <MaterialCommunityIcons name="refresh" size={18} color="#111" />
+              )}
+            </TouchableOpacity>
+          ) : null}
           <MaterialCommunityIcons name={distanceOpen ? 'chevron-up' : 'chevron-down'} size={20} color="#111" />
         </View>
       </TouchableOpacity>
@@ -542,7 +558,6 @@ const JobMap = () => {
       <>
         <View style={styles.narrowShell} onLayout={(e) => setShellH(e.nativeEvent.layout.height)}>
           <View style={styles.narrowTop} onLayout={(e) => setTopH(e.nativeEvent.layout.height)}>
-            {headerBlock}
             {radiusBlock}
             <View style={[styles.mapPaneNarrow, { height: mapHeight }]}>
               <JobsMapView
@@ -713,6 +728,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+  },
+  filterRefresh: {
+    width: 30,
+    height: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   filterLabel: {
     color: '#111',
