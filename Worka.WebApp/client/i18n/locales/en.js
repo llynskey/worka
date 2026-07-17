@@ -276,6 +276,13 @@ export default {
   'post.searchAddress': 'Search address',
   'post.locationSet': 'Location set',
   'post.submit': 'Post job',
+  'post.previewKicker': 'Live preview',
+  'post.previewTitlePlaceholder': 'Your job title',
+  'post.previewDescPlaceholder': 'A clear description helps professionals quote accurately.',
+  'post.tipsTitle': 'Tips for great quotes',
+  'post.tip1': 'Add a photo — jobs with a reference photo get more quotes.',
+  'post.tip2': 'Describe the work, access, and any materials or timing.',
+  'post.tip3': 'Set an accurate location so nearby pros can find you.',
 
   // Photo notices (shared)
   'photo.accessTitle': 'Photo access needed',

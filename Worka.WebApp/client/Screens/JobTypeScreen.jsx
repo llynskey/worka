@@ -19,6 +19,7 @@ import { lookupLocations } from '../api/locationLookup';
 import { useI18n } from '../i18n/I18nContext';
 import { categoryLabel } from '../i18n/categories';
 import AppFooter from '../components/AppFooter';
+import { colors, radius, shadow, space, isWeb, useLayout } from '../Utils/theme';
 
 const jobTypes = [
   {
@@ -55,6 +56,7 @@ const jobTypes = [
 
 const JobTypeScreen = ({ navigation }) => {
   const { t } = useI18n();
+  const { isDesktop } = useLayout();
   const [selectedType, setSelectedType] = useState(jobTypes[0]);
   const [account, setAccount] = useState(null);
   const [loadingAccount, setLoadingAccount] = useState(true);
@@ -284,6 +286,42 @@ const JobTypeScreen = ({ navigation }) => {
     }
   };
 
+  const previewImage = resolveUploadUrl(form.photoUrl) || selectedType.image;
+  const previewCard = (
+    <View style={[styles.previewCard, isWeb && styles.previewSticky]}>
+      <Text style={styles.previewKicker}>{t('post.previewKicker')}</Text>
+      <ImageBackground source={{ uri: previewImage }} style={styles.previewImage} imageStyle={styles.previewImageRadius}>
+        <View style={styles.previewImageOverlay}>
+          <Text style={styles.previewCategory}>{categoryLabel(t, selectedType.type)}</Text>
+        </View>
+      </ImageBackground>
+      <Text style={styles.previewTitle} numberOfLines={2}>
+        {form.jobName.trim() || t('post.previewTitlePlaceholder')}
+      </Text>
+      <Text style={styles.previewDesc} numberOfLines={4}>
+        {form.jobDescription.trim() || t('post.previewDescPlaceholder')}
+      </Text>
+      {form.locationLabel || form.address ? (
+        <View style={styles.previewMeta}>
+          <MaterialCommunityIcons name="map-marker-outline" size={16} color={colors.muted} />
+          <Text style={styles.previewMetaText} numberOfLines={1}>{form.locationLabel || form.address}</Text>
+        </View>
+      ) : null}
+    </View>
+  );
+
+  const tipsCard = (
+    <View style={styles.tipsCard}>
+      <Text style={styles.tipsTitle}>{t('post.tipsTitle')}</Text>
+      {[1, 2, 3].map((n) => (
+        <View key={n} style={styles.tipRow}>
+          <MaterialCommunityIcons name="check-circle-outline" size={17} color={colors.accent} />
+          <Text style={styles.tipText}>{t(`post.tip${n}`)}</Text>
+        </View>
+      ))}
+    </View>
+  );
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
@@ -298,6 +336,8 @@ const JobTypeScreen = ({ navigation }) => {
           </View>
         </ImageBackground>
 
+        <View style={[styles.layout, isDesktop && styles.layoutRow]}>
+          <View style={styles.formCol}>
         <Text style={styles.sectionTitle}>{t('jobs.category')}</Text>
         <View style={styles.categoryGrid}>
           {jobTypes.map((job) => {
@@ -457,6 +497,10 @@ const JobTypeScreen = ({ navigation }) => {
             )}
           </TouchableOpacity>
         </View>
+          </View>
+
+          {isDesktop ? <View style={styles.previewCol}>{previewCard}{tipsCard}</View> : null}
+        </View>
 
         <AppFooter />
       </ScrollView>
@@ -479,8 +523,109 @@ const styles = StyleSheet.create({
     paddingBottom: 28,
     flexGrow: 1,
     width: '100%',
-    maxWidth: 720,
+    maxWidth: 1160,
     alignSelf: 'center',
+  },
+  layout: {
+    width: '100%',
+  },
+  layoutRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: space.xl,
+  },
+  formCol: {
+    flex: 1,
+    minWidth: 0,
+    maxWidth: 720,
+  },
+  previewCol: {
+    width: 360,
+    flexShrink: 0,
+    gap: space.lg,
+  },
+  previewSticky: isWeb ? { position: 'sticky', top: 16 } : {},
+  previewCard: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 16,
+    ...shadow.card,
+  },
+  previewKicker: {
+    color: colors.muted,
+    fontSize: 12,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 10,
+  },
+  previewImage: {
+    height: 150,
+    borderRadius: radius.sm,
+    overflow: 'hidden',
+    justifyContent: 'flex-end',
+    backgroundColor: colors.line,
+  },
+  previewImageRadius: {
+    borderRadius: radius.sm,
+  },
+  previewImageOverlay: {
+    backgroundColor: 'rgba(0,0,0,0.42)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  previewCategory: {
+    color: '#fff',
+    fontWeight: '900',
+    fontSize: 13,
+  },
+  previewTitle: {
+    color: colors.ink,
+    fontSize: 18,
+    fontWeight: '900',
+    marginTop: 12,
+  },
+  previewDesc: {
+    color: colors.inkSoft,
+    lineHeight: 20,
+    marginTop: 6,
+  },
+  previewMeta: {
+    marginTop: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  previewMetaText: {
+    flex: 1,
+    color: colors.muted,
+    fontWeight: '600',
+  },
+  tipsCard: {
+    backgroundColor: colors.surfaceAlt,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 16,
+  },
+  tipsTitle: {
+    color: colors.ink,
+    fontWeight: '900',
+    fontSize: 15,
+    marginBottom: 10,
+  },
+  tipRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    marginBottom: 8,
+  },
+  tipText: {
+    flex: 1,
+    color: colors.inkSoft,
+    lineHeight: 20,
   },
   hero: {
     minHeight: 190,
