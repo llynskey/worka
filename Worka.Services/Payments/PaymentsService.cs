@@ -535,28 +535,30 @@ namespace Worka.Services.Payments
 
                 if (payment != null)
                 {
-                    if (string.IsNullOrWhiteSpace(_stripeSecretKey))
+                    // Real charges carry a Stripe PaymentIntent and are refunded via
+                    // Stripe (clawing the transfer back + returning the app fee).
+                    // Seeded/test bookings have no PaymentIntent and are refunded
+                    // in-app (simulated) so the flow is testable without Stripe.
+                    if (!string.IsNullOrWhiteSpace(payment.StripePaymentIntentId))
                     {
-                        return new WorkaResponse<PaymentResponseDTO>("Refunds are unavailable right now. Please contact support.");
-                    }
-
-                    if (string.IsNullOrWhiteSpace(payment.StripePaymentIntentId))
-                    {
-                        return new WorkaResponse<PaymentResponseDTO>("This payment can't be refunded automatically. Please contact support.");
-                    }
-
-                    try
-                    {
-                        await new RefundService().CreateAsync(new RefundCreateOptions
+                        if (string.IsNullOrWhiteSpace(_stripeSecretKey))
                         {
-                            PaymentIntent = payment.StripePaymentIntentId,
-                            ReverseTransfer = true,
-                            RefundApplicationFee = true,
-                        });
-                    }
-                    catch (StripeException)
-                    {
-                        return new WorkaResponse<PaymentResponseDTO>("The refund could not be processed. Please try again or contact support.");
+                            return new WorkaResponse<PaymentResponseDTO>("Refunds are unavailable right now. Please contact support.");
+                        }
+
+                        try
+                        {
+                            await new RefundService().CreateAsync(new RefundCreateOptions
+                            {
+                                PaymentIntent = payment.StripePaymentIntentId,
+                                ReverseTransfer = true,
+                                RefundApplicationFee = true,
+                            });
+                        }
+                        catch (StripeException)
+                        {
+                            return new WorkaResponse<PaymentResponseDTO>("The refund could not be processed. Please try again or contact support.");
+                        }
                     }
 
                     payment.Status = "refunded";

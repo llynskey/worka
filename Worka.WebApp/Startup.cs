@@ -14,6 +14,7 @@ using System.Text.Json;
 using System.Threading.RateLimiting;
 using Worka.Services.Customers;
 using Worka.Services.Database;
+using Worka.Services.Dev;
 using Worka.Services.Email;
 using Worka.Services.Favourites;
 using Worka.Services.Interest;
@@ -92,6 +93,7 @@ namespace Worka.WebApp
             services.AddScoped<IMessagesService, MessagesService>();
             services.AddScoped<INotificationsService, NotificationsService>();
             services.AddScoped<IFavouritesService, FavouritesService>();
+            services.AddScoped<IDevSeedService, DevSeedService>();
 
             var jwtSecret = Configuration["JwtSecret"];
             if (string.IsNullOrWhiteSpace(jwtSecret) || jwtSecret.Length < 32)

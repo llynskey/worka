@@ -22,7 +22,21 @@ const CustomerSettingsScreen = ({ navigation }) => {
   const [changingPassword, setChangingPassword] = useState(false);
   const [deletePassword, setDeletePassword] = useState('');
   const [deleting, setDeleting] = useState(false);
+  const [seeding, setSeeding] = useState(false);
   const { signOut } = useContext(AuthContext);
+  const seedEnabled = process.env.EXPO_PUBLIC_ALLOW_SEED === 'true';
+
+  const seedSampleData = async () => {
+    try {
+      setSeeding(true);
+      const res = await api.post('/api/dev/seed');
+      notify(t('dev.seededTitle'), res?.data?.data || t('dev.seededText'));
+    } catch (error) {
+      notify(t('dev.errorTitle'), getErrorMessage(error, t('common.tryAgain')));
+    } finally {
+      setSeeding(false);
+    }
+  };
 
   // Persist notification preferences locally so choices survive restarts.
   useEffect(() => {
@@ -96,6 +110,20 @@ const CustomerSettingsScreen = ({ navigation }) => {
           <Text style={styles.subtitle}>{t('settings.customerSubtitle')}</Text>
         </View>
       </View>
+
+      {seedEnabled ? (
+        <View style={styles.card}>
+          <Text style={styles.settingTitle}>{t('dev.title')}</Text>
+          <Text style={styles.settingText}>{t('dev.seedHint')}</Text>
+          <TouchableOpacity style={styles.securityButton} onPress={seedSampleData} disabled={seeding}>
+            {seeding ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.securityButtonText}>{t('dev.seed')}</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+      ) : null}
 
       <PaymentsPanel mode="history" />
 
