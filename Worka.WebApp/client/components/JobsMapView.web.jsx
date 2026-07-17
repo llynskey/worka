@@ -2,10 +2,10 @@ import React, { useEffect, useRef } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-// Real interactive map (web) that plots every located job as a clickable pin and
-// draws the distance-radius circle around the worker's location, so the slider,
-// map and list all stay in sync. Mapbox GL is loaded from its CDN on demand so
-// it isn't bundled. Needs EXPO_PUBLIC_MAPBOX_TOKEN at build time.
+// Real interactive map (web): plots every located job as a clickable pin, draws
+// the distance-radius circle around the worker's location, zooms to match the
+// chosen distance, and has a "my location" button. Mapbox GL loads from its CDN
+// on demand. Needs EXPO_PUBLIC_MAPBOX_TOKEN at build time.
 const TOKEN = process.env.EXPO_PUBLIC_MAPBOX_TOKEN;
 const VERSION = 'v3.6.0';
 
@@ -31,8 +31,7 @@ function loadMapbox() {
   return loadPromise;
 }
 
-// Polygon approximating a circle of radiusKm around a lng/lat, for the radius overlay.
-function circleFeature(lng, lat, radiusKm, points = 72) {
+function circleRing(lng, lat, radiusKm, points = 72) {
   const coords = [];
   const dx = radiusKm / (111.32 * Math.cos((lat * Math.PI) / 180));
   const dy = radiusKm / 110.574;
@@ -41,13 +40,14 @@ function circleFeature(lng, lat, radiusKm, points = 72) {
     coords.push([lng + dx * Math.cos(t), lat + dy * Math.sin(t)]);
   }
   coords.push(coords[0]);
-  return { type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates: [coords] } };
+  return coords;
 }
 
 const JobsMapView = ({
   jobs = [],
   selectedJobId = null,
   onSelectJob,
+  onLocate,
   userLocation = null,
   origin = null,
   radiusKm = null,
@@ -58,31 +58,33 @@ const JobsMapView = ({
   const mapRef = useRef(null);
   const markersRef = useRef([]);
   const readyRef = useRef(false);
-  const fittedRef = useRef(false);
+  const prevRadiusRef = useRef(undefined);
   const dataRef = useRef({});
-  dataRef.current = { jobs, selectedJobId, onSelectJob, userLocation, origin, radiusKm, inRadiusIds };
+  dataRef.current = { jobs, selectedJobId, onSelectJob, onLocate, userLocation, origin, radiusKm, inRadiusIds };
+
+  const validLoc = (o) => o && Number.isFinite(Number(o.latitude)) && Number.isFinite(Number(o.longitude));
 
   const updateRadius = () => {
     const map = mapRef.current;
     const src = map && map.getSource && map.getSource('radius');
     if (!src) return;
     const { origin: o, radiusKm: km } = dataRef.current;
-    if (o && Number.isFinite(Number(o.latitude)) && Number.isFinite(Number(o.longitude)) && km > 0) {
-      src.setData({ type: 'FeatureCollection', features: [circleFeature(Number(o.longitude), Number(o.latitude), km)] });
+    if (validLoc(o) && km > 0) {
+      src.setData({
+        type: 'FeatureCollection',
+        features: [{ type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates: [circleRing(Number(o.longitude), Number(o.latitude), km)] } }],
+      });
     } else {
       src.setData({ type: 'FeatureCollection', features: [] });
     }
   };
 
-  const draw = (mapboxgl) => {
+  const drawMarkers = (mapboxgl) => {
     const map = mapRef.current;
     if (!map) return;
     const { jobs: js, selectedJobId: sel, onSelectJob: onSel, userLocation: loc, inRadiusIds: ids } = dataRef.current;
-
     markersRef.current.forEach((m) => m.remove());
     markersRef.current = [];
-    const bounds = new mapboxgl.LngLatBounds();
-    let has = false;
 
     js.forEach((job) => {
       const lat = Number(job.latitude);
@@ -102,27 +104,37 @@ const JobsMapView = ({
         onSel?.(job.jobId);
       });
       markersRef.current.push(new mapboxgl.Marker({ element: el }).setLngLat([lng, lat]).addTo(map));
-      bounds.extend([lng, lat]);
-      has = true;
     });
 
-    if (loc && Number.isFinite(Number(loc.latitude)) && Number.isFinite(Number(loc.longitude))) {
+    if (validLoc(loc)) {
       const el = document.createElement('div');
       el.style.cssText =
         'width:14px;height:14px;border-radius:50%;background:#2f6df6;border:2px solid #fff;box-shadow:0 0 0 4px rgba(47,109,246,.25);';
-      markersRef.current.push(
-        new mapboxgl.Marker({ element: el }).setLngLat([Number(loc.longitude), Number(loc.latitude)]).addTo(map)
-      );
-      bounds.extend([Number(loc.longitude), Number(loc.latitude)]);
-      has = true;
+      markersRef.current.push(new mapboxgl.Marker({ element: el }).setLngLat([Number(loc.longitude), Number(loc.latitude)]).addTo(map));
     }
-
     updateRadius();
+  };
 
-    if (has && !fittedRef.current && !bounds.isEmpty()) {
-      map.fitBounds(bounds, { padding: 60, maxZoom: 12, duration: 0 });
-      fittedRef.current = true;
+  // Zoom to match the chosen distance: fit the radius circle, else fit all pins.
+  const fitView = (mapboxgl) => {
+    const map = mapRef.current;
+    if (!map) return;
+    const { origin: o, radiusKm: km, jobs: js } = dataRef.current;
+    const b = new mapboxgl.LngLatBounds();
+    if (validLoc(o) && km > 0) {
+      circleRing(Number(o.longitude), Number(o.latitude), km).forEach((c) => b.extend(c));
+      map.fitBounds(b, { padding: 40, duration: 400 });
+      return;
     }
+    let has = false;
+    js.forEach((j) => {
+      if (Number.isFinite(Number(j.latitude)) && Number.isFinite(Number(j.longitude))) {
+        b.extend([Number(j.longitude), Number(j.latitude)]);
+        has = true;
+      }
+    });
+    if (validLoc(o)) { b.extend([Number(o.longitude), Number(o.latitude)]); has = true; }
+    if (has && !b.isEmpty()) map.fitBounds(b, { padding: 60, maxZoom: 12, duration: 400 });
   };
 
   useEffect(() => {
@@ -140,6 +152,31 @@ const JobsMapView = ({
           attributionControl: false,
         });
         map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'top-right');
+
+        // "My location" button.
+        const locateBtn = document.createElement('button');
+        locateBtn.type = 'button';
+        locateBtn.title = 'My location';
+        locateBtn.style.cssText = 'display:flex;align-items:center;justify-content:center;font-size:16px;';
+        locateBtn.textContent = '◎';
+        locateBtn.addEventListener('click', () => {
+          const { origin: o, onLocate: onLoc } = dataRef.current;
+          if (validLoc(o)) fitView(window.mapboxgl);
+          else onLoc?.();
+        });
+        map.addControl(
+          {
+            onAdd: () => {
+              const div = document.createElement('div');
+              div.className = 'mapboxgl-ctrl mapboxgl-ctrl-group';
+              div.appendChild(locateBtn);
+              return div;
+            },
+            onRemove: () => {},
+          },
+          'top-right'
+        );
+
         mapRef.current = map;
         map.on('load', () => {
           if (cancelled) return;
@@ -152,15 +189,16 @@ const JobsMapView = ({
             paint: { 'line-color': '#111', 'line-opacity': 0.35, 'line-width': 1.5, 'line-dasharray': [2, 2] },
           });
           readyRef.current = true;
+          prevRadiusRef.current = dataRef.current.radiusKm;
           map.resize();
-          draw(mapboxgl);
+          drawMarkers(mapboxgl);
+          fitView(mapboxgl);
         });
       })
       .catch(() => {});
     return () => {
       cancelled = true;
       readyRef.current = false;
-      fittedRef.current = false;
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
@@ -169,7 +207,12 @@ const JobsMapView = ({
   }, []);
 
   useEffect(() => {
-    if (readyRef.current && window.mapboxgl) draw(window.mapboxgl);
+    if (!readyRef.current || !window.mapboxgl) return;
+    drawMarkers(window.mapboxgl);
+    if (prevRadiusRef.current !== radiusKm) {
+      prevRadiusRef.current = radiusKm;
+      fitView(window.mapboxgl);
+    }
   }, [jobs, selectedJobId, userLocation, origin, radiusKm, inRadiusIds]);
 
   if (!TOKEN) {

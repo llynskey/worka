@@ -2,26 +2,44 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Linking,
+  Modal,
   Platform,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
   useWindowDimensions,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import notify from '../../Utils/notify';
 import useAutoRefresh from '../../Utils/useAutoRefresh';
-import { api, formatDate, getErrorMessage, unwrap } from '../../api/workaApi';
+import { api, formatDate, getErrorMessage, resolveUploadUrl, unwrap } from '../../api/workaApi';
 import { formatDistance, getDistanceKm, hasCoordinates, requestCurrentLocation } from '../../Utils/locationUtils';
 import { useDistanceUnit, milesToKm } from '../../Utils/distanceUnit';
 import { useI18n } from '../../i18n/I18nContext';
 import { categoryLabel } from '../../i18n/categories';
 import AppFooter from '../AppFooter';
 import JobsMapView from '../JobsMapView';
+import JobDetailsModal from './JobDetailsModal';
 
 const getLocationLabel = (job, fallback = 'Location not set') => job.locationLabel || job.address || fallback;
+
+const categoryImages = {
+  plumbing: 'https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?auto=format&fit=crop&w=900&q=80',
+  electrical: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=900&q=80',
+  painting: 'https://images.unsplash.com/photo-1562259949-e8e7689d7828?auto=format&fit=crop&w=900&q=80',
+  cleaning: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=900&q=80',
+  garden: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=900&q=80',
+  repairs: 'https://images.unsplash.com/photo-1504148455328-c376907d081c?auto=format&fit=crop&w=900&q=80',
+};
+
+const jobImage = (job) =>
+  (job && resolveUploadUrl(job.photoUrl)) ||
+  categoryImages[String(job?.category ?? '').toLowerCase()] ||
+  categoryImages.repairs;
 
 const MAPBOX_TOKEN = process.env.EXPO_PUBLIC_MAPBOX_TOKEN;
 
@@ -71,6 +89,11 @@ const JobMap = () => {
   const [workLocation, setWorkLocation] = useState(null);
   const [locating, setLocating] = useState(false);
   const [locationError, setLocationError] = useState('');
+  const [account, setAccount] = useState(null);
+  const [detailsJob, setDetailsJob] = useState(null);
+  const [quoteJob, setQuoteJob] = useState(null);
+  const [quoteForm, setQuoteForm] = useState({ price: '', description: '' });
+  const [submittingQuote, setSubmittingQuote] = useState(false);
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const isNarrow = windowWidth < 700;
   const mapHeight = Math.min(300, Math.round(windowHeight * 0.45));
@@ -141,12 +164,13 @@ const JobMap = () => {
     api
       .get('/api/Professionals/account')
       .then((response) => {
-        const account = unwrap(response.data);
-        if (account && hasCoordinates(account)) {
+        const acc = unwrap(response.data);
+        setAccount(acc);
+        if (acc && hasCoordinates(acc)) {
           setWorkLocation({
-            latitude: Number(account.latitude),
-            longitude: Number(account.longitude),
-            label: account.locationLabel || '',
+            latitude: Number(acc.latitude),
+            longitude: Number(acc.longitude),
+            label: acc.locationLabel || '',
           });
         }
       })
@@ -193,6 +217,101 @@ const JobMap = () => {
     }
   };
 
+  const openJobDetails = useCallback(
+    (jobId) => {
+      const job = jobs.find((j) => j.jobId === jobId);
+      if (job) {
+        setSelectedJobId(jobId);
+        setDetailsJob(job);
+      }
+    },
+    [jobs]
+  );
+
+  const openQuote = useCallback(
+    (job) => {
+      setQuoteForm({ price: '', description: t('quotes.defaultNote') });
+      setQuoteJob(job);
+    },
+    [t]
+  );
+
+  const submitQuote = useCallback(async () => {
+    const amount = Number(quoteForm.price);
+    if (!quoteJob) return;
+    if (!Number.isFinite(amount) || amount <= 0) {
+      notify(t('quotes.addPriceTitle'), t('quotes.addPriceText'));
+      return;
+    }
+    if (!quoteForm.description.trim()) {
+      notify(t('quotes.addNoteTitle'), t('quotes.addNoteText'));
+      return;
+    }
+    try {
+      setSubmittingQuote(true);
+      await api.post('/createQuote', { jobId: quoteJob.jobId, price: amount, description: quoteForm.description.trim() });
+      setQuoteJob(null);
+      await refresh();
+      notify(t('quotes.sentTitle'), t('quotes.sentText'));
+    } catch (err) {
+      notify(t('quotes.sendErrorTitle'), getErrorMessage(err, t('common.tryAgain')));
+    } finally {
+      setSubmittingQuote(false);
+    }
+  }, [quoteForm, quoteJob, refresh, t]);
+
+  const modals = (
+    <>
+      <JobDetailsModal
+        job={detailsJob}
+        image={detailsJob ? jobImage(detailsJob) : null}
+        userLocation={currentLocation}
+        professionalId={account?.professionalId}
+        onClose={() => setDetailsJob(null)}
+        onQuote={(job) => {
+          setDetailsJob(null);
+          openQuote(job);
+        }}
+      />
+      <Modal visible={!!quoteJob} transparent animationType="slide" onRequestClose={() => setQuoteJob(null)}>
+        <View style={styles.quoteBackdrop}>
+          <View style={styles.quoteCard}>
+            <View style={styles.quoteHeader}>
+              <Text style={styles.quoteTitle}>{t('quotes.send')}</Text>
+              <TouchableOpacity style={styles.refreshButton} onPress={() => setQuoteJob(null)}>
+                <MaterialCommunityIcons name="close" size={20} color="#111" />
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.quoteJobName} numberOfLines={2}>{quoteJob?.jobName}</Text>
+            <TextInput
+              style={styles.quoteInput}
+              value={quoteForm.price}
+              onChangeText={(price) => setQuoteForm((c) => ({ ...c, price }))}
+              placeholder={t('quotes.pricePlaceholder', { currency: (quoteJob?.currency || 'gbp').toUpperCase() })}
+              placeholderTextColor="#686b64"
+              keyboardType="decimal-pad"
+            />
+            <TextInput
+              style={[styles.quoteInput, styles.quoteTextArea]}
+              value={quoteForm.description}
+              onChangeText={(description) => setQuoteForm((c) => ({ ...c, description }))}
+              placeholder={t('quotes.includedPlaceholder')}
+              placeholderTextColor="#686b64"
+              multiline
+            />
+            <TouchableOpacity style={styles.quoteSubmit} onPress={submitQuote} disabled={submittingQuote}>
+              {submittingQuote ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.quoteSubmitText}>{t('quotes.send')}</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    </>
+  );
+
   if (loading && !refreshing) {
     return (
       <View style={styles.centerState}>
@@ -218,11 +337,10 @@ const JobMap = () => {
   const headerBlock = (
     <View style={styles.header}>
       <View style={styles.headerCopy}>
-        <Text style={styles.eyebrow}>{t('map.eyebrow')}</Text>
-        <Text style={[styles.title, isNarrow && styles.titleNarrow]}>{t('map.title')}</Text>
-        <Text style={styles.subtitle}>
-          {t('map.subtitle', { located: locatedJobs.length, unlocated: unlocatedJobs.length })}
+        <Text style={styles.eyebrow}>
+          {t('map.eyebrow')} · {locatedJobs.length}
         </Text>
+        <Text style={styles.title} numberOfLines={1}>{t('map.title')}</Text>
       </View>
       <TouchableOpacity style={styles.refreshButton} onPress={refresh} disabled={refreshing}>
         {refreshing ? (
@@ -310,7 +428,7 @@ const JobMap = () => {
             <TouchableOpacity
               key={job.jobId}
               style={[styles.jobItem, active && styles.jobItemActive]}
-              onPress={() => setSelectedJobId(job.jobId)}
+              onPress={() => openJobDetails(job.jobId)}
             >
               <View style={styles.jobItemHeader}>
                 <Text style={[styles.jobTitle, active && styles.jobTitleActive]}>{job.jobName}</Text>
@@ -352,52 +470,58 @@ const JobMap = () => {
 
   if (isNarrow) {
     return (
-      <ScrollView style={styles.narrowShell} contentContainerStyle={styles.narrowContent}>
-        {headerBlock}
-        {locationBarBlock}
-        {radiusBlock}
-        <View style={[styles.mapPaneNarrow, { height: mapHeight }]}>
-          <JobsMapView
-            jobs={locatedJobs}
-            selectedJobId={selectedJobId}
-            onSelectJob={setSelectedJobId}
-            userLocation={currentLocation}
-            origin={origin}
-            radiusKm={Number.isFinite(radiusKm) ? radiusKm : null}
-            inRadiusIds={inRadiusIds}
-          />
-        </View>
-        <View style={styles.narrowList}>{listBody}</View>
-        <AppFooter />
-      </ScrollView>
+      <>
+        <ScrollView style={styles.narrowShell} contentContainerStyle={styles.narrowContent}>
+          {headerBlock}
+          {radiusBlock}
+          <View style={[styles.mapPaneNarrow, { height: mapHeight }]}>
+            <JobsMapView
+              jobs={locatedJobs}
+              selectedJobId={selectedJobId}
+              onSelectJob={openJobDetails}
+              onLocate={useCurrentLocation}
+              userLocation={currentLocation}
+              origin={origin}
+              radiusKm={Number.isFinite(radiusKm) ? radiusKm : null}
+              inRadiusIds={inRadiusIds}
+            />
+          </View>
+          <View style={styles.narrowList}>{listBody}</View>
+          <AppFooter />
+        </ScrollView>
+        {modals}
+      </>
     );
   }
 
   return (
-    <View style={styles.shell}>
-      {headerBlock}
-      {locationBarBlock}
-      {radiusBlock}
+    <>
+      <View style={styles.shell}>
+        {headerBlock}
+        {radiusBlock}
 
-      <View style={styles.mapLayout}>
-        <View style={styles.mapPane}>
-          <JobsMapView
-            jobs={locatedJobs}
-            selectedJobId={selectedJobId}
-            onSelectJob={setSelectedJobId}
-            userLocation={currentLocation}
-            origin={origin}
-            radiusKm={Number.isFinite(radiusKm) ? radiusKm : null}
-            inRadiusIds={inRadiusIds}
-          />
+        <View style={styles.mapLayout}>
+          <View style={styles.mapPane}>
+            <JobsMapView
+              jobs={locatedJobs}
+              selectedJobId={selectedJobId}
+              onSelectJob={openJobDetails}
+              onLocate={useCurrentLocation}
+              userLocation={currentLocation}
+              origin={origin}
+              radiusKm={Number.isFinite(radiusKm) ? radiusKm : null}
+              inRadiusIds={inRadiusIds}
+            />
+          </View>
+
+          <ScrollView style={styles.listPane} contentContainerStyle={styles.listContent}>
+            {listBody}
+            <AppFooter />
+          </ScrollView>
         </View>
-
-        <ScrollView style={styles.listPane} contentContainerStyle={styles.listContent}>
-          {listBody}
-          <AppFooter />
-        </ScrollView>
       </View>
-    </View>
+      {modals}
+    </>
   );
 };
 
@@ -441,9 +565,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#e3dfd2',
     borderRadius: 8,
-    padding: 16,
-    marginBottom: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    marginBottom: 12,
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
     gap: 14,
   },
@@ -571,11 +697,68 @@ const styles = StyleSheet.create({
   },
   title: {
     color: '#111',
-    fontSize: 24,
+    fontSize: 19,
     fontWeight: '900',
   },
   titleNarrow: {
+    fontSize: 18,
+  },
+  quoteBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.42)',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  quoteCard: {
+    width: '100%',
+    maxWidth: 480,
+    alignSelf: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 18,
+  },
+  quoteHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  quoteTitle: {
+    color: '#111',
     fontSize: 20,
+    fontWeight: '900',
+  },
+  quoteJobName: {
+    color: '#62645c',
+    fontWeight: '700',
+    marginBottom: 12,
+  },
+  quoteInput: {
+    minHeight: 50,
+    borderWidth: 1,
+    borderColor: '#d9d5ca',
+    borderRadius: 8,
+    paddingHorizontal: 13,
+    paddingVertical: 12,
+    marginBottom: 12,
+    backgroundColor: '#fbfaf6',
+    fontSize: 16,
+  },
+  quoteTextArea: {
+    minHeight: 110,
+    textAlignVertical: 'top',
+  },
+  quoteSubmit: {
+    minHeight: 48,
+    backgroundColor: '#111',
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  quoteSubmitText: {
+    color: '#fff',
+    fontWeight: '900',
+    fontSize: 15,
   },
   subtitle: {
     color: '#62645c',
