@@ -38,12 +38,10 @@ const WebShell = ({ eyebrow, title, tabs, activeTab, onTabChange, children }) =>
   const [hidden, setHidden] = useState(false);
   const [hover, setHover] = useState(false);
   const lastY = useRef(0);
-  const activeTabRef = useRef(activeTab);
   const visible = hover || !hidden;
 
-  // Reset on section change; the map view never auto-hides (feels wrong there).
+  // Show the bar again when switching sections.
   useEffect(() => {
-    activeTabRef.current = activeTab;
     lastY.current = 0;
     setHidden(false);
   }, [activeTab]);
@@ -53,9 +51,7 @@ const WebShell = ({ eyebrow, title, tabs, activeTab, onTabChange, children }) =>
       const y = e.target && typeof e.target.scrollTop === 'number' ? e.target.scrollTop : 0;
       const last = lastY.current;
       lastY.current = y;
-      if (activeTabRef.current === 'map') {
-        setHidden(false);
-      } else if (y <= 24) {
+      if (y <= 24) {
         setHidden(false); // at the top
       } else if (y > last + 3) {
         setHidden(true); // scrolling down

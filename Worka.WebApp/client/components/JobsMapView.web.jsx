@@ -58,6 +58,7 @@ const JobsMapView = ({
   const mapRef = useRef(null);
   const markersRef = useRef([]);
   const readyRef = useRef(false);
+  const roRef = useRef(null);
   const prevRadiusRef = useRef(undefined);
   const dataRef = useRef({});
   dataRef.current = { jobs, selectedJobId, onSelectJob, onLocate, userLocation, origin, radiusKm, inRadiusIds };
@@ -178,6 +179,16 @@ const JobsMapView = ({
         );
 
         mapRef.current = map;
+
+        // Keep the map filled when its container resizes (e.g. the section bar
+        // auto-hiding reflows the layout) so it never shows blank edges.
+        if (typeof ResizeObserver !== 'undefined' && containerRef.current) {
+          roRef.current = new ResizeObserver(() => {
+            if (mapRef.current) mapRef.current.resize();
+          });
+          roRef.current.observe(containerRef.current);
+        }
+
         map.on('load', () => {
           if (cancelled) return;
           map.addSource('radius', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
@@ -199,6 +210,10 @@ const JobsMapView = ({
     return () => {
       cancelled = true;
       readyRef.current = false;
+      if (roRef.current) {
+        roRef.current.disconnect();
+        roRef.current = null;
+      }
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
