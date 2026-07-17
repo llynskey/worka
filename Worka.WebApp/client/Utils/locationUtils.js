@@ -1,7 +1,14 @@
 import { getDistanceUnit, kmToMiles } from './distanceUnit';
 
-export const hasCoordinates = (item) =>
-  Number.isFinite(Number(item?.latitude)) && Number.isFinite(Number(item?.longitude));
+export const hasCoordinates = (item) => {
+  if (!item) return false;
+  const { latitude, longitude } = item;
+  // Reject null/undefined/'' explicitly — Number(null) is 0 (finite), which
+  // would otherwise place an un-located record at (0,0) off Africa.
+  const missing = (v) => v === null || v === undefined || v === '';
+  if (missing(latitude) || missing(longitude)) return false;
+  return Number.isFinite(Number(latitude)) && Number.isFinite(Number(longitude));
+};
 
 export const getDistanceKm = (from, to) => {
   if (!from || !hasCoordinates(to)) return null;

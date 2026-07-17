@@ -14,15 +14,12 @@ import { useFocusEffect } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import useAutoRefresh from '../../Utils/useAutoRefresh';
 import { api, formatDate, getErrorMessage, unwrap } from '../../api/workaApi';
-import { formatDistance, getDistanceKm, requestCurrentLocation } from '../../Utils/locationUtils';
+import { formatDistance, getDistanceKm, hasCoordinates, requestCurrentLocation } from '../../Utils/locationUtils';
 import { useDistanceUnit, milesToKm } from '../../Utils/distanceUnit';
 import { useI18n } from '../../i18n/I18nContext';
 import { categoryLabel } from '../../i18n/categories';
 import AppFooter from '../AppFooter';
 import JobsMapView from '../JobsMapView';
-import Slider from '../Slider';
-
-const hasCoordinates = (job) => Number.isFinite(Number(job.latitude)) && Number.isFinite(Number(job.longitude));
 
 const getLocationLabel = (job, fallback = 'Location not set') => job.locationLabel || job.address || fallback;
 
@@ -79,14 +76,18 @@ const JobMap = () => {
   const mapHeight = Math.min(300, Math.round(windowHeight * 0.45));
 
   const unit = useDistanceUnit();
-  const [radius, setRadius] = useState(unit === 'mi' ? 15 : 25);
+  // Discrete distance presets that step up to National and Everywhere (no cap),
+  // so a spread-out marketplace is never empty at the top of the range.
+  const RADIUS_PRESETS = unit === 'mi' ? [5, 10, 25, 50, 100, 300, Infinity] : [10, 25, 50, 100, 200, 500, Infinity];
+  const nationalValue = unit === 'mi' ? 300 : 500;
+  const [radius, setRadius] = useState(unit === 'mi' ? 50 : 80);
   // Reset to a sensible default whenever the unit preference changes.
   useEffect(() => {
-    setRadius(unit === 'mi' ? 15 : 25);
+    setRadius(unit === 'mi' ? 50 : 80);
   }, [unit]);
-  const radiusMax = unit === 'mi' ? 60 : 100;
-  const radiusStep = unit === 'mi' ? 1 : 5;
-  const radiusKm = unit === 'mi' ? milesToKm(radius) : radius;
+  const radiusKm = radius === Infinity ? Infinity : unit === 'mi' ? milesToKm(radius) : radius;
+  const presetLabel = (v) =>
+    v === Infinity ? t('map.everywhere') : v === nationalValue ? t('map.national') : `${v} ${unit}`;
 
   // The worker's saved work location takes priority as the distance origin;
   // the device location is the fallback when no work location is set.
@@ -166,7 +167,7 @@ const JobMap = () => {
 
   // With an origin we can filter to a radius; without one, show all located jobs.
   const shownJobs = useMemo(() => {
-    if (!origin) return locatedJobs;
+    if (!origin || radiusKm === Infinity) return locatedJobs;
     return locatedJobs.filter((job) => {
       const distance = getDistanceKm(origin, job);
       return distance != null && distance <= radiusKm;
@@ -267,15 +268,25 @@ const JobMap = () => {
     </View>
   );
 
-  const radiusText = `${radius} ${unit}`;
+  const radiusText = presetLabel(radius);
 
   const radiusBlock = origin ? (
     <View style={styles.filterCard}>
       <View style={styles.filterHeader}>
-        <Text style={styles.filterLabel}>{t('map.radiusLabel', { distance: radiusText })}</Text>
+        <Text style={styles.filterLabel}>{t('map.distance')}</Text>
         <Text style={styles.filterCount}>{shownJobs.length}</Text>
       </View>
-      <Slider value={radius} min={1} max={radiusMax} step={radiusStep} onChange={setRadius} />
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.presetRow}>
+        {RADIUS_PRESETS.map((v) => (
+          <TouchableOpacity
+            key={String(v)}
+            style={[styles.preset, radius === v && styles.presetActive]}
+            onPress={() => setRadius(v)}
+          >
+            <Text style={[styles.presetText, radius === v && styles.presetTextActive]}>{presetLabel(v)}</Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
     </View>
   ) : null;
 
@@ -352,7 +363,7 @@ const JobMap = () => {
             onSelectJob={setSelectedJobId}
             userLocation={currentLocation}
             origin={origin}
-            radiusKm={radiusKm}
+            radiusKm={Number.isFinite(radiusKm) ? radiusKm : null}
             inRadiusIds={inRadiusIds}
           />
         </View>
@@ -376,7 +387,7 @@ const JobMap = () => {
             onSelectJob={setSelectedJobId}
             userLocation={currentLocation}
             origin={origin}
-            radiusKm={radiusKm}
+            radiusKm={Number.isFinite(radiusKm) ? radiusKm : null}
             inRadiusIds={inRadiusIds}
           />
         </View>
@@ -493,6 +504,33 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     fontSize: 13,
     overflow: 'hidden',
+  },
+  presetRow: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingTop: 10,
+    paddingRight: 4,
+  },
+  preset: {
+    minHeight: 34,
+    borderWidth: 1,
+    borderColor: '#e3dfd2',
+    borderRadius: 999,
+    paddingHorizontal: 13,
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+  },
+  presetActive: {
+    backgroundColor: '#111',
+    borderColor: '#111',
+  },
+  presetText: {
+    color: '#111',
+    fontWeight: '800',
+    fontSize: 13,
+  },
+  presetTextActive: {
+    color: '#fff',
   },
   locationBarTitle: {
     color: '#111',
