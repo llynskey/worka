@@ -404,11 +404,10 @@ const JobMap = () => {
 
   const radiusText = presetLabel(radius);
 
-  // The distance controls, shown inside the combined map-controls card once a
-  // location is set. Reveals smoothly on web when the origin is found.
-  const distanceInner = (
-    <>
-      <View style={styles.filterDivider} />
+  // A single skinny control bar: the distance filter (with a refresh action),
+  // revealing smoothly once a location is set. No separate header card.
+  const distanceCard = (
+    <View style={styles.filterCard}>
       <TouchableOpacity style={styles.filterHeader} activeOpacity={0.7} onPress={() => setDistanceOpen((v) => !v)}>
         <Text style={styles.filterLabel}>
           {t('map.distance')}
@@ -416,6 +415,18 @@ const JobMap = () => {
         </Text>
         <View style={styles.filterHeaderRight}>
           <Text style={styles.filterCount}>{shownJobs.length}</Text>
+          <TouchableOpacity
+            style={styles.filterRefresh}
+            onPress={refresh}
+            disabled={refreshing}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            {refreshing ? (
+              <ActivityIndicator color="#111" size="small" />
+            ) : (
+              <MaterialCommunityIcons name="refresh" size={18} color="#111" />
+            )}
+          </TouchableOpacity>
           <MaterialCommunityIcons name={distanceOpen ? 'chevron-up' : 'chevron-down'} size={20} color="#111" />
         </View>
       </TouchableOpacity>
@@ -432,10 +443,10 @@ const JobMap = () => {
           ))}
         </ScrollView>
       ) : null}
-    </>
+    </View>
   );
 
-  const distanceReveal =
+  const mapControls =
     Platform.OS === 'web'
       ? React.createElement(
           'div',
@@ -443,38 +454,15 @@ const JobMap = () => {
             style: {
               overflow: 'hidden',
               transition: 'max-height 320ms ease, opacity 320ms ease',
-              maxHeight: origin ? 320 : 0,
+              maxHeight: origin ? 260 : 0,
               opacity: origin ? 1 : 0,
             },
           },
-          distanceInner
+          distanceCard
         )
       : origin
-        ? distanceInner
+        ? distanceCard
         : null;
-
-  // One combined section: the map header (browse-by-location) and the distance
-  // controls live in a single card.
-  const mapControls = (
-    <View style={styles.filterCard}>
-      <View style={styles.controlsHeaderRow}>
-        <View style={styles.headerCopy}>
-          <Text style={styles.eyebrow}>
-            {t('map.eyebrow')} · {locatedJobs.length}
-          </Text>
-          <Text style={[styles.title, isNarrow && styles.titleNarrow]} numberOfLines={1}>{t('map.title')}</Text>
-        </View>
-        <TouchableOpacity style={styles.refreshButton} onPress={refresh} disabled={refreshing}>
-          {refreshing ? (
-            <ActivityIndicator color="#111" />
-          ) : (
-            <MaterialCommunityIcons name="refresh" size={20} color="#111" />
-          )}
-        </TouchableOpacity>
-      </View>
-      {distanceReveal}
-    </View>
-  );
 
   const listBody = (
     <>
