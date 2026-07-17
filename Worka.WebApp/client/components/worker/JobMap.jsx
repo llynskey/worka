@@ -572,7 +572,7 @@ const styles = StyleSheet.create({
   },
   mapPane: {
     flex: 1.25,
-    minHeight: 240,
+    minHeight: 0,
     minWidth: 0,
     borderRadius: 8,
     overflow: 'hidden',
