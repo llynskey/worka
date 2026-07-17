@@ -94,6 +94,7 @@ const JobMap = () => {
   const [quoteJob, setQuoteJob] = useState(null);
   const [quoteForm, setQuoteForm] = useState({ price: '', description: '' });
   const [submittingQuote, setSubmittingQuote] = useState(false);
+  const [distanceOpen, setDistanceOpen] = useState(true);
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const isNarrow = windowWidth < 700;
   const mapHeight = Math.min(300, Math.round(windowHeight * 0.45));
@@ -390,21 +391,29 @@ const JobMap = () => {
 
   const radiusBlock = origin ? (
     <View style={styles.filterCard}>
-      <View style={styles.filterHeader}>
-        <Text style={styles.filterLabel}>{t('map.distance')}</Text>
-        <Text style={styles.filterCount}>{shownJobs.length}</Text>
-      </View>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.presetRow}>
-        {RADIUS_PRESETS.map((v) => (
-          <TouchableOpacity
-            key={String(v)}
-            style={[styles.preset, radius === v && styles.presetActive]}
-            onPress={() => setRadius(v)}
-          >
-            <Text style={[styles.presetText, radius === v && styles.presetTextActive]}>{presetLabel(v)}</Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+      <TouchableOpacity style={styles.filterHeader} activeOpacity={0.7} onPress={() => setDistanceOpen((v) => !v)}>
+        <Text style={styles.filterLabel}>
+          {t('map.distance')}
+          {distanceOpen ? '' : ` · ${radiusText}`}
+        </Text>
+        <View style={styles.filterHeaderRight}>
+          <Text style={styles.filterCount}>{shownJobs.length}</Text>
+          <MaterialCommunityIcons name={distanceOpen ? 'chevron-up' : 'chevron-down'} size={20} color="#111" />
+        </View>
+      </TouchableOpacity>
+      {distanceOpen ? (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.presetRow}>
+          {RADIUS_PRESETS.map((v) => (
+            <TouchableOpacity
+              key={String(v)}
+              style={[styles.preset, radius === v && styles.presetActive]}
+              onPress={() => setRadius(v)}
+            >
+              <Text style={[styles.presetText, radius === v && styles.presetTextActive]}>{presetLabel(v)}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      ) : null}
     </View>
   ) : null;
 
@@ -613,6 +622,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 10,
+    paddingBottom: 4,
+  },
+  filterHeaderRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   filterLabel: {
     color: '#111',

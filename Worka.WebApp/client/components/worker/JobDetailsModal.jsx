@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ImageBackground, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ImageBackground, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { formatDate } from '../../api/workaApi';
 import { useI18n } from '../../i18n/I18nContext';
@@ -10,13 +10,15 @@ import PhotoLightbox from '../PhotoLightbox';
 
 const JobDetailsModal = ({ job, image, userLocation = null, onClose, onQuote, professionalId }) => {
   const { t } = useI18n();
+  const { width } = useWindowDimensions();
+  const wide = width >= 700;
   const [lightboxUri, setLightboxUri] = useState(null);
   const [chatVisible, setChatVisible] = useState(false);
 
   return (
-  <Modal visible={!!job} transparent animationType="slide" onRequestClose={onClose}>
-    <View style={styles.backdrop}>
-      <View style={styles.card}>
+  <Modal visible={!!job} transparent animationType={wide ? 'fade' : 'slide'} onRequestClose={onClose}>
+    <View style={[styles.backdrop, wide && styles.backdropCentered]}>
+      <View style={[styles.card, wide && styles.cardWide]}>
         {job ? (
           <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
             <View style={styles.header}>
@@ -126,12 +128,23 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.42)',
     justifyContent: 'flex-end',
   },
+  backdropCentered: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
   card: {
     maxHeight: '88%',
     backgroundColor: '#fff',
     borderTopLeftRadius: 8,
     borderTopRightRadius: 8,
     overflow: 'hidden',
+  },
+  cardWide: {
+    width: '100%',
+    maxWidth: 560,
+    maxHeight: '85%',
+    borderRadius: 12,
   },
   content: {
     padding: 18,
