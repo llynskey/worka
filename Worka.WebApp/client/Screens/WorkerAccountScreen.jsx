@@ -18,6 +18,7 @@ import { lookupLocations } from '../api/locationLookup';
 import AppFooter from '../components/AppFooter';
 import Avatar from '../components/Avatar';
 import LanguagePicker from '../components/LanguagePicker';
+import PaymentsPanel from '../components/PaymentsPanel';
 import { useI18n } from '../i18n/I18nContext';
 import { useLayout } from '../Utils/theme';
 
@@ -513,6 +514,8 @@ const WorkerAccountScreen = () => {
         </TouchableOpacity>
       </View>
       </View>
+
+      <PaymentsPanel mode="earnings" />
 
       <AppFooter />
     </ScrollView>

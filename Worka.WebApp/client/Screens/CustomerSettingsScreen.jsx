@@ -7,6 +7,7 @@ import { api, getErrorMessage } from '../api/workaApi';
 import notify, { confirmAction } from '../Utils/notify';
 import AppFooter from '../components/AppFooter';
 import SelectField from '../components/SelectField';
+import PaymentsPanel from '../components/PaymentsPanel';
 import { useI18n } from '../i18n/I18nContext';
 import { useLayout } from '../Utils/theme';
 
@@ -95,6 +96,8 @@ const CustomerSettingsScreen = ({ navigation }) => {
           <Text style={styles.subtitle}>{t('settings.customerSubtitle')}</Text>
         </View>
       </View>
+
+      <PaymentsPanel mode="history" />
 
       <View style={isDesktop ? styles.cardsRow : undefined}>
       <View style={[styles.card, isDesktop && styles.cardHalf]}>

@@ -71,6 +71,34 @@ namespace Worka.WebApp.Controllers
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
+        [Authorize]
+        [HttpGet("earnings")]
+        public async Task<IActionResult> GetEarnings()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Unauthorized();
+            }
+
+            var result = await _paymentsService.GetEarningsForProfessionalAsync(userId);
+            return result.Success ? Ok(result) : BadRequest(result);
+        }
+
+        [Authorize]
+        [HttpGet("history")]
+        public async Task<IActionResult> GetHistory()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Unauthorized();
+            }
+
+            var result = await _paymentsService.GetPaymentHistoryForCustomerAsync(userId);
+            return result.Success ? Ok(result) : BadRequest(result);
+        }
+
         [AllowAnonymous]
         [HttpPost("stripe/webhook")]
         public async Task<IActionResult> StripeWebhook()

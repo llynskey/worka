@@ -20,5 +20,9 @@ namespace Worka.Services.Payments
             string cancelUrl);
 
         Task<WorkaResponse<PaymentResponseDTO>> HandleStripeWebhookAsync(string payload, string signature);
+
+        Task<WorkaResponse<EarningsSummaryDTO>> GetEarningsForProfessionalAsync(string userId);
+
+        Task<WorkaResponse<CustomerSpendSummaryDTO>> GetPaymentHistoryForCustomerAsync(string userId);
     }
 }

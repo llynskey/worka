@@ -379,6 +379,114 @@ namespace Worka.Services.Payments
             return new WorkaResponse<PaymentResponseDTO>(new PaymentResponseDTO(payment));
         }
 
+        public async Task<WorkaResponse<EarningsSummaryDTO>> GetEarningsForProfessionalAsync(string userId)
+        {
+            try
+            {
+                if (!Guid.TryParse(userId, out var userGuid))
+                {
+                    return new WorkaResponse<EarningsSummaryDTO>("Invalid user identity.");
+                }
+
+                var professional = await _dbContext.Professionals.FirstOrDefaultAsync(p => p.UserId == userGuid);
+                if (professional == null)
+                {
+                    return new WorkaResponse<EarningsSummaryDTO>("Professional profile not found.");
+                }
+
+                var payments = await _dbContext.WorkaPayments
+                    .Where(p => p.ProfessionalId == professional.ProfessionalId && p.Status == PaidStatus)
+                    .OrderByDescending(p => p.UpdatedAt)
+                    .ToListAsync();
+
+                var jobIds = payments.Select(p => p.JobId).Distinct().ToList();
+                var customerIds = payments.Select(p => p.CustomerId).Distinct().ToList();
+                var jobNames = await _dbContext.Jobs
+                    .Where(j => jobIds.Contains(j.JobId))
+                    .ToDictionaryAsync(j => j.JobId, j => j.Name);
+                var customerNames = await _dbContext.Customers
+                    .Where(c => customerIds.Contains(c.CustomerId))
+                    .ToDictionaryAsync(c => c.CustomerId, c => $"{c.FirstName} {c.LastName}".Trim());
+
+                var items = payments
+                    .Select(p => new PaymentHistoryItemDTO(
+                        p,
+                        jobNames.TryGetValue(p.JobId, out var jn) ? jn : string.Empty,
+                        customerNames.TryGetValue(p.CustomerId, out var cn) ? cn : string.Empty))
+                    .ToList();
+
+                var now = DateTimeOffset.UtcNow;
+                var summary = new EarningsSummaryDTO
+                {
+                    TotalEarned = payments.Sum(p => p.WorkerAmount),
+                    ThisMonth = payments
+                        .Where(p => p.UpdatedAt.Year == now.Year && p.UpdatedAt.Month == now.Month)
+                        .Sum(p => p.WorkerAmount),
+                    BookingsCount = payments.Count,
+                    Currency = payments.FirstOrDefault()?.Currency ?? "gbp",
+                    Payments = items,
+                };
+
+                return new WorkaResponse<EarningsSummaryDTO>(summary);
+            }
+            catch (Exception ex)
+            {
+                return WorkaResponse<EarningsSummaryDTO>.Fail(ex, "An error occurred while loading earnings.");
+            }
+        }
+
+        public async Task<WorkaResponse<CustomerSpendSummaryDTO>> GetPaymentHistoryForCustomerAsync(string userId)
+        {
+            try
+            {
+                if (!Guid.TryParse(userId, out var userGuid))
+                {
+                    return new WorkaResponse<CustomerSpendSummaryDTO>("Invalid user identity.");
+                }
+
+                var customer = await _dbContext.Customers.FirstOrDefaultAsync(c => c.UserId == userGuid);
+                if (customer == null)
+                {
+                    return new WorkaResponse<CustomerSpendSummaryDTO>("Customer profile not found.");
+                }
+
+                var payments = await _dbContext.WorkaPayments
+                    .Where(p => p.CustomerId == customer.CustomerId && p.Status == PaidStatus)
+                    .OrderByDescending(p => p.UpdatedAt)
+                    .ToListAsync();
+
+                var jobIds = payments.Select(p => p.JobId).Distinct().ToList();
+                var professionalIds = payments.Select(p => p.ProfessionalId).Distinct().ToList();
+                var jobNames = await _dbContext.Jobs
+                    .Where(j => jobIds.Contains(j.JobId))
+                    .ToDictionaryAsync(j => j.JobId, j => j.Name);
+                var professionalNames = await _dbContext.Professionals
+                    .Where(p => professionalIds.Contains(p.ProfessionalId))
+                    .ToDictionaryAsync(p => p.ProfessionalId, p => $"{p.FirstName} {p.LastName}".Trim());
+
+                var items = payments
+                    .Select(p => new PaymentHistoryItemDTO(
+                        p,
+                        jobNames.TryGetValue(p.JobId, out var jn) ? jn : string.Empty,
+                        professionalNames.TryGetValue(p.ProfessionalId, out var pn) ? pn : string.Empty))
+                    .ToList();
+
+                var summary = new CustomerSpendSummaryDTO
+                {
+                    TotalSpent = payments.Sum(p => p.TotalAmount),
+                    PaymentsCount = payments.Count,
+                    Currency = payments.FirstOrDefault()?.Currency ?? "gbp",
+                    Payments = items,
+                };
+
+                return new WorkaResponse<CustomerSpendSummaryDTO>(summary);
+            }
+            catch (Exception ex)
+            {
+                return WorkaResponse<CustomerSpendSummaryDTO>.Fail(ex, "An error occurred while loading payment history.");
+            }
+        }
+
         private async Task<WorkaResponse<Professional>> GetProfessionalForUserAsync(string userId)
         {
             if (!Guid.TryParse(userId, out var userGuid))
