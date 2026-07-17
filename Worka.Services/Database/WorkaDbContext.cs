@@ -35,6 +35,8 @@ namespace Worka.Services.Database
 
         public DbSet<Notification> Notifications => Set<Notification>();
 
+        public DbSet<Favourite> Favourites => Set<Favourite>();
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<User>(entity =>
@@ -226,6 +228,21 @@ namespace Worka.Services.Database
                 entity.Property(notification => notification.Type).HasMaxLength(40).IsRequired();
                 entity.Property(notification => notification.Title).HasMaxLength(280).IsRequired();
                 entity.Property(notification => notification.Body).HasMaxLength(1000).IsRequired();
+            });
+
+            modelBuilder.Entity<Favourite>(entity =>
+            {
+                entity.ToTable("favourites");
+                entity.HasKey(favourite => favourite.FavouriteId);
+                entity.HasIndex(favourite => new { favourite.CustomerId, favourite.ProfessionalId }).IsUnique();
+                entity.HasOne<Customer>()
+                    .WithMany()
+                    .HasForeignKey(favourite => favourite.CustomerId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne<Professional>()
+                    .WithMany()
+                    .HasForeignKey(favourite => favourite.ProfessionalId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
 
             modelBuilder.Entity<InterestRegistration>(entity =>

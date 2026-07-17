@@ -15,6 +15,7 @@ using System.Threading.RateLimiting;
 using Worka.Services.Customers;
 using Worka.Services.Database;
 using Worka.Services.Email;
+using Worka.Services.Favourites;
 using Worka.Services.Interest;
 using Worka.Services.Jobs;
 using Worka.Services.Messages;
@@ -90,6 +91,7 @@ namespace Worka.WebApp
             services.AddScoped<IReviewsService, ReviewsService>();
             services.AddScoped<IMessagesService, MessagesService>();
             services.AddScoped<INotificationsService, NotificationsService>();
+            services.AddScoped<IFavouritesService, FavouritesService>();
 
             var jwtSecret = Configuration["JwtSecret"];
             if (string.IsNullOrWhiteSpace(jwtSecret) || jwtSecret.Length < 32)
@@ -309,6 +311,14 @@ namespace Worka.WebApp
                 ALTER TABLE quotes ADD COLUMN IF NOT EXISTS "ScheduledAt" timestamp with time zone NULL;
                 ALTER TABLE jobs ADD COLUMN IF NOT EXISTS "ScheduledAt" timestamp with time zone NULL;
                 ALTER TABLE jobs ADD COLUMN IF NOT EXISTS "ScheduleConfirmed" boolean NOT NULL DEFAULT false;
+                CREATE TABLE IF NOT EXISTS favourites (
+                    "FavouriteId" uuid PRIMARY KEY,
+                    "CustomerId" uuid NOT NULL REFERENCES customers("CustomerId") ON DELETE CASCADE,
+                    "ProfessionalId" uuid NOT NULL REFERENCES professionals("ProfessionalId") ON DELETE CASCADE,
+                    "CreatedAt" timestamp with time zone NOT NULL
+                );
+                CREATE UNIQUE INDEX IF NOT EXISTS "IX_favourites_Customer_Professional"
+                    ON favourites("CustomerId", "ProfessionalId");
                 """);
         }
     }

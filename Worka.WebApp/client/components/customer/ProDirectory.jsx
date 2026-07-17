@@ -50,6 +50,39 @@ const ProDirectory = () => {
   const [selectedPro, setSelectedPro] = useState(null);
   const [proReviews, setProReviews] = useState([]);
   const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [favourites, setFavourites] = useState(() => new Set());
+  const [savedOnly, setSavedOnly] = useState(false);
+
+  const loadFavourites = useCallback(async () => {
+    try {
+      const res = await api.get('/api/favourites');
+      setFavourites(new Set(unwrap(res.data) ?? []));
+    } catch {
+      // Non-fatal.
+    }
+  }, []);
+
+  useEffect(() => {
+    loadFavourites();
+  }, [loadFavourites]);
+
+  const toggleFavourite = useCallback(
+    async (proId) => {
+      const id = String(proId);
+      setFavourites((cur) => {
+        const next = new Set(cur);
+        if (next.has(id)) next.delete(id);
+        else next.add(id);
+        return next;
+      });
+      try {
+        await api.post(`/api/favourites/${id}/toggle`);
+      } catch {
+        loadFavourites();
+      }
+    },
+    [loadFavourites]
+  );
 
   // Client-side sort over whatever the directory returns.
   const sortedPros = useMemo(() => {
@@ -69,6 +102,9 @@ const ProDirectory = () => {
   }, [pros, sortBy]);
 
   const gridCols = isWide ? 3 : isDesktop ? 2 : 1;
+  const visiblePros = savedOnly
+    ? sortedPros.filter((pro) => favourites.has(String(pro.professionalId)))
+    : sortedPros;
 
   const openProDetails = useCallback(async (pro) => {
     setSelectedPro(pro);
@@ -147,6 +183,18 @@ const ProDirectory = () => {
               <Stars value={item.averageRating} count={item.reviewCount} emptyLabel={t('reviews.none')} />
             </View>
           </View>
+          <TouchableOpacity
+            style={styles.heartButton}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            onPress={() => toggleFavourite(item.professionalId)}
+            accessibilityLabel={t('directory.save')}
+          >
+            <MaterialCommunityIcons
+              name={favourites.has(String(item.professionalId)) ? 'heart' : 'heart-outline'}
+              size={22}
+              color={favourites.has(String(item.professionalId)) ? '#8c2f2f' : colors.muted}
+            />
+          </TouchableOpacity>
         </View>
 
         {item.readyForPayments ? (
@@ -310,7 +358,22 @@ const ProDirectory = () => {
       ) : null}
 
       <View style={styles.resultRow}>
-        <Text style={styles.resultCount}>{t('directory.results', { count: sortedPros.length })}</Text>
+        <View style={styles.resultLeft}>
+          <Text style={styles.resultCount}>{t('directory.results', { count: visiblePros.length })}</Text>
+          <TouchableOpacity
+            style={[styles.savedChip, savedOnly && styles.savedChipActive]}
+            onPress={() => setSavedOnly((v) => !v)}
+          >
+            <MaterialCommunityIcons
+              name={savedOnly ? 'heart' : 'heart-outline'}
+              size={15}
+              color={savedOnly ? '#fff' : '#8c2f2f'}
+            />
+            <Text style={[styles.savedChipText, savedOnly && styles.savedChipTextActive]}>
+              {t('directory.saved', { count: favourites.size })}
+            </Text>
+          </TouchableOpacity>
+        </View>
         <View style={styles.sortControl}>
           <SelectField
             options={[
@@ -325,14 +388,14 @@ const ProDirectory = () => {
         </View>
       </View>
 
-      {sortedPros.length === 0 ? (
+      {visiblePros.length === 0 ? (
         <View style={styles.emptyState}>
-          <MaterialCommunityIcons name="account-search-outline" size={40} color="#111" />
-          <Text style={styles.emptyTitle}>{t('directory.emptyTitle')}</Text>
-          <Text style={styles.mutedText}>{t('directory.emptyText')}</Text>
+          <MaterialCommunityIcons name={savedOnly ? 'heart-outline' : 'account-search-outline'} size={40} color="#111" />
+          <Text style={styles.emptyTitle}>{savedOnly ? t('directory.noSavedTitle') : t('directory.emptyTitle')}</Text>
+          <Text style={styles.mutedText}>{savedOnly ? t('directory.noSavedText') : t('directory.emptyText')}</Text>
         </View>
       ) : (
-        <View style={styles.grid}>{sortedPros.map(renderCard)}</View>
+        <View style={styles.grid}>{visiblePros.map(renderCard)}</View>
       )}
 
       <AppFooter />
@@ -590,10 +653,47 @@ const styles = StyleSheet.create({
     gap: 12,
     marginBottom: 12,
   },
+  resultLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flexShrink: 1,
+    minWidth: 0,
+  },
   resultCount: {
     color: colors.muted,
     fontWeight: '800',
     fontSize: 14,
+  },
+  savedChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    minHeight: 34,
+    paddingHorizontal: 11,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#e3dfd2',
+    backgroundColor: colors.surface,
+  },
+  savedChipActive: {
+    backgroundColor: '#8c2f2f',
+    borderColor: '#8c2f2f',
+  },
+  savedChipText: {
+    color: colors.ink,
+    fontWeight: '800',
+    fontSize: 13,
+  },
+  savedChipTextActive: {
+    color: '#fff',
+  },
+  heartButton: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'flex-start',
   },
   sortControl: {
     minWidth: 190,
