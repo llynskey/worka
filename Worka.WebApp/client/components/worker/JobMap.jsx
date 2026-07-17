@@ -41,6 +41,18 @@ const jobImage = (job) =>
   categoryImages[String(job?.category ?? '').toLowerCase()] ||
   categoryImages.repairs;
 
+// The nearest actually-scrolling ancestor of a DOM node (web). Used to scroll a
+// specific container reliably — scrollIntoView picks the wrong scroller on iOS.
+const nearestScroller = (el) => {
+  let n = el && el.parentElement;
+  while (n) {
+    const oy = window.getComputedStyle(n).overflowY;
+    if ((oy === 'auto' || oy === 'scroll') && n.scrollHeight > n.clientHeight + 1) return n;
+    n = n.parentElement;
+  }
+  return null;
+};
+
 const MAPBOX_TOKEN = process.env.EXPO_PUBLIC_MAPBOX_TOKEN;
 
 const getMapUrl = (job) => {
@@ -164,8 +176,19 @@ const JobMap = () => {
   // sits at the top of the visible list. scrollIntoView handles the nesting.
   useEffect(() => {
     if (Platform.OS !== 'web' || !selectedJobId || typeof document === 'undefined') return;
-    const el = document.getElementById(`jobmap-item-${selectedJobId}`);
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // Defer so the item is laid out, then scroll its own container to it.
+    const id = requestAnimationFrame(() => {
+      const item = document.getElementById(`jobmap-item-${selectedJobId}`);
+      if (!item) return;
+      const scroller = nearestScroller(item);
+      if (scroller) {
+        const delta = item.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
+        scroller.scrollTo({ top: scroller.scrollTop + delta - 8, behavior: 'smooth' });
+      } else {
+        item.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+    return () => cancelAnimationFrame(id);
   }, [selectedJobId]);
 
   // Load the saved work location so distances default to the worker's base.
