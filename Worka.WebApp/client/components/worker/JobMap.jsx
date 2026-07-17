@@ -524,24 +524,32 @@ const JobMap = () => {
   if (isNarrow) {
     return (
       <>
-        <ScrollView style={styles.narrowShell} contentContainerStyle={styles.narrowContent}>
-          {headerBlock}
-          {radiusBlock}
-          <View style={[styles.mapPaneNarrow, { height: mapHeight }]}>
-            <JobsMapView
-              jobs={locatedJobs}
-              selectedJobId={selectedJobId}
-              onSelectJob={handleSelectJob}
-              onLocate={useCurrentLocation}
-              userLocation={currentLocation}
-              origin={origin}
-              radiusKm={Number.isFinite(radiusKm) ? radiusKm : null}
-              inRadiusIds={inRadiusIds}
-            />
+        <View style={styles.narrowShell}>
+          <View style={styles.narrowTop}>
+            {headerBlock}
+            {radiusBlock}
+            <View style={[styles.mapPaneNarrow, { height: mapHeight }]}>
+              <JobsMapView
+                jobs={locatedJobs}
+                selectedJobId={selectedJobId}
+                onSelectJob={handleSelectJob}
+                onLocate={useCurrentLocation}
+                userLocation={currentLocation}
+                origin={origin}
+                radiusKm={Number.isFinite(radiusKm) ? radiusKm : null}
+                inRadiusIds={inRadiusIds}
+              />
+            </View>
           </View>
-          <View style={styles.narrowList}>{listBody}</View>
-          <AppFooter />
-        </ScrollView>
+          <ScrollView
+            ref={listScrollRef}
+            style={styles.narrowListScroll}
+            contentContainerStyle={styles.narrowListContent}
+          >
+            {listBody}
+            <AppFooter />
+          </ScrollView>
+        </View>
         {modals}
       </>
     );
@@ -589,6 +597,19 @@ const styles = StyleSheet.create({
     flex: 1,
     minHeight: 0,
     backgroundColor: '#f7f5ef',
+  },
+  narrowTop: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+  },
+  narrowListScroll: {
+    flex: 1,
+    minHeight: 0,
+  },
+  narrowListContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 28,
+    gap: 10,
   },
   narrowContent: {
     padding: 16,
