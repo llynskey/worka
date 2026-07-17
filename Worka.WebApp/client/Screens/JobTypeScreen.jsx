@@ -415,15 +415,6 @@ const JobTypeScreen = ({ navigation }) => {
                 </>
               )}
             </TouchableOpacity>
-
-            <TextInput
-              placeholder={t('post.photoUrlPlaceholder')}
-              placeholderTextColor="#686b64"
-              value={form.photoUrl}
-              onChangeText={(text) => updateField('photoUrl', text)}
-              autoCapitalize="none"
-              style={[styles.input, styles.photoUrlInput]}
-            />
           </View>
 
           <TextInput
