@@ -41,11 +41,14 @@ const WebShell = ({ eyebrow, title, tabs, activeTab, onTabChange, children }) =>
   const activeTabRef = useRef(activeTab);
   const visible = hover || !hidden;
 
-  // Show the bar again when switching sections.
+  // Show the bar again when switching sections. Also clear the hover latch:
+  // clicking a tab leaves the cursor over the bar, and without a mouse move a
+  // stuck hover would keep `visible` true and stop the bar ever retracting.
   useEffect(() => {
     activeTabRef.current = activeTab;
     lastY.current = 0;
     setHidden(false);
+    setHover(false);
   }, [activeTab]);
 
   useEffect(() => {
@@ -63,8 +66,10 @@ const WebShell = ({ eyebrow, title, tabs, activeTab, onTabChange, children }) =>
         // The map view keeps the bar fixed so the map panel never shifts.
         if (activeTabRef.current === 'map') setHidden(false);
         else if (y <= 24) setHidden(false); // at the top
-        else if (y > last + 8) setHidden(true); // scrolling down
-        else if (y < last - 8) setHidden(false); // scrolling up
+        else if (y > last + 8) {
+          setHidden(true); // scrolling down
+          setHover(false); // drop any stale hover latch so it can actually hide
+        } else if (y < last - 8) setHidden(false); // scrolling up
       });
     };
     // Capture phase so nested screen scrollers are caught (scroll doesn't bubble).
