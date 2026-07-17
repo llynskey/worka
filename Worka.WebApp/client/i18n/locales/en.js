@@ -224,6 +224,8 @@ export default {
   'quotes.many': '{count} quotes',
   'quotes.bookedTotal': 'Booked total {amount}',
   'quotes.empty': 'Quotes from professionals will appear here.',
+  'quotes.reviewCount': 'Review {count} quotes',
+  'quotes.bookedLabel': 'Booked total',
   'quotes.noNote': 'No note provided.',
   'quotes.wallets': 'Apple Pay, Google Pay, Link, or card via Stripe Checkout.',
   'quotes.payBook': 'Pay & book',
