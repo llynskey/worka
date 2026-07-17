@@ -333,6 +333,15 @@ namespace Worka.Services.Payments
             job.Status = JobStatusEnum.Accepted;
             job.UpdatedAt = DateTimeOffset.UtcNow;
 
+            // Carry the professional's proposed appointment time onto the booking
+            // (awaiting the customer's confirmation).
+            var bookedQuote = await _dbContext.Quotes.FirstOrDefaultAsync(q => q.QuoteId == payment.QuoteId);
+            if (bookedQuote?.ScheduledAt != null)
+            {
+                job.ScheduledAt = bookedQuote.ScheduledAt;
+                job.ScheduleConfirmed = false;
+            }
+
             payment.Status = PaidStatus;
             payment.StripePaymentIntentId = session.PaymentIntentId ?? string.Empty;
             payment.UpdatedAt = DateTimeOffset.UtcNow;

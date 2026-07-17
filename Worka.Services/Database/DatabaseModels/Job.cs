@@ -31,6 +31,12 @@ namespace Worka.Services.Database.DatabaseModels
 
         public JobStatusEnum Status { get; set; } = JobStatusEnum.Pending;
 
+        /// <summary>Agreed appointment time once booked (copied from the accepted quote, then editable).</summary>
+        public DateTimeOffset? ScheduledAt { get; set; }
+
+        /// <summary>True once both sides have confirmed the scheduled time.</summary>
+        public bool ScheduleConfirmed { get; set; }
+
         public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 
         public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;

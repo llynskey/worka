@@ -65,6 +65,7 @@ namespace Worka.Services.Quotes
                     Price = quoteDto.Price,
                     JobId = jobGuid,
                     Description = (quoteDto.Description ?? string.Empty).Trim(),
+                    ScheduledAt = quoteDto.ScheduledAt,
                     CreatedAt = DateTimeOffset.UtcNow
                 };
 
@@ -107,6 +108,12 @@ namespace Worka.Services.Quotes
 
                 quote.Price = quoteDto.Price;
                 quote.Description = (quoteDto.Description ?? string.Empty).Trim();
+                // Only overwrite the proposed time when one is supplied, so edits
+                // from surfaces that don't include the field don't wipe it.
+                if (quoteDto.ScheduledAt.HasValue)
+                {
+                    quote.ScheduledAt = quoteDto.ScheduledAt;
+                }
                 await _dbContext.SaveChangesAsync();
 
                 return new WorkaResponse<QuoteResponseDTO>(new QuoteResponseDTO(quote));

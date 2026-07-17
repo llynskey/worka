@@ -11,6 +11,8 @@ namespace Worka.Services.Jobs
         Task<WorkaResponse<JobResponseDTO>> UpdateJobAsync(string userId, string jobId, UpdateJobDTO jobDto);
         Task<WorkaResponse<JobResponseDTO>> DeleteJobAsync(string userId, string jobId);
         Task<WorkaResponse<JobResponseDTO>> CompleteJobAsync(string userId, string jobId);
+        Task<WorkaResponse<JobResponseDTO>> SetScheduleAsync(string userId, string jobId, DateTimeOffset? scheduledAt);
+        Task<WorkaResponse<JobResponseDTO>> ConfirmScheduleAsync(string userId, string jobId);
         Task<WorkaResponse<List<JobResponseDTO>>> GetAllJobsAsync(string userId = null);
     }
 }

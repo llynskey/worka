@@ -70,11 +70,15 @@ const BookingsCalendar = () => {
       .filter((quote) => jobsById[quote.jobId]?.acceptedQuoteId === quote.quoteId)
       .map((quote) => {
         const job = jobsById[quote.jobId];
-        const when = new Date(job.updatedAt || job.createdAt);
+        // Prefer the agreed appointment time; fall back to the booking date.
+        const scheduled = !!job.scheduledAt;
+        const when = new Date(job.scheduledAt || job.updatedAt || job.createdAt);
         return {
           id: quote.quoteId,
           day: dayKey(when),
           when,
+          scheduled,
+          scheduleConfirmed: !!job.scheduleConfirmed,
           jobName: job.jobName,
           location: job.locationLabel || job.address || '',
           amount: quote.price,
@@ -255,6 +259,15 @@ const BookingsCalendar = () => {
               <MaterialCommunityIcons name="map-marker-outline" size={15} color="#62645c" />
               <Text style={styles.bookingMetaText} numberOfLines={1}>
                 {booking.location}
+              </Text>
+            </View>
+          ) : null}
+          {booking.scheduled ? (
+            <View style={styles.bookingMeta}>
+              <MaterialCommunityIcons name="clock-outline" size={15} color={colors.muted} />
+              <Text style={styles.bookingMetaText} numberOfLines={1}>
+                {booking.when.toLocaleTimeString(MONTH_LOCALES[language] ?? language ?? 'en-GB', { hour: '2-digit', minute: '2-digit' })}
+                {booking.scheduleConfirmed ? '' : ` · ${t('schedule.proposed')}`}
               </Text>
             </View>
           ) : null}

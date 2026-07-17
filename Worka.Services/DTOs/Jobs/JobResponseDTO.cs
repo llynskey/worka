@@ -30,6 +30,10 @@ namespace Worka.Services.DTOs.Jobs
 
         public JobStatusEnum JobStatus { get; set; }
 
+        public DateTimeOffset? ScheduledAt { get; set; }
+
+        public bool ScheduleConfirmed { get; set; }
+
         public string Currency { get; set; }
 
         /// <summary>
@@ -58,6 +62,8 @@ namespace Worka.Services.DTOs.Jobs
             Latitude = job.Latitude;
             Longitude = job.Longitude;
             JobStatus = job.Status;
+            ScheduledAt = job.ScheduledAt;
+            ScheduleConfirmed = job.ScheduleConfirmed;
             CustomerId = job.CustomerId.ToString();
             AcceptedQuoteId = job.AcceptedQuoteId?.ToString();
             Currency = job.Currency;

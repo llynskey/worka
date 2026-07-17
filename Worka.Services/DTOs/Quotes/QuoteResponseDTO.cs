@@ -14,6 +14,8 @@ namespace Worka.Services.DTOs.Quotes
 
         public string Description { get; set; }
 
+        public DateTimeOffset? ScheduledAt { get; set; }
+
         public DateTimeOffset CreatedAt { get; set; }
 
         // Professional summary — populated for customer-facing quote lists so
@@ -37,6 +39,7 @@ namespace Worka.Services.DTOs.Quotes
             JobId = quote.JobId.ToString();
             Price = quote.Price;
             Description = quote.Description;
+            ScheduledAt = quote.ScheduledAt;
             CreatedAt = quote.CreatedAt;
         }
     }

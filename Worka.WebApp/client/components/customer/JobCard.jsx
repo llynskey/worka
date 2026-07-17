@@ -43,7 +43,7 @@ const statusLabel = (status) => {
   return 'Open';
 };
 
-const JobCard = ({ job, quotes = [], onAcceptQuote, onEditJob, onDeleteJob, onCompleteJob, onReviewJob }) => {
+const JobCard = ({ job, quotes = [], onAcceptQuote, onEditJob, onDeleteJob, onCompleteJob, onReviewJob, onConfirmSchedule }) => {
   const { t } = useI18n();
   const [detailsVisible, setDetailsVisible] = useState(false);
   const [userLocation, setUserLocation] = useState(null);
@@ -99,6 +99,27 @@ const JobCard = ({ job, quotes = [], onAcceptQuote, onEditJob, onDeleteJob, onCo
               <Text style={styles.metaText}>{job.locationLabel || job.address}</Text>
             </View>
           )}
+
+          {status === 'Booked' && job.scheduledAt ? (
+            <View style={[styles.scheduleBox, job.scheduleConfirmed && styles.scheduleBoxConfirmed]}>
+              <MaterialCommunityIcons
+                name={job.scheduleConfirmed ? 'calendar-check' : 'calendar-clock'}
+                size={20}
+                color={job.scheduleConfirmed ? '#24513b' : '#111'}
+              />
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Text style={styles.scheduleLabel}>
+                  {job.scheduleConfirmed ? t('schedule.confirmed') : t('schedule.proposedTime')}
+                </Text>
+                <Text style={styles.scheduleTime}>{new Date(job.scheduledAt).toLocaleString()}</Text>
+              </View>
+              {!job.scheduleConfirmed ? (
+                <TouchableOpacity style={styles.confirmButton} onPress={() => onConfirmSchedule?.(job)}>
+                  <Text style={styles.confirmButtonText}>{t('schedule.confirm')}</Text>
+                </TouchableOpacity>
+              ) : null}
+            </View>
+          ) : null}
 
           <View style={styles.actionRow}>
             <TouchableOpacity style={styles.detailsButton} onPress={openDetails}>
@@ -463,6 +484,46 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+  },
+  scheduleBox: {
+    marginTop: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    borderWidth: 1,
+    borderColor: '#e3dfd2',
+    borderRadius: 8,
+    padding: 12,
+    backgroundColor: '#fbfaf6',
+  },
+  scheduleBoxConfirmed: {
+    borderColor: '#cfe3d4',
+    backgroundColor: '#e8f5ed',
+  },
+  scheduleLabel: {
+    color: '#62645c',
+    fontSize: 11,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
+  },
+  scheduleTime: {
+    color: '#111',
+    fontWeight: '900',
+    marginTop: 2,
+  },
+  confirmButton: {
+    minHeight: 40,
+    borderRadius: 8,
+    backgroundColor: '#111',
+    paddingHorizontal: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  confirmButtonText: {
+    color: '#fff',
+    fontWeight: '900',
+    fontSize: 13,
   },
   metaText: {
     flex: 1,

@@ -304,6 +304,19 @@ const CustomerJobList = ({ navigation }) => {
     [refresh, t]
   );
 
+  const confirmSchedule = useCallback(
+    async (job) => {
+      try {
+        await api.post(`/Jobs/${job.jobId}/schedule/confirm`);
+        await refresh();
+        notify(t('schedule.confirmedTitle'), t('schedule.confirmedText'));
+      } catch (err) {
+        notify(t('schedule.errorTitle'), getErrorMessage(err, t('common.tryAgain')));
+      }
+    },
+    [refresh, t]
+  );
+
   if (loading && !refreshing) {
     return (
       <View style={styles.centerState}>
@@ -481,6 +494,7 @@ const CustomerJobList = ({ navigation }) => {
               onDeleteJob={deleteJob}
               onCompleteJob={completeJob}
               onReviewJob={openReview}
+              onConfirmSchedule={confirmSchedule}
             />
           </Reveal>
         ))}

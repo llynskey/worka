@@ -219,6 +219,132 @@ namespace Worka.Services.Jobs
             }
         }
 
+        public async Task<WorkaResponse<JobResponseDTO>> SetScheduleAsync(string userId, string jobId, DateTimeOffset? scheduledAt)
+        {
+            try
+            {
+                var (job, otherUserId, error) = await ResolveBookingParticipantAsync(userId, jobId);
+                if (error != null)
+                {
+                    return new WorkaResponse<JobResponseDTO>(error);
+                }
+
+                if (scheduledAt == null)
+                {
+                    return new WorkaResponse<JobResponseDTO>("Choose a date and time for the appointment.");
+                }
+
+                job.ScheduledAt = scheduledAt;
+                job.ScheduleConfirmed = false; // a (new) proposed time needs confirming by the other side
+                job.UpdatedAt = DateTimeOffset.UtcNow;
+                await _dbContext.SaveChangesAsync();
+
+                if (_notifications != null && otherUserId != Guid.Empty)
+                {
+                    await _notifications.NotifyAsync(
+                        otherUserId,
+                        "booking",
+                        "New time proposed",
+                        $"A new time was proposed for \"{job.Name}\". Open your bookings to confirm it.",
+                        job.JobId);
+                }
+
+                return new WorkaResponse<JobResponseDTO>(new JobResponseDTO(job));
+            }
+            catch (Exception ex)
+            {
+                return WorkaResponse<JobResponseDTO>.Fail(ex, "An error occurred while scheduling the job.");
+            }
+        }
+
+        public async Task<WorkaResponse<JobResponseDTO>> ConfirmScheduleAsync(string userId, string jobId)
+        {
+            try
+            {
+                var (job, otherUserId, error) = await ResolveBookingParticipantAsync(userId, jobId);
+                if (error != null)
+                {
+                    return new WorkaResponse<JobResponseDTO>(error);
+                }
+
+                if (job.ScheduledAt == null)
+                {
+                    return new WorkaResponse<JobResponseDTO>("No time has been proposed yet.");
+                }
+
+                job.ScheduleConfirmed = true;
+                job.UpdatedAt = DateTimeOffset.UtcNow;
+                await _dbContext.SaveChangesAsync();
+
+                if (_notifications != null && otherUserId != Guid.Empty)
+                {
+                    await _notifications.NotifyAsync(
+                        otherUserId,
+                        "booking",
+                        "Time confirmed",
+                        $"The appointment for \"{job.Name}\" is confirmed.",
+                        job.JobId);
+                }
+
+                return new WorkaResponse<JobResponseDTO>(new JobResponseDTO(job));
+            }
+            catch (Exception ex)
+            {
+                return WorkaResponse<JobResponseDTO>.Fail(ex, "An error occurred while confirming the time.");
+            }
+        }
+
+        /// <summary>
+        /// Resolves the booked job the caller may schedule and the other party's
+        /// user id (for notifying them). Only the job's customer or the booked
+        /// professional may touch the schedule, and only once the job is booked.
+        /// </summary>
+        private async Task<(Job Job, Guid OtherUserId, string Error)> ResolveBookingParticipantAsync(
+            string userId, string jobId)
+        {
+            if (!Guid.TryParse(userId, out var userGuid))
+            {
+                return (null, Guid.Empty, "Invalid user identity.");
+            }
+
+            if (!Guid.TryParse(jobId, out var jobGuid))
+            {
+                return (null, Guid.Empty, "Invalid job ID format.");
+            }
+
+            var job = await _dbContext.Jobs.FirstOrDefaultAsync(j => j.JobId == jobGuid);
+            if (job == null)
+            {
+                return (null, Guid.Empty, "Job not found.");
+            }
+
+            if (job.AcceptedQuoteId == null || job.Status != JobStatusEnum.Accepted)
+            {
+                return (null, Guid.Empty, "Only booked jobs can be scheduled.");
+            }
+
+            var customer = await _dbContext.Customers.FirstOrDefaultAsync(c => c.CustomerId == job.CustomerId);
+            var acceptedQuote = await _dbContext.Quotes.FirstOrDefaultAsync(q => q.QuoteId == job.AcceptedQuoteId);
+            var professional = acceptedQuote == null
+                ? null
+                : await _dbContext.Professionals.FirstOrDefaultAsync(p => p.ProfessionalId == acceptedQuote.ProfessionalId);
+
+            var customerUserId = customer?.UserId ?? Guid.Empty;
+            var professionalUserId = professional?.UserId ?? Guid.Empty;
+
+            if (userGuid == customerUserId)
+            {
+                return (job, professionalUserId, null);
+            }
+
+            if (userGuid == professionalUserId)
+            {
+                return (job, customerUserId, null);
+            }
+
+            return (null, Guid.Empty, "You are not part of this booking.");
+        }
+
         private async Task<(Job Job, string Error)> GetOwnedJobAsync(string userId, string jobId)
         {
             if (!Guid.TryParse(userId, out var userGuid))

@@ -47,7 +47,7 @@ const WorkerJobList = () => {
   const [error, setError] = useState(null);
   const [selectedJob, setSelectedJob] = useState(null);
   const [selectedDetailsJob, setSelectedDetailsJob] = useState(null);
-  const [quoteForm, setQuoteForm] = useState({ price: '', description: '' });
+  const [quoteForm, setQuoteForm] = useState({ price: '', description: '', scheduledAt: '' });
   const [submitting, setSubmitting] = useState(false);
   const [currentLocation, setCurrentLocation] = useState(null);
   const [locating, setLocating] = useState(false);
@@ -233,6 +233,7 @@ const WorkerJobList = () => {
     setQuoteForm({
       price: '',
       description: t('quotes.defaultNote'),
+      scheduledAt: '',
     });
   };
 
@@ -254,6 +255,7 @@ const WorkerJobList = () => {
         jobId: selectedJob.jobId,
         price: amount,
         description: quoteForm.description.trim(),
+        scheduledAt: quoteForm.scheduledAt ? new Date(quoteForm.scheduledAt).toISOString() : null,
       });
       setSelectedJob(null);
       await refresh();
@@ -529,6 +531,29 @@ const WorkerJobList = () => {
                 placeholderTextColor="#686b64"
                 multiline
               />
+
+              {Platform.OS === 'web' ? (
+                <View style={styles.scheduleField}>
+                  <Text style={styles.scheduleLabel}>{t('schedule.proposeLabel')}</Text>
+                  {React.createElement('input', {
+                    type: 'datetime-local',
+                    value: quoteForm.scheduledAt,
+                    onChange: (e) => setQuoteForm((current) => ({ ...current, scheduledAt: e.target.value })),
+                    style: {
+                      width: '100%',
+                      minHeight: 46,
+                      borderRadius: 8,
+                      border: '1px solid #d9d5ca',
+                      padding: '10px 12px',
+                      background: '#fbfaf6',
+                      fontSize: 15,
+                      boxSizing: 'border-box',
+                      fontFamily: 'inherit',
+                      color: '#111',
+                    },
+                  })}
+                </View>
+              ) : null}
 
               <TouchableOpacity style={styles.submitButton} onPress={submitQuote} disabled={submitting}>
                 {submitting ? (
@@ -858,6 +883,15 @@ const styles = StyleSheet.create({
     maxWidth: 520,
     borderRadius: 16,
     maxHeight: '90%',
+  },
+  scheduleField: {
+    marginBottom: 12,
+  },
+  scheduleLabel: {
+    color: '#111',
+    fontWeight: '800',
+    fontSize: 13,
+    marginBottom: 6,
   },
   modalHeader: {
     flexDirection: 'row',

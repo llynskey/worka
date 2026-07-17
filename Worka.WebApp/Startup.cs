@@ -306,6 +306,9 @@ namespace Worka.WebApp
                 );
                 CREATE INDEX IF NOT EXISTS "IX_notifications_UserId_CreatedAt"
                     ON notifications("UserId", "CreatedAt");
+                ALTER TABLE quotes ADD COLUMN IF NOT EXISTS "ScheduledAt" timestamp with time zone NULL;
+                ALTER TABLE jobs ADD COLUMN IF NOT EXISTS "ScheduledAt" timestamp with time zone NULL;
+                ALTER TABLE jobs ADD COLUMN IF NOT EXISTS "ScheduleConfirmed" boolean NOT NULL DEFAULT false;
                 """);
         }
     }

@@ -71,6 +71,32 @@ namespace Worka.WebApp.Controllers
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
+        [HttpPost("Jobs/{jobId}/schedule")]
+        public async Task<IActionResult> Schedule(string jobId, [FromBody] ScheduleJobDTO request)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Unauthorized();
+            }
+
+            var result = await _jobService.SetScheduleAsync(userId, jobId, request?.ScheduledAt);
+            return result.Success ? Ok(result) : BadRequest(result);
+        }
+
+        [HttpPost("Jobs/{jobId}/schedule/confirm")]
+        public async Task<IActionResult> ConfirmSchedule(string jobId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Unauthorized();
+            }
+
+            var result = await _jobService.ConfirmScheduleAsync(userId, jobId);
+            return result.Success ? Ok(result) : BadRequest(result);
+        }
+
         [HttpGet("ProfessionalJobs")]
         [HttpGet("~/ProfessionalJobs")]
         public async Task<IActionResult> GetProfessionalJobs()
