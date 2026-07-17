@@ -173,6 +173,10 @@ const JobMap = () => {
     });
   }, [origin, locatedJobs, radiusKm]);
 
+  // Jobs inside the slider radius — shared by the list and the map so pins,
+  // the radius circle and the list all move together with the slider.
+  const inRadiusIds = useMemo(() => new Set(shownJobs.map((job) => job.jobId)), [shownJobs]);
+
   const selectedJob = shownJobs.find((job) => job.jobId === selectedJobId) ?? shownJobs[0] ?? null;
 
   const useCurrentLocation = async () => {
@@ -347,6 +351,9 @@ const JobMap = () => {
             selectedJobId={selectedJobId}
             onSelectJob={setSelectedJobId}
             userLocation={currentLocation}
+            origin={origin}
+            radiusKm={radiusKm}
+            inRadiusIds={inRadiusIds}
           />
         </View>
         <View style={styles.narrowList}>{listBody}</View>
@@ -368,6 +375,9 @@ const JobMap = () => {
             selectedJobId={selectedJobId}
             onSelectJob={setSelectedJobId}
             userLocation={currentLocation}
+            origin={origin}
+            radiusKm={radiusKm}
+            inRadiusIds={inRadiusIds}
           />
         </View>
 
