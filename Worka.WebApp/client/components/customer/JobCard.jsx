@@ -43,7 +43,7 @@ const statusLabel = (status) => {
   return 'Open';
 };
 
-const JobCard = ({ job, quotes = [], onAcceptQuote, onEditJob, onDeleteJob, onCompleteJob, onReviewJob, onConfirmSchedule }) => {
+const JobCard = ({ job, quotes = [], onAcceptQuote, onEditJob, onDeleteJob, onCompleteJob, onReviewJob, onConfirmSchedule, onCancelBooking }) => {
   const { t } = useI18n();
   const [detailsVisible, setDetailsVisible] = useState(false);
   const [userLocation, setUserLocation] = useState(null);
@@ -151,10 +151,19 @@ const JobCard = ({ job, quotes = [], onAcceptQuote, onEditJob, onDeleteJob, onCo
                   </TouchableOpacity>
                 </>
               ) : status === 'Booked' ? (
-                <TouchableOpacity style={styles.manageButtonPrimary} onPress={() => onCompleteJob?.(job)}>
-                  <MaterialCommunityIcons name="check-circle-outline" size={17} color="#fff" />
-                  <Text style={styles.manageButtonPrimaryText}>{t('jobs.markComplete')}</Text>
-                </TouchableOpacity>
+                <>
+                  <TouchableOpacity style={styles.manageButtonPrimary} onPress={() => onCompleteJob?.(job)}>
+                    <MaterialCommunityIcons name="check-circle-outline" size={17} color="#fff" />
+                    <Text style={styles.manageButtonPrimaryText}>{t('jobs.markComplete')}</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.manageButton, styles.manageButtonRight]}
+                    onPress={() => onCancelBooking?.(job)}
+                  >
+                    <MaterialCommunityIcons name="close-circle-outline" size={17} color="#8c2f2f" />
+                    <Text style={[styles.manageButtonText, styles.manageButtonDanger]}>{t('jobs.cancelBooking')}</Text>
+                  </TouchableOpacity>
+                </>
               ) : (
                 <TouchableOpacity style={styles.manageButtonPrimary} onPress={() => onReviewJob?.(job)}>
                   <MaterialCommunityIcons name="star-outline" size={17} color="#fff" />

@@ -99,6 +99,20 @@ namespace Worka.WebApp.Controllers
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
+        [Authorize]
+        [HttpPost("jobs/{jobId}/cancel")]
+        public async Task<IActionResult> CancelBooking(string jobId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Unauthorized();
+            }
+
+            var result = await _paymentsService.CancelBookingAsync(userId, jobId);
+            return result.Success ? Ok(result) : BadRequest(result);
+        }
+
         [AllowAnonymous]
         [HttpPost("stripe/webhook")]
         public async Task<IActionResult> StripeWebhook()

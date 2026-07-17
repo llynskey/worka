@@ -317,6 +317,27 @@ const CustomerJobList = ({ navigation }) => {
     [refresh, t]
   );
 
+  const cancelBooking = useCallback(
+    async (job) => {
+      const confirmed = await confirmAction(
+        t('jobs.cancelConfirmTitle'),
+        t('jobs.cancelConfirmText'),
+        t('jobs.cancelBooking'),
+        t('common.cancel')
+      );
+      if (!confirmed) return;
+
+      try {
+        await api.post(`/payments/jobs/${job.jobId}/cancel`);
+        await refresh();
+        notify(t('jobs.cancelledTitle'), t('jobs.cancelledText'));
+      } catch (err) {
+        notify(t('jobs.cancelErrorTitle'), getErrorMessage(err, t('common.tryAgain')));
+      }
+    },
+    [refresh, t]
+  );
+
   if (loading && !refreshing) {
     return (
       <View style={styles.centerState}>
@@ -495,6 +516,7 @@ const CustomerJobList = ({ navigation }) => {
               onCompleteJob={completeJob}
               onReviewJob={openReview}
               onConfirmSchedule={confirmSchedule}
+              onCancelBooking={cancelBooking}
             />
           </Reveal>
         ))}

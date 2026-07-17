@@ -560,6 +560,12 @@ export default {
   // Messages inbox
   'messages.empty': 'No messages yet',
   'messages.emptyHint': 'Your conversations with professionals and customers will appear here.',
+  'jobs.cancelBooking': 'Cancel booking',
+  'jobs.cancelConfirmTitle': 'Cancel this booking?',
+  'jobs.cancelConfirmText': 'The professional will be un-booked and your payment refunded in full. This cannot be undone.',
+  'jobs.cancelledTitle': 'Booking cancelled',
+  'jobs.cancelledText': 'The booking was cancelled and your payment refunded.',
+  'jobs.cancelErrorTitle': "Couldn't cancel the booking",
   'earnings.title': 'Earnings',
   'earnings.historyTitle': 'Payment history',
   'earnings.totalEarned': 'Total earned',

@@ -487,6 +487,105 @@ namespace Worka.Services.Payments
             }
         }
 
+        public async Task<WorkaResponse<PaymentResponseDTO>> CancelBookingAsync(string userId, string jobId)
+        {
+            try
+            {
+                if (!Guid.TryParse(userId, out var userGuid))
+                {
+                    return new WorkaResponse<PaymentResponseDTO>("Invalid user identity.");
+                }
+
+                if (!Guid.TryParse(jobId, out var jobGuid))
+                {
+                    return new WorkaResponse<PaymentResponseDTO>("Invalid job ID format.");
+                }
+
+                var job = await _dbContext.Jobs.FirstOrDefaultAsync(j => j.JobId == jobGuid);
+                if (job == null)
+                {
+                    return new WorkaResponse<PaymentResponseDTO>("Job not found.");
+                }
+
+                if (job.Status != JobStatusEnum.Accepted || job.AcceptedQuoteId == null)
+                {
+                    return new WorkaResponse<PaymentResponseDTO>("Only booked jobs can be cancelled.");
+                }
+
+                // Authorise: only the job's customer or the booked professional.
+                var customer = await _dbContext.Customers.FirstOrDefaultAsync(c => c.CustomerId == job.CustomerId);
+                var acceptedQuote = await _dbContext.Quotes.FirstOrDefaultAsync(q => q.QuoteId == job.AcceptedQuoteId);
+                var professional = acceptedQuote == null
+                    ? null
+                    : await _dbContext.Professionals.FirstOrDefaultAsync(p => p.ProfessionalId == acceptedQuote.ProfessionalId);
+                var customerUserId = customer?.UserId ?? Guid.Empty;
+                var professionalUserId = professional?.UserId ?? Guid.Empty;
+
+                if (userGuid != customerUserId && userGuid != professionalUserId)
+                {
+                    return new WorkaResponse<PaymentResponseDTO>("You are not part of this booking.");
+                }
+
+                var otherUserId = userGuid == customerUserId ? professionalUserId : customerUserId;
+
+                // Refund the paid charge, clawing the transfer back from the pro and
+                // returning Fixa's application fee.
+                var payment = await _dbContext.WorkaPayments.FirstOrDefaultAsync(p =>
+                    p.JobId == job.JobId && p.QuoteId == job.AcceptedQuoteId && p.Status == PaidStatus);
+
+                if (payment != null)
+                {
+                    if (string.IsNullOrWhiteSpace(_stripeSecretKey))
+                    {
+                        return new WorkaResponse<PaymentResponseDTO>("Refunds are unavailable right now. Please contact support.");
+                    }
+
+                    if (string.IsNullOrWhiteSpace(payment.StripePaymentIntentId))
+                    {
+                        return new WorkaResponse<PaymentResponseDTO>("This payment can't be refunded automatically. Please contact support.");
+                    }
+
+                    try
+                    {
+                        await new RefundService().CreateAsync(new RefundCreateOptions
+                        {
+                            PaymentIntent = payment.StripePaymentIntentId,
+                            ReverseTransfer = true,
+                            RefundApplicationFee = true,
+                        });
+                    }
+                    catch (StripeException)
+                    {
+                        return new WorkaResponse<PaymentResponseDTO>("The refund could not be processed. Please try again or contact support.");
+                    }
+
+                    payment.Status = "refunded";
+                    payment.UpdatedAt = DateTimeOffset.UtcNow;
+                }
+
+                job.Status = JobStatusEnum.Cancelled;
+                job.ScheduleConfirmed = false;
+                job.UpdatedAt = DateTimeOffset.UtcNow;
+                await _dbContext.SaveChangesAsync();
+
+                if (_notifications != null && otherUserId != Guid.Empty)
+                {
+                    await _notifications.NotifyAsync(
+                        otherUserId,
+                        "booking",
+                        "Booking cancelled",
+                        $"\"{job.Name}\" was cancelled" + (payment != null ? " and the payment refunded." : "."),
+                        job.JobId);
+                }
+
+                return new WorkaResponse<PaymentResponseDTO>(payment != null ? new PaymentResponseDTO(payment) : null);
+            }
+            catch (Exception ex)
+            {
+                return WorkaResponse<PaymentResponseDTO>.Fail(ex, "An error occurred while cancelling the booking.");
+            }
+        }
+
         private async Task<WorkaResponse<Professional>> GetProfessionalForUserAsync(string userId)
         {
             if (!Guid.TryParse(userId, out var userGuid))

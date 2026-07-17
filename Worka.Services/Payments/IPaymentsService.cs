@@ -24,5 +24,7 @@ namespace Worka.Services.Payments
         Task<WorkaResponse<EarningsSummaryDTO>> GetEarningsForProfessionalAsync(string userId);
 
         Task<WorkaResponse<CustomerSpendSummaryDTO>> GetPaymentHistoryForCustomerAsync(string userId);
+
+        Task<WorkaResponse<PaymentResponseDTO>> CancelBookingAsync(string userId, string jobId);
     }
 }
