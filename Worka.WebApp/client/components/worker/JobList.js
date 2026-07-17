@@ -482,10 +482,10 @@ const WorkerJobList = () => {
         />
       ) : null}
 
-      <Modal visible={!!selectedJob} transparent animationType="slide" onRequestClose={() => setSelectedJob(null)}>
-        <View style={styles.modalBackdrop}>
-          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.modalKeyboard}>
-            <View style={styles.modalCard}>
+      <Modal visible={!!selectedJob} transparent animationType={wide ? 'fade' : 'slide'} onRequestClose={() => setSelectedJob(null)}>
+        <View style={[styles.modalBackdrop, wide && styles.modalBackdropCentered]}>
+          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={[styles.modalKeyboard, wide && styles.modalKeyboardCentered]}>
+            <View style={[styles.modalCard, wide && styles.modalCardWide]}>
               <View style={styles.modalHeader}>
                 <Text style={styles.modalTitle}>{t('quotes.send')}</Text>
                 <TouchableOpacity onPress={() => setSelectedJob(null)} style={styles.closeButton}>
@@ -833,14 +833,31 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.42)',
     justifyContent: 'flex-end',
   },
+  modalBackdropCentered: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
   modalKeyboard: {
     justifyContent: 'flex-end',
+  },
+  modalKeyboardCentered: {
+    flex: 1,
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   modalCard: {
     backgroundColor: '#fff',
     borderTopLeftRadius: 8,
     borderTopRightRadius: 8,
     padding: 18,
+  },
+  modalCardWide: {
+    width: '100%',
+    maxWidth: 520,
+    borderRadius: 16,
+    maxHeight: '90%',
   },
   modalHeader: {
     flexDirection: 'row',

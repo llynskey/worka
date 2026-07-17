@@ -1,9 +1,9 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
-  FlatList,
   Modal,
   RefreshControl,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -16,11 +16,15 @@ import { api, formatDate, formatMoney, getErrorMessage, unwrap } from '../../api
 import notify, { confirmAction } from '../../Utils/notify';
 import useAutoRefresh from '../../Utils/useAutoRefresh';
 import AppFooter from '../AppFooter';
+import Reveal from '../Reveal';
 import { useI18n } from '../../i18n/I18nContext';
 import { categoryLabel } from '../../i18n/categories';
+import { colors, radius, shadow, space, useLayout } from '../../Utils/theme';
 
 const BidList = () => {
   const { t } = useI18n();
+  const { isDesktop } = useLayout();
+  const [scrollTick, setScrollTick] = useState(0);
   const [account, setAccount] = useState(null);
   const [quotes, setQuotes] = useState([]);
   const [jobs, setJobs] = useState([]);
@@ -150,92 +154,102 @@ const BidList = () => {
     );
   }
 
-  return (
-    <>
-    <FlatList
-      data={quotes}
-      keyExtractor={(item) => String(item.quoteId)}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} />}
-      contentContainerStyle={styles.listContent}
-      ListFooterComponent={<AppFooter />}
-      ListHeaderComponent={
-        <View style={styles.hero}>
-          <Text style={styles.eyebrow}>{t('bids.eyebrow')}</Text>
-          <Text style={styles.heroTitle}>
-            {account ? t('bids.heroTitleNamed', { name: account.firstName }) : t('bids.heroTitle')}
-          </Text>
-          <Text style={styles.heroText}>{t('bids.heroText')}</Text>
-          <View style={styles.statsRow}>
-            <View style={styles.statChip}>
-              <Text style={styles.statValue}>{quotes.length}</Text>
-              <Text style={styles.statLabel}>{t('bids.sent')}</Text>
+  const renderCard = (item, i) => {
+    const job = jobsById[item.jobId];
+    const accepted = job?.acceptedQuoteId === item.quoteId;
+    const bookedElsewhere = job?.acceptedQuoteId && job.acceptedQuoteId !== item.quoteId;
+
+    return (
+      <Reveal key={item.quoteId} tick={scrollTick} delay={Math.min(i, 8) * 50} style={[styles.gridCell, isDesktop && styles.gridCellHalf]}>
+        <View style={styles.card}>
+          <View style={styles.cardHeader}>
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text style={styles.cardTitle} numberOfLines={1}>{job?.jobName ?? t('bids.jobUnavailable')}</Text>
+              <Text style={styles.cardMeta}>{categoryLabel(t, job?.category)} - {formatDate(item.createdAt)}</Text>
             </View>
-            <View style={styles.statChip}>
-              <Text style={styles.statValue}>{acceptedCount}</Text>
-              <Text style={styles.statLabel}>{t('status.accepted')}</Text>
+            <View style={[styles.statusPill, accepted && styles.statusAccepted, bookedElsewhere && styles.statusClosed]}>
+              <Text style={[styles.statusText, accepted && styles.statusTextAccepted]}>
+                {accepted ? t('status.accepted') : bookedElsewhere ? t('status.booked') : t('status.pending')}
+              </Text>
             </View>
           </View>
+
+          <Text style={styles.amount}>{formatMoney(item.price, job?.currency)}</Text>
+          <Text style={styles.description}>{item.description || t('quotes.noNote')}</Text>
+          {accepted ? (
+            <View style={styles.payoutBox}>
+              <MaterialCommunityIcons name="cash-fast" size={18} color={colors.accent} />
+              <Text style={styles.payoutText}>
+                {t('bids.payoutText', { amount: formatMoney(item.price, job?.currency) })}
+              </Text>
+            </View>
+          ) : (
+            <>
+              <View style={styles.pendingBox}>
+                <MaterialCommunityIcons name="clock-outline" size={18} color="#111" />
+                <Text style={styles.pendingText}>{t('bids.pendingText')}</Text>
+              </View>
+              {!bookedElsewhere && (
+                <View style={styles.quoteActions}>
+                  <TouchableOpacity style={styles.quoteActionButton} onPress={() => openEditQuote(item)}>
+                    <MaterialCommunityIcons name="pencil-outline" size={17} color="#111" />
+                    <Text style={styles.quoteActionText}>{t('common.edit')}</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.quoteActionButton} onPress={() => withdrawQuote(item)}>
+                    <MaterialCommunityIcons name="trash-can-outline" size={17} color="#8c2f2f" />
+                    <Text style={[styles.quoteActionText, styles.quoteActionDanger]}>{t('bids.withdraw')}</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </>
+          )}
         </View>
-      }
-      ListEmptyComponent={
+      </Reveal>
+    );
+  };
+
+  return (
+    <>
+    <ScrollView
+      style={styles.screen}
+      contentContainerStyle={styles.content}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} />}
+      onScroll={(event) => {
+        const bucket = Math.round(event.nativeEvent.contentOffset.y / 60);
+        setScrollTick((current) => (current === bucket ? current : bucket));
+      }}
+      scrollEventThrottle={80}
+    >
+      <View style={styles.hero}>
+        <Text style={styles.eyebrow}>{t('bids.eyebrow')}</Text>
+        <Text style={styles.heroTitle}>
+          {account ? t('bids.heroTitleNamed', { name: account.firstName }) : t('bids.heroTitle')}
+        </Text>
+        <Text style={styles.heroText}>{t('bids.heroText')}</Text>
+        <View style={styles.statsRow}>
+          <View style={styles.statChip}>
+            <Text style={styles.statValue}>{quotes.length}</Text>
+            <Text style={styles.statLabel}>{t('bids.sent')}</Text>
+          </View>
+          <View style={styles.statChip}>
+            <Text style={styles.statValue}>{acceptedCount}</Text>
+            <Text style={styles.statLabel}>{t('status.accepted')}</Text>
+          </View>
+        </View>
+      </View>
+
+      {quotes.length === 0 ? (
         <View style={styles.emptyState}>
           <MaterialCommunityIcons name="file-document-edit-outline" size={40} color="#111" />
           <Text style={styles.emptyTitle}>{t('bids.emptyTitle')}</Text>
           <Text style={styles.mutedText}>{t('bids.emptyText')}</Text>
         </View>
-      }
-      renderItem={({ item }) => {
-        const job = jobsById[item.jobId];
-        const accepted = job?.acceptedQuoteId === item.quoteId;
-        const bookedElsewhere = job?.acceptedQuoteId && job.acceptedQuoteId !== item.quoteId;
+      ) : (
+        <View style={styles.grid}>{quotes.map(renderCard)}</View>
+      )}
 
-        return (
-          <View style={styles.card}>
-            <View style={styles.cardHeader}>
-              <View>
-                <Text style={styles.cardTitle}>{job?.jobName ?? t('bids.jobUnavailable')}</Text>
-                <Text style={styles.cardMeta}>{categoryLabel(t, job?.category)} - {formatDate(item.createdAt)}</Text>
-              </View>
-              <View style={[styles.statusPill, accepted && styles.statusAccepted, bookedElsewhere && styles.statusClosed]}>
-                <Text style={[styles.statusText, accepted && styles.statusTextAccepted]}>
-                  {accepted ? t('status.accepted') : bookedElsewhere ? t('status.booked') : t('status.pending')}
-                </Text>
-              </View>
-            </View>
-
-            <Text style={styles.amount}>{formatMoney(item.price, job?.currency)}</Text>
-            <Text style={styles.description}>{item.description || t('quotes.noNote')}</Text>
-            {accepted ? (
-              <View style={styles.payoutBox}>
-                <MaterialCommunityIcons name="cash-fast" size={18} color="#24513b" />
-                <Text style={styles.payoutText}>
-                  {t('bids.payoutText', { amount: formatMoney(item.price, job?.currency) })}
-                </Text>
-              </View>
-            ) : (
-              <>
-                <View style={styles.pendingBox}>
-                  <MaterialCommunityIcons name="clock-outline" size={18} color="#111" />
-                  <Text style={styles.pendingText}>{t('bids.pendingText')}</Text>
-                </View>
-                {!bookedElsewhere && (
-                  <View style={styles.quoteActions}>
-                    <TouchableOpacity style={styles.quoteActionButton} onPress={() => openEditQuote(item)}>
-                      <MaterialCommunityIcons name="pencil-outline" size={17} color="#111" />
-                      <Text style={styles.quoteActionText}>{t('common.edit')}</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.quoteActionButton} onPress={() => withdrawQuote(item)}>
-                      <MaterialCommunityIcons name="trash-can-outline" size={17} color="#8c2f2f" />
-                      <Text style={[styles.quoteActionText, styles.quoteActionDanger]}>{t('bids.withdraw')}</Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
-              </>
-            )}
-          </View>
-        );
-      }}
-    />
+      <AppFooter />
+    </ScrollView>
 
     <Modal visible={!!editQuote} transparent animationType="slide" onRequestClose={() => setEditQuote(null)}>
       <View style={styles.editBackdrop}>
@@ -279,20 +293,41 @@ const BidList = () => {
 };
 
 const styles = StyleSheet.create({
-  listContent: {
-    padding: 16,
+  screen: {
+    flex: 1,
+    minHeight: 0,
+    backgroundColor: colors.paper,
+  },
+  content: {
+    padding: space.lg,
     paddingBottom: 28,
     flexGrow: 1,
-    backgroundColor: '#f7f5ef',
+    backgroundColor: colors.paper,
     width: '100%',
-    maxWidth: 880,
+    maxWidth: 1240,
     alignSelf: 'center',
   },
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    columnGap: space.lg,
+  },
+  gridCell: {
+    flexGrow: 1,
+    flexBasis: '100%',
+    minWidth: '100%',
+    maxWidth: '100%',
+  },
+  gridCellHalf: {
+    flexBasis: '48%',
+    minWidth: 320,
+  },
   hero: {
-    backgroundColor: '#18201d',
-    borderRadius: 8,
-    padding: 18,
-    marginBottom: 14,
+    backgroundColor: colors.hero,
+    borderRadius: radius.md,
+    padding: 20,
+    marginBottom: space.lg,
+    ...shadow.card,
   },
   eyebrow: {
     color: '#9fd8b6',
