@@ -1,5 +1,5 @@
-import React from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 /**
@@ -7,38 +7,99 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
  * Wide viewports: fixed sidebar navigation on the left.
  * Narrow viewports: horizontal tab bar across the top.
  */
-const WorkspaceShell = ({ eyebrow, title, tabs, activeTab, onTabChange, children }) => {
-  // Section nav is shown as pill tabs across the top at every width (matches the
-  // mobile layout and lets the content use the full width on desktop).
-  return (
-      <View style={styles.shellColumn}>
-        <View style={styles.topBar}>
-          <Text style={styles.topBarTitle}>
-            {eyebrow} <Text style={styles.topBarTitleStrong}>{title}</Text>
-          </Text>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.topTabs}
+// The pill-tab section bar shown across the top.
+const SectionBar = ({ eyebrow, title, tabs, activeTab, onTabChange, onLayout }) => (
+  <View style={styles.topBar} onLayout={onLayout}>
+    <Text style={styles.topBarTitle}>
+      {eyebrow} <Text style={styles.topBarTitleStrong}>{title}</Text>
+    </Text>
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.topTabs}>
+      {tabs.map((tab) => {
+        const active = activeTab === tab.key;
+        return (
+          <Pressable
+            key={tab.key}
+            onPress={() => onTabChange(tab.key)}
+            style={[styles.topTab, active && styles.topTabActive]}
           >
-            {tabs.map((tab) => {
-              const active = activeTab === tab.key;
-              return (
-                <Pressable
-                  key={tab.key}
-                  onPress={() => onTabChange(tab.key)}
-                  style={[styles.topTab, active && styles.topTabActive]}
-                >
-                  <MaterialCommunityIcons name={tab.icon} size={18} color={active ? '#fff' : '#111'} />
-                  <Text style={[styles.topTabLabel, active && styles.topTabLabelActive]}>{tab.label}</Text>
-                </Pressable>
-              );
-            })}
-          </ScrollView>
-        </View>
-        <View style={styles.main}>{children}</View>
+            <MaterialCommunityIcons name={tab.icon} size={18} color={active ? '#fff' : '#111'} />
+            <Text style={[styles.topTabLabel, active && styles.topTabLabelActive]}>{tab.label}</Text>
+          </Pressable>
+        );
+      })}
+    </ScrollView>
+  </View>
+);
+
+// Web: the section bar auto-hides once the content is scrolled and slides back in
+// at the top of the content or when the cursor reaches the top edge.
+const WebShell = ({ eyebrow, title, tabs, activeTab, onTabChange, children }) => {
+  const [barH, setBarH] = useState(88);
+  const [atTop, setAtTop] = useState(true);
+  const [hover, setHover] = useState(false);
+  const visible = atTop || hover;
+
+  useEffect(() => {
+    const onScroll = (e) => {
+      const el = e.target;
+      const top = el && typeof el.scrollTop === 'number' ? el.scrollTop : 0;
+      setAtTop(top <= 24);
+    };
+    // Capture phase so nested screen scrollers are caught (scroll doesn't bubble).
+    document.addEventListener('scroll', onScroll, true);
+    return () => document.removeEventListener('scroll', onScroll, true);
+  }, []);
+
+  return (
+    <View style={styles.shellColumn}>
+      {React.createElement('div', {
+        onMouseEnter: () => setHover(true),
+        style: { position: 'absolute', top: 0, left: 0, right: 0, height: 16, zIndex: 30 },
+      })}
+      {React.createElement(
+        'div',
+        {
+          onMouseEnter: () => setHover(true),
+          onMouseLeave: () => setHover(false),
+          style: {
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            zIndex: 20,
+            transform: `translateY(${visible ? 0 : -(barH + 6)}px)`,
+            transition: 'transform 260ms ease',
+          },
+        },
+        <SectionBar
+          eyebrow={eyebrow}
+          title={title}
+          tabs={tabs}
+          activeTab={activeTab}
+          onTabChange={onTabChange}
+          onLayout={(e) => setBarH(Math.round(e.nativeEvent.layout.height))}
+        />
+      )}
+      <View
+        style={[
+          styles.main,
+          { paddingTop: visible ? barH : 0, transitionProperty: 'padding-top', transitionDuration: '260ms' },
+        ]}
+      >
+        {children}
       </View>
-    );
+    </View>
+  );
+};
+
+const WorkspaceShell = (props) => {
+  if (Platform.OS === 'web') return <WebShell {...props} />;
+  return (
+    <View style={styles.shellColumn}>
+      <SectionBar {...props} />
+      <View style={styles.main}>{props.children}</View>
+    </View>
+  );
 };
 
 const styles = StyleSheet.create({
