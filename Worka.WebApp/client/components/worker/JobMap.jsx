@@ -95,8 +95,6 @@ const JobMap = () => {
   const [quoteForm, setQuoteForm] = useState({ price: '', description: '' });
   const [submittingQuote, setSubmittingQuote] = useState(false);
   const [distanceOpen, setDistanceOpen] = useState(true);
-  const listScrollRef = useRef(null);
-  const itemOffsets = useRef({});
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const isNarrow = windowWidth < 700;
   const mapHeight = Math.min(300, Math.round(windowHeight * 0.45));
@@ -162,13 +160,12 @@ const JobMap = () => {
     requestCurrentLocation().then(setCurrentLocation).catch(() => {});
   }, []);
 
-  // Selecting a job (e.g. by tapping its map pin) scrolls the list to it.
+  // Selecting a job (e.g. by tapping its map pin) scrolls the list so that job
+  // sits at the top of the visible list. scrollIntoView handles the nesting.
   useEffect(() => {
-    if (!selectedJobId || !listScrollRef.current) return;
-    const y = itemOffsets.current[selectedJobId];
-    if (typeof y === 'number') {
-      listScrollRef.current.scrollTo({ y: Math.max(y - 12, 0), animated: true });
-    }
+    if (Platform.OS !== 'web' || !selectedJobId || typeof document === 'undefined') return;
+    const el = document.getElementById(`jobmap-item-${selectedJobId}`);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, [selectedJobId]);
 
   // Load the saved work location so distances default to the worker's base.
@@ -477,10 +474,8 @@ const JobMap = () => {
           return (
             <TouchableOpacity
               key={job.jobId}
+              nativeID={`jobmap-item-${job.jobId}`}
               style={[styles.jobItem, active && styles.jobItemActive]}
-              onLayout={(e) => {
-                itemOffsets.current[job.jobId] = e.nativeEvent.layout.y;
-              }}
               onPress={() => handleSelectJob(job.jobId)}
             >
               <View style={styles.jobItemHeader}>
@@ -524,32 +519,24 @@ const JobMap = () => {
   if (isNarrow) {
     return (
       <>
-        <View style={styles.narrowShell}>
-          <View style={styles.narrowTop}>
-            {headerBlock}
-            {radiusBlock}
-            <View style={[styles.mapPaneNarrow, { height: mapHeight }]}>
-              <JobsMapView
-                jobs={locatedJobs}
-                selectedJobId={selectedJobId}
-                onSelectJob={handleSelectJob}
-                onLocate={useCurrentLocation}
-                userLocation={currentLocation}
-                origin={origin}
-                radiusKm={Number.isFinite(radiusKm) ? radiusKm : null}
-                inRadiusIds={inRadiusIds}
-              />
-            </View>
+        <ScrollView style={styles.narrowShell} contentContainerStyle={styles.narrowContent}>
+          {headerBlock}
+          {radiusBlock}
+          <View style={[styles.mapPaneNarrow, { height: mapHeight }]}>
+            <JobsMapView
+              jobs={locatedJobs}
+              selectedJobId={selectedJobId}
+              onSelectJob={handleSelectJob}
+              onLocate={useCurrentLocation}
+              userLocation={currentLocation}
+              origin={origin}
+              radiusKm={Number.isFinite(radiusKm) ? radiusKm : null}
+              inRadiusIds={inRadiusIds}
+            />
           </View>
-          <ScrollView
-            ref={listScrollRef}
-            style={styles.narrowListScroll}
-            contentContainerStyle={styles.narrowListContent}
-          >
-            {listBody}
-            <AppFooter />
-          </ScrollView>
-        </View>
+          <View style={styles.narrowList}>{listBody}</View>
+          <AppFooter />
+        </ScrollView>
         {modals}
       </>
     );
@@ -575,7 +562,7 @@ const JobMap = () => {
             />
           </View>
 
-          <ScrollView ref={listScrollRef} style={styles.listPane} contentContainerStyle={styles.listContent}>
+          <ScrollView style={styles.listPane} contentContainerStyle={styles.listContent}>
             {listBody}
             <AppFooter />
           </ScrollView>

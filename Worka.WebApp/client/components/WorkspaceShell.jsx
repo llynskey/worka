@@ -49,30 +49,37 @@ const WebShell = ({ eyebrow, title, tabs, activeTab, onTabChange, children }) =>
   }, [activeTab]);
 
   useEffect(() => {
+    let raf = 0;
     const onScroll = (e) => {
-      const y = e.target && typeof e.target.scrollTop === 'number' ? e.target.scrollTop : 0;
-      const last = lastY.current;
-      lastY.current = y;
-      // The map view keeps the bar fixed so the map panel never shifts.
-      if (activeTabRef.current === 'map') {
-        setHidden(false);
-      } else if (y <= 24) {
-        setHidden(false); // at the top
-      } else if (y > last + 3) {
-        setHidden(true); // scrolling down
-      } else if (y < last - 3) {
-        setHidden(false); // scrolling up
-      }
+      const el = e.target;
+      if (!el || typeof el.scrollTop !== 'number' || raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        const y = el.scrollTop;
+        const max = (el.scrollHeight || 0) - (el.clientHeight || 0);
+        if (y < 0 || y > max) return; // ignore rubber-band overscroll (bounce)
+        const last = lastY.current;
+        lastY.current = y;
+        // The map view keeps the bar fixed so the map panel never shifts.
+        if (activeTabRef.current === 'map') setHidden(false);
+        else if (y <= 24) setHidden(false); // at the top
+        else if (y > last + 8) setHidden(true); // scrolling down
+        else if (y < last - 8) setHidden(false); // scrolling up
+      });
     };
     // Capture phase so nested screen scrollers are caught (scroll doesn't bubble).
     document.addEventListener('scroll', onScroll, true);
-    return () => document.removeEventListener('scroll', onScroll, true);
+    return () => {
+      if (raf) cancelAnimationFrame(raf);
+      document.removeEventListener('scroll', onScroll, true);
+    };
   }, []);
 
   return (
     <View style={styles.shellColumn}>
       {React.createElement('div', {
         onMouseEnter: () => setHover(true),
+        onMouseLeave: () => setHover(false),
         style: { position: 'absolute', top: 0, left: 0, right: 0, height: 16, zIndex: 30 },
       })}
       {React.createElement(
