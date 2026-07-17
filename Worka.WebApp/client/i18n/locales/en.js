@@ -4,6 +4,7 @@ export default {
   'list.searchPros': 'Search by name, trade or language…',
   'list.all': 'All',
   'list.language': 'Language',
+  'list.myLanguages': 'My languages',
   'map.distance': 'Distance',
   'map.national': 'National',
   'map.everywhere': 'Everywhere',

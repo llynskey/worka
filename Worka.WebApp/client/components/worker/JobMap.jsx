@@ -229,6 +229,16 @@ const JobMap = () => {
     [jobs]
   );
 
+  // First tap selects (highlights on the map + list); tapping the already-selected
+  // job opens its details.
+  const handleSelectJob = useCallback(
+    (jobId) => {
+      if (selectedJobId === jobId) openJobDetails(jobId);
+      else setSelectedJobId(jobId);
+    },
+    [selectedJobId, openJobDetails]
+  );
+
   const openQuote = useCallback(
     (job) => {
       setQuoteForm({ price: '', description: t('quotes.defaultNote') });
@@ -437,7 +447,7 @@ const JobMap = () => {
             <TouchableOpacity
               key={job.jobId}
               style={[styles.jobItem, active && styles.jobItemActive]}
-              onPress={() => openJobDetails(job.jobId)}
+              onPress={() => handleSelectJob(job.jobId)}
             >
               <View style={styles.jobItemHeader}>
                 <Text style={[styles.jobTitle, active && styles.jobTitleActive]}>{job.jobName}</Text>
@@ -487,7 +497,7 @@ const JobMap = () => {
             <JobsMapView
               jobs={locatedJobs}
               selectedJobId={selectedJobId}
-              onSelectJob={openJobDetails}
+              onSelectJob={handleSelectJob}
               onLocate={useCurrentLocation}
               userLocation={currentLocation}
               origin={origin}
@@ -514,7 +524,7 @@ const JobMap = () => {
             <JobsMapView
               jobs={locatedJobs}
               selectedJobId={selectedJobId}
-              onSelectJob={openJobDetails}
+              onSelectJob={handleSelectJob}
               onLocate={useCurrentLocation}
               userLocation={currentLocation}
               origin={origin}

@@ -131,6 +131,18 @@ const WorkerJobList = () => {
     });
   }, [currentLocation, jobs]);
 
+  // The professional's own languages, for the "My languages" filter + badge.
+  const workerLangs = useMemo(
+    () =>
+      new Set(
+        String(account?.languages ?? '')
+          .split(',')
+          .map((c) => c.trim().toLowerCase())
+          .filter(Boolean)
+      ),
+    [account]
+  );
+
   // Search + category filter + sort applied on top of the open jobs, so the
   // list stays usable when the marketplace holds a large number of jobs.
   const filteredJobs = useMemo(() => {
@@ -139,7 +151,15 @@ const WorkerJobList = () => {
     if (category) {
       list = list.filter((j) => String(j.category ?? '').toLowerCase() === category);
     }
-    if (language) {
+    if (language === '__mine__') {
+      list = list.filter((j) =>
+        String(j.customerLanguages ?? '')
+          .toLowerCase()
+          .split(',')
+          .map((c) => c.trim())
+          .some((c) => c && workerLangs.has(c))
+      );
+    } else if (language) {
       list = list.filter((j) =>
         String(j.customerLanguages ?? '')
           .toLowerCase()
@@ -164,7 +184,7 @@ const WorkerJobList = () => {
           (getDistanceKm(currentLocation, a) ?? Infinity) - (getDistanceKm(currentLocation, b) ?? Infinity)
       );
     return arr;
-  }, [openJobs, search, category, language, sortBy, currentLocation, t]);
+  }, [openJobs, search, category, language, sortBy, currentLocation, workerLangs, t]);
 
   const categoryChips = useMemo(
     () => CATEGORY_VALUES.map((c) => ({ value: c, label: categoryLabel(t, c) })),
@@ -181,19 +201,10 @@ const WorkerJobList = () => {
           if (code) set.add(code);
         })
     );
-    return [...set].sort().map((code) => ({ value: code, label: code.toUpperCase() }));
-  }, [openJobs]);
-  // The professional's own languages, to flag jobs that are a language fit.
-  const workerLangs = useMemo(
-    () =>
-      new Set(
-        String(account?.languages ?? '')
-          .split(',')
-          .map((c) => c.trim().toLowerCase())
-          .filter(Boolean)
-      ),
-    [account]
-  );
+    const chips = [...set].sort().map((code) => ({ value: code, label: code.toUpperCase() }));
+    if (workerLangs.size > 0) chips.unshift({ value: '__mine__', label: t('list.myLanguages') });
+    return chips;
+  }, [openJobs, workerLangs, t]);
   const sortChips = useMemo(
     () => [
       { value: 'nearest', label: t('list.nearest') },
