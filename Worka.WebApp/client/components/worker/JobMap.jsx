@@ -182,8 +182,11 @@ const JobMap = () => {
       if (!item) return;
       const scroller = nearestScroller(item);
       if (scroller) {
+        // Land the item just below the sticky map (mobile) rather than behind it.
+        const sticky = document.getElementById('jobmap-sticky');
+        const stickyH = sticky ? sticky.getBoundingClientRect().height : 0;
         const delta = item.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
-        scroller.scrollTo({ top: scroller.scrollTop + delta - 8, behavior: 'smooth' });
+        scroller.scrollTo({ top: scroller.scrollTop + delta - stickyH - 8, behavior: 'smooth' });
       } else {
         item.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
@@ -540,23 +543,36 @@ const JobMap = () => {
   );
 
   if (isNarrow) {
+    const narrowMap = (
+      <View style={[styles.mapPaneNarrow, { height: mapHeight }]}>
+        <JobsMapView
+          jobs={locatedJobs}
+          selectedJobId={selectedJobId}
+          onSelectJob={handleSelectJob}
+          onLocate={useCurrentLocation}
+          userLocation={currentLocation}
+          origin={origin}
+          radiusKm={Number.isFinite(radiusKm) ? radiusKm : null}
+          inRadiusIds={inRadiusIds}
+        />
+      </View>
+    );
+    // Keep the map in view while the list scrolls beneath it — sticky works on
+    // iOS inside the single ScrollView (a nested ScrollView doesn't get height).
+    const stickyMap =
+      Platform.OS === 'web'
+        ? React.createElement(
+            'div',
+            { id: 'jobmap-sticky', style: { position: 'sticky', top: 0, zIndex: 5, background: '#f7f5ef', paddingBottom: 8 } },
+            narrowMap
+          )
+        : narrowMap;
     return (
       <>
         <ScrollView style={styles.narrowShell} contentContainerStyle={styles.narrowContent}>
           {headerBlock}
           {radiusBlock}
-          <View style={[styles.mapPaneNarrow, { height: mapHeight }]}>
-            <JobsMapView
-              jobs={locatedJobs}
-              selectedJobId={selectedJobId}
-              onSelectJob={handleSelectJob}
-              onLocate={useCurrentLocation}
-              userLocation={currentLocation}
-              origin={origin}
-              radiusKm={Number.isFinite(radiusKm) ? radiusKm : null}
-              inRadiusIds={inRadiusIds}
-            />
-          </View>
+          {stickyMap}
           <View style={styles.narrowList}>{listBody}</View>
           <AppFooter />
         </ScrollView>
