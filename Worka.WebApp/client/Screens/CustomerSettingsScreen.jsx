@@ -8,8 +8,10 @@ import notify, { confirmAction } from '../Utils/notify';
 import AppFooter from '../components/AppFooter';
 import SelectField from '../components/SelectField';
 import { useI18n } from '../i18n/I18nContext';
+import { useLayout } from '../Utils/theme';
 
 const CustomerSettingsScreen = ({ navigation }) => {
+  const { isDesktop } = useLayout();
   const [quoteAlerts, setQuoteAlerts] = useState(true);
   const [bookingAlerts, setBookingAlerts] = useState(true);
 
@@ -85,7 +87,7 @@ const CustomerSettingsScreen = ({ navigation }) => {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.content}>
+    <ScrollView contentContainerStyle={[styles.content, isDesktop && styles.contentWide]}>
       <View style={styles.headerCard}>
         <MaterialCommunityIcons name="cog-outline" size={34} color="#111" />
         <View style={{ flex: 1 }}>
@@ -94,7 +96,8 @@ const CustomerSettingsScreen = ({ navigation }) => {
         </View>
       </View>
 
-      <View style={styles.card}>
+      <View style={isDesktop ? styles.cardsRow : undefined}>
+      <View style={[styles.card, isDesktop && styles.cardHalf]}>
         <View style={styles.settingRow}>
           <View style={{ flex: 1 }}>
             <Text style={styles.settingTitle}>{t('settings.quoteAlerts')}</Text>
@@ -112,7 +115,7 @@ const CustomerSettingsScreen = ({ navigation }) => {
         </View>
       </View>
 
-      <TouchableOpacity style={styles.linkCard} onPress={() => navigation.navigate('Account')}>
+      <TouchableOpacity style={[styles.linkCard, isDesktop && styles.cardHalf]} onPress={() => navigation.navigate('Account')}>
         <MaterialCommunityIcons name="account-edit-outline" size={24} color="#111" />
         <Text style={styles.linkText}>{t('settings.manageAccount')}</Text>
         <MaterialCommunityIcons name="chevron-right" size={24} color="#111" />
@@ -120,7 +123,7 @@ const CustomerSettingsScreen = ({ navigation }) => {
 
 
 
-      <View style={styles.card}>
+      <View style={[styles.card, isDesktop && styles.cardHalf]}>
         <Text style={styles.settingTitle}>{t('settings.language')}</Text>
         <Text style={styles.settingText}>{t('settings.languageHint')}</Text>
         <View style={styles.languageSelect}>
@@ -134,7 +137,7 @@ const CustomerSettingsScreen = ({ navigation }) => {
         </View>
       </View>
 
-      <View style={styles.card}>
+      <View style={[styles.card, isDesktop && styles.cardHalf]}>
         <Text style={styles.settingTitle}>{t('settings.changePassword')}</Text>
         <TextInput
           style={styles.securityInput}
@@ -163,7 +166,7 @@ const CustomerSettingsScreen = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      <View style={[styles.card, styles.dangerCard]}>
+      <View style={[styles.card, styles.dangerCard, isDesktop && styles.cardHalf]}>
         <Text style={styles.settingTitle}>{t('settings.deleteAccount')}</Text>
         <Text style={styles.settingText}>{t('settings.deleteAccountText')}</Text>
         <TextInput
@@ -184,7 +187,7 @@ const CustomerSettingsScreen = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.card}>
+      <View style={[styles.card, isDesktop && styles.cardHalf]}>
         <Text style={styles.settingTitle}>{t('settings.support')}</Text>
         <Text style={styles.settingText}>support@fixa.site</Text>
         <Text style={styles.settingText}>{t('settings.supportResponse')}</Text>
@@ -197,6 +200,7 @@ const CustomerSettingsScreen = ({ navigation }) => {
             <Text style={styles.legalLink}>{t('settings.terms')}</Text>
           </TouchableOpacity>
         </View>
+      </View>
       </View>
 
       <TouchableOpacity style={styles.signOutButton} onPress={signOut}>
@@ -294,6 +298,19 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 720,
     alignSelf: 'center',
+  },
+  contentWide: {
+    maxWidth: 1000,
+  },
+  cardsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    columnGap: 14,
+  },
+  cardHalf: {
+    flexGrow: 1,
+    flexBasis: '47%',
+    minWidth: 300,
   },
   headerCard: {
     backgroundColor: '#fff',

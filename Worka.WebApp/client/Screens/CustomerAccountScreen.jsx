@@ -18,6 +18,7 @@ import Avatar from '../components/Avatar';
 import LanguagePicker from '../components/LanguagePicker';
 import SelectField from '../components/SelectField';
 import { useI18n } from '../i18n/I18nContext';
+import { colors, radius, shadow, space, useLayout } from '../Utils/theme';
 
 const emptyForm = {
   firstName: '',
@@ -75,6 +76,7 @@ const appendAssetToForm = async (upload, asset) => {
 
 const CustomerAccountScreen = () => {
   const { t } = useI18n();
+  const { isDesktop } = useLayout();
   const [form, setForm] = useState(emptyForm);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -173,7 +175,7 @@ const CustomerAccountScreen = () => {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.content}>
+    <ScrollView contentContainerStyle={[styles.content, isDesktop && styles.contentWide]}>
       <View style={styles.headerCard}>
         <MaterialCommunityIcons name="account-circle-outline" size={34} color="#111" />
         <View style={{ flex: 1 }}>
@@ -182,7 +184,26 @@ const CustomerAccountScreen = () => {
         </View>
       </View>
 
-      <View style={styles.formCard}>
+      <View style={[styles.layout, isDesktop && styles.layoutRow]}>
+      {isDesktop ? (
+        <View style={styles.summaryCol}>
+          <View style={styles.summaryCard}>
+            <Avatar photoUrl={form.photoUrl} firstName={form.firstName} lastName={form.lastName} size={96} />
+            <Text style={styles.summaryName} numberOfLines={2}>
+              {`${form.firstName} ${form.lastName}`.trim() || t('account.customerTitle')}
+            </Text>
+            {form.email ? <Text style={styles.summaryMeta} numberOfLines={1}>{form.email}</Text> : null}
+            {form.address ? (
+              <View style={styles.summaryMetaRow}>
+                <MaterialCommunityIcons name="map-marker-outline" size={15} color={colors.muted} />
+                <Text style={styles.summaryMeta} numberOfLines={1}>{form.address}</Text>
+              </View>
+            ) : null}
+          </View>
+        </View>
+      ) : null}
+
+      <View style={[styles.formCard, isDesktop && styles.formCardCol]}>
         <View style={styles.photoRow}>
           <Avatar photoUrl={form.photoUrl} firstName={form.firstName} lastName={form.lastName} size={64} />
           <TouchableOpacity
@@ -271,6 +292,7 @@ const CustomerAccountScreen = () => {
           )}
         </TouchableOpacity>
       </View>
+      </View>
 
       <AppFooter />
     </ScrollView>
@@ -286,6 +308,55 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 720,
     alignSelf: 'center',
+  },
+  contentWide: {
+    maxWidth: 1040,
+  },
+  layout: {
+    width: '100%',
+  },
+  layoutRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: space.lg,
+  },
+  summaryCol: {
+    width: 300,
+    flexShrink: 0,
+  },
+  summaryCard: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 20,
+    alignItems: 'center',
+    ...shadow.card,
+  },
+  summaryName: {
+    marginTop: 12,
+    color: colors.ink,
+    fontSize: 18,
+    fontWeight: '900',
+    textAlign: 'center',
+  },
+  summaryMeta: {
+    marginTop: 4,
+    color: colors.muted,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  summaryMetaRow: {
+    marginTop: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    maxWidth: '100%',
+  },
+  formCardCol: {
+    flex: 1,
+    minWidth: 0,
+    marginBottom: 0,
   },
   headerCard: {
     backgroundColor: '#fff',
