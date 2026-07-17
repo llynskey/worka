@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
@@ -35,15 +35,33 @@ const SectionBar = ({ eyebrow, title, tabs, activeTab, onTabChange, onLayout }) 
 // at the top of the content or when the cursor reaches the top edge.
 const WebShell = ({ eyebrow, title, tabs, activeTab, onTabChange, children }) => {
   const [barH, setBarH] = useState(88);
-  const [atTop, setAtTop] = useState(true);
+  const [hidden, setHidden] = useState(false);
   const [hover, setHover] = useState(false);
-  const visible = atTop || hover;
+  const lastY = useRef(0);
+  const activeTabRef = useRef(activeTab);
+  const visible = hover || !hidden;
+
+  // Reset on section change; the map view never auto-hides (feels wrong there).
+  useEffect(() => {
+    activeTabRef.current = activeTab;
+    lastY.current = 0;
+    setHidden(false);
+  }, [activeTab]);
 
   useEffect(() => {
     const onScroll = (e) => {
-      const el = e.target;
-      const top = el && typeof el.scrollTop === 'number' ? el.scrollTop : 0;
-      setAtTop(top <= 24);
+      const y = e.target && typeof e.target.scrollTop === 'number' ? e.target.scrollTop : 0;
+      const last = lastY.current;
+      lastY.current = y;
+      if (activeTabRef.current === 'map') {
+        setHidden(false);
+      } else if (y <= 24) {
+        setHidden(false); // at the top
+      } else if (y > last + 3) {
+        setHidden(true); // scrolling down
+      } else if (y < last - 3) {
+        setHidden(false); // scrolling up
+      }
     };
     // Capture phase so nested screen scrollers are caught (scroll doesn't bubble).
     document.addEventListener('scroll', onScroll, true);
