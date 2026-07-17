@@ -1,8 +1,6 @@
 import React from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-
-const SIDEBAR_BREAKPOINT = 900;
 
 /**
  * Responsive web workspace shell.
@@ -10,11 +8,9 @@ const SIDEBAR_BREAKPOINT = 900;
  * Narrow viewports: horizontal tab bar across the top.
  */
 const WorkspaceShell = ({ eyebrow, title, tabs, activeTab, onTabChange, children }) => {
-  const { width } = useWindowDimensions();
-  const compact = width < SIDEBAR_BREAKPOINT;
-
-  if (compact) {
-    return (
+  // Section nav is shown as pill tabs across the top at every width (matches the
+  // mobile layout and lets the content use the full width on desktop).
+  return (
       <View style={styles.shellColumn}>
         <View style={styles.topBar}>
           <Text style={styles.topBarTitle}>
@@ -43,39 +39,6 @@ const WorkspaceShell = ({ eyebrow, title, tabs, activeTab, onTabChange, children
         <View style={styles.main}>{children}</View>
       </View>
     );
-  }
-
-  return (
-    <View style={styles.shellRow}>
-      <View style={styles.sidebar}>
-        <Text style={styles.eyebrow}>{eyebrow}</Text>
-        <Text style={styles.title}>{title}</Text>
-
-        <View style={styles.nav}>
-          {tabs.map((tab) => {
-            const active = activeTab === tab.key;
-            return (
-              <Pressable
-                key={tab.key}
-                onPress={() => onTabChange(tab.key)}
-                style={[styles.navItem, active && styles.navItemActive]}
-              >
-                <MaterialCommunityIcons name={tab.icon} size={22} color={active ? '#fff' : '#111'} />
-                <View style={styles.navText}>
-                  <Text style={[styles.navLabel, active && styles.navLabelActive]}>{tab.label}</Text>
-                  <Text style={[styles.navDescription, active && styles.navDescriptionActive]}>
-                    {tab.description}
-                  </Text>
-                </View>
-              </Pressable>
-            );
-          })}
-        </View>
-      </View>
-
-      <View style={styles.main}>{children}</View>
-    </View>
-  );
 };
 
 const styles = StyleSheet.create({
