@@ -66,6 +66,30 @@ const ProDirectory = () => {
     loadFavourites();
   }, [loadFavourites]);
 
+  const [openJobs, setOpenJobs] = useState([]);
+  const [invited, setInvited] = useState(() => new Set());
+
+  useEffect(() => {
+    api
+      .get('/CustomerJobs')
+      .then((res) => setOpenJobs((unwrap(res.data) ?? []).filter((j) => !j.acceptedQuoteId)))
+      .catch(() => {});
+  }, []);
+
+  const inviteToJob = useCallback(
+    async (job) => {
+      if (!selectedPro) return;
+      const key = `${job.jobId}:${selectedPro.professionalId}`;
+      setInvited((cur) => new Set(cur).add(key));
+      try {
+        await api.post(`/api/Jobs/${job.jobId}/invite/${selectedPro.professionalId}`);
+      } catch {
+        // Non-fatal.
+      }
+    },
+    [selectedPro]
+  );
+
   const toggleFavourite = useCallback(
     async (proId) => {
       const id = String(proId);
@@ -483,6 +507,30 @@ const ProDirectory = () => {
                   </View>
                 </View>
 
+                {openJobs.length > 0 ? (
+                  <View>
+                    <Text style={styles.reviewsTitle}>{t('directory.inviteTitle')}</Text>
+                    {openJobs.map((job) => {
+                      const key = `${job.jobId}:${selectedPro.professionalId}`;
+                      const done = invited.has(key);
+                      return (
+                        <View key={job.jobId} style={styles.inviteRow}>
+                          <Text style={styles.inviteJobName} numberOfLines={1}>{job.jobName}</Text>
+                          <TouchableOpacity
+                            style={[styles.inviteBtn, done && styles.inviteBtnDone]}
+                            disabled={done}
+                            onPress={() => inviteToJob(job)}
+                          >
+                            <Text style={[styles.inviteBtnText, done && styles.inviteBtnTextDone]}>
+                              {done ? t('directory.invited') : t('directory.invite')}
+                            </Text>
+                          </TouchableOpacity>
+                        </View>
+                      );
+                    })}
+                  </View>
+                ) : null}
+
                 <Text style={styles.reviewsTitle}>{t('reviews.title')}</Text>
                 {reviewsLoading ? (
                   <ActivityIndicator color="#111" style={{ marginVertical: 16 }} />
@@ -694,6 +742,39 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     alignSelf: 'flex-start',
+  },
+  inviteRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 8,
+    borderTopWidth: 1,
+    borderTopColor: colors.line,
+  },
+  inviteJobName: {
+    flex: 1,
+    minWidth: 0,
+    color: colors.ink,
+    fontWeight: '800',
+  },
+  inviteBtn: {
+    minHeight: 38,
+    paddingHorizontal: 14,
+    borderRadius: 8,
+    backgroundColor: colors.ink,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  inviteBtnDone: {
+    backgroundColor: colors.accentSoft,
+  },
+  inviteBtnText: {
+    color: '#fff',
+    fontWeight: '900',
+    fontSize: 13,
+  },
+  inviteBtnTextDone: {
+    color: colors.accent,
   },
   sortControl: {
     minWidth: 190,

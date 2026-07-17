@@ -97,6 +97,19 @@ namespace Worka.WebApp.Controllers
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
+        [HttpPost("Jobs/{jobId}/invite/{professionalId}")]
+        public async Task<IActionResult> InviteProfessional(string jobId, string professionalId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Unauthorized();
+            }
+
+            var result = await _jobService.InviteProfessionalAsync(userId, jobId, professionalId);
+            return result.Success ? Ok(result) : BadRequest(result);
+        }
+
         [HttpGet("ProfessionalJobs")]
         [HttpGet("~/ProfessionalJobs")]
         public async Task<IActionResult> GetProfessionalJobs()

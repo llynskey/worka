@@ -294,6 +294,56 @@ namespace Worka.Services.Jobs
             }
         }
 
+        public async Task<WorkaResponse<JobResponseDTO>> InviteProfessionalAsync(string userId, string jobId, string professionalId)
+        {
+            try
+            {
+                var (job, error) = await GetOwnedJobAsync(userId, jobId);
+                if (error != null)
+                {
+                    return new WorkaResponse<JobResponseDTO>(error);
+                }
+
+                if (job.AcceptedQuoteId != null || job.Status != JobStatusEnum.Pending)
+                {
+                    return new WorkaResponse<JobResponseDTO>("You can only invite professionals to an open job.");
+                }
+
+                if (!Guid.TryParse(professionalId, out var professionalGuid))
+                {
+                    return new WorkaResponse<JobResponseDTO>("Invalid professional ID format.");
+                }
+
+                var professional = await _dbContext.Professionals.FirstOrDefaultAsync(p => p.ProfessionalId == professionalGuid);
+                if (professional == null)
+                {
+                    return new WorkaResponse<JobResponseDTO>("Professional not found.");
+                }
+
+                var customer = await _dbContext.Customers.FirstOrDefaultAsync(c => c.CustomerId == job.CustomerId);
+                if (customer != null && professional.UserId == customer.UserId)
+                {
+                    return new WorkaResponse<JobResponseDTO>("You can't invite yourself.");
+                }
+
+                if (_notifications != null)
+                {
+                    await _notifications.NotifyAsync(
+                        professional.UserId,
+                        "quote",
+                        "You've been invited to quote",
+                        $"A customer invited you to quote on \"{job.Name}\".",
+                        job.JobId);
+                }
+
+                return new WorkaResponse<JobResponseDTO>(new JobResponseDTO(job));
+            }
+            catch (Exception ex)
+            {
+                return WorkaResponse<JobResponseDTO>.Fail(ex, "An error occurred while sending the invite.");
+            }
+        }
+
         /// <summary>
         /// Resolves the booked job the caller may schedule and the other party's
         /// user id (for notifying them). Only the job's customer or the booked

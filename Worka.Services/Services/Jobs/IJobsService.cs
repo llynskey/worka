@@ -13,6 +13,7 @@ namespace Worka.Services.Jobs
         Task<WorkaResponse<JobResponseDTO>> CompleteJobAsync(string userId, string jobId);
         Task<WorkaResponse<JobResponseDTO>> SetScheduleAsync(string userId, string jobId, DateTimeOffset? scheduledAt);
         Task<WorkaResponse<JobResponseDTO>> ConfirmScheduleAsync(string userId, string jobId);
+        Task<WorkaResponse<JobResponseDTO>> InviteProfessionalAsync(string userId, string jobId, string professionalId);
         Task<WorkaResponse<List<JobResponseDTO>>> GetAllJobsAsync(string userId = null);
     }
 }
