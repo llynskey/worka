@@ -560,6 +560,9 @@ export default {
   // Messages inbox
   'messages.empty': 'No messages yet',
   'messages.emptyHint': 'Your conversations with professionals and customers will appear here.',
+  'notif.title': 'Notifications',
+  'notif.markAll': 'Mark all read',
+  'notif.empty': 'No notifications yet',
   'messages.selectTitle': 'Select a conversation',
   'messages.selectHint': 'Pick a thread on the left to read and reply.',
   'messages.you': 'You:',

@@ -18,6 +18,7 @@ using Worka.Services.Email;
 using Worka.Services.Interest;
 using Worka.Services.Jobs;
 using Worka.Services.Messages;
+using Worka.Services.Notifications;
 using Worka.Services.Payments;
 using Worka.Services.Professionals;
 using Worka.Services.Quotes;
@@ -88,6 +89,7 @@ namespace Worka.WebApp
             services.AddSingleton<IEmailService, SmtpEmailService>();
             services.AddScoped<IReviewsService, ReviewsService>();
             services.AddScoped<IMessagesService, MessagesService>();
+            services.AddScoped<INotificationsService, NotificationsService>();
 
             var jwtSecret = Configuration["JwtSecret"];
             if (string.IsNullOrWhiteSpace(jwtSecret) || jwtSecret.Length < 32)
@@ -292,6 +294,18 @@ namespace Worka.WebApp
                 );
                 CREATE UNIQUE INDEX IF NOT EXISTS "IX_message_reads_UserId_JobId_ProfessionalId"
                     ON message_reads("UserId", "JobId", "ProfessionalId");
+                CREATE TABLE IF NOT EXISTS notifications (
+                    "NotificationId" uuid PRIMARY KEY,
+                    "UserId" uuid NOT NULL,
+                    "Type" character varying(40) NOT NULL DEFAULT '',
+                    "Title" character varying(280) NOT NULL DEFAULT '',
+                    "Body" character varying(1000) NOT NULL DEFAULT '',
+                    "JobId" uuid NULL,
+                    "Read" boolean NOT NULL DEFAULT false,
+                    "CreatedAt" timestamp with time zone NOT NULL
+                );
+                CREATE INDEX IF NOT EXISTS "IX_notifications_UserId_CreatedAt"
+                    ON notifications("UserId", "CreatedAt");
                 """);
         }
     }

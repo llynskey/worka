@@ -4,16 +4,19 @@ using Worka.Services.Database;
 using Worka.Services.Database.DatabaseModels;
 using Worka.Services.DTOs.Reviews;
 using Worka.Services.Enums;
+using Worka.Services.Notifications;
 
 namespace Worka.Services.Reviews
 {
     public class ReviewsService : IReviewsService
     {
         private readonly WorkaDbContext _dbContext;
+        private readonly INotificationsService _notifications;
 
-        public ReviewsService(WorkaDbContext dbContext)
+        public ReviewsService(WorkaDbContext dbContext, INotificationsService notifications = null)
         {
             _dbContext = dbContext;
+            _notifications = notifications;
         }
 
         public async Task<WorkaResponse<ReviewResponseDTO>> CreateReviewAsync(
@@ -85,6 +88,19 @@ namespace Worka.Services.Reviews
 
                 _dbContext.Reviews.Add(entity);
                 await _dbContext.SaveChangesAsync();
+
+                // Let the reviewed professional know.
+                var reviewedPro = await _dbContext.Professionals
+                    .FirstOrDefaultAsync(p => p.ProfessionalId == acceptedQuote.ProfessionalId);
+                if (reviewedPro != null && _notifications != null)
+                {
+                    await _notifications.NotifyAsync(
+                        reviewedPro.UserId,
+                        "review",
+                        $"You received a {entity.Rating}★ review",
+                        $"{customer.FirstName} reviewed your work on \"{job.Name}\".",
+                        job.JobId);
+                }
 
                 return new WorkaResponse<ReviewResponseDTO>(
                     new ReviewResponseDTO(entity, customer.FirstName, job.Name));

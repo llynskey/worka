@@ -33,6 +33,8 @@ namespace Worka.Services.Database
 
         public DbSet<MessageRead> MessageReads => Set<MessageRead>();
 
+        public DbSet<Notification> Notifications => Set<Notification>();
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<User>(entity =>
@@ -214,6 +216,16 @@ namespace Worka.Services.Database
                     .WithMany()
                     .HasForeignKey(token => token.UserId)
                     .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<Notification>(entity =>
+            {
+                entity.ToTable("notifications");
+                entity.HasKey(notification => notification.NotificationId);
+                entity.HasIndex(notification => new { notification.UserId, notification.CreatedAt });
+                entity.Property(notification => notification.Type).HasMaxLength(40).IsRequired();
+                entity.Property(notification => notification.Title).HasMaxLength(280).IsRequired();
+                entity.Property(notification => notification.Body).HasMaxLength(1000).IsRequired();
             });
 
             modelBuilder.Entity<InterestRegistration>(entity =>

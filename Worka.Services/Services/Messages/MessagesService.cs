@@ -3,6 +3,7 @@ using Worka.Services.Common;
 using Worka.Services.Database;
 using Worka.Services.Database.DatabaseModels;
 using Worka.Services.DTOs.Messages;
+using Worka.Services.Notifications;
 
 namespace Worka.Services.Messages
 {
@@ -17,10 +18,12 @@ namespace Worka.Services.Messages
         private const int MaxBodyLength = 2000;
 
         private readonly WorkaDbContext _dbContext;
+        private readonly INotificationsService _notifications;
 
-        public MessagesService(WorkaDbContext dbContext)
+        public MessagesService(WorkaDbContext dbContext, INotificationsService notifications = null)
         {
             _dbContext = dbContext;
+            _notifications = notifications;
         }
 
         public async Task<WorkaResponse<List<JobMessageDTO>>> GetThreadAsync(
@@ -91,6 +94,31 @@ namespace Worka.Services.Messages
 
                 _dbContext.JobMessages.Add(message);
                 await _dbContext.SaveChangesAsync();
+
+                // Notify the other side of the thread (generic — never include the
+                // body, which may carry contact details redacted until booking).
+                if (_notifications != null)
+                {
+                    var senderIsProfessional = message.SenderUserId == thread.Professional.UserId;
+                    Guid recipientUserId;
+                    if (senderIsProfessional)
+                    {
+                        var jobCustomer = await _dbContext.Customers
+                            .FirstOrDefaultAsync(c => c.CustomerId == thread.Job.CustomerId);
+                        recipientUserId = jobCustomer?.UserId ?? Guid.Empty;
+                    }
+                    else
+                    {
+                        recipientUserId = thread.Professional.UserId;
+                    }
+
+                    await _notifications.NotifyAsync(
+                        recipientUserId,
+                        "message",
+                        "New message",
+                        $"You have a new message about \"{thread.Job.Name}\".",
+                        thread.Job.JobId);
+                }
 
                 var booked = await IsBookedWithProfessionalAsync(thread.Job, thread.Professional.ProfessionalId);
 

@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLayout } from '../Utils/theme';
+import NotificationCenter from './NotificationCenter';
 
 /**
  * Responsive web workspace shell.
@@ -13,9 +14,12 @@ const SectionBar = ({ eyebrow, title, tabs, activeTab, onTabChange, onLayout }) 
   const { isDesktop } = useLayout();
   return (
     <View style={[styles.topBar, isDesktop && styles.topBarRow]} onLayout={onLayout}>
-      <Text style={[styles.topBarTitle, isDesktop && styles.topBarTitleInline]} numberOfLines={1}>
-        {eyebrow} <Text style={styles.topBarTitleStrong}>{title}</Text>
-      </Text>
+      <View style={styles.topBarTitleWrap}>
+        <Text style={[styles.topBarTitle, isDesktop && styles.topBarTitleInline]} numberOfLines={1}>
+          {eyebrow} <Text style={styles.topBarTitleStrong}>{title}</Text>
+        </Text>
+        {!isDesktop ? <NotificationCenter /> : null}
+      </View>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -36,6 +40,7 @@ const SectionBar = ({ eyebrow, title, tabs, activeTab, onTabChange, onLayout }) 
           );
         })}
       </ScrollView>
+      {isDesktop ? <NotificationCenter /> : null}
     </View>
   );
 };
@@ -172,19 +177,30 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 8,
   },
+  topBarTitleWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+    flexShrink: 1,
+    minWidth: 0,
+  },
   topBarTitleInline: {
     flexShrink: 1,
     minWidth: 0,
   },
   topTabsScrollDesktop: {
-    flexGrow: 0,
+    flexGrow: 1,
     flexShrink: 1,
+    minWidth: 0,
   },
   topBarTitle: {
     color: '#666',
     fontSize: 13,
     fontWeight: '800',
     textTransform: 'uppercase',
+    flexShrink: 1,
+    minWidth: 0,
   },
   topBarTitleStrong: {
     color: '#111',

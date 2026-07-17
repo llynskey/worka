@@ -3,16 +3,19 @@ using Worka.Services.Common;
 using Worka.Services.Database;
 using Worka.Services.Database.DatabaseModels;
 using Worka.Services.DTOs.Quotes;
+using Worka.Services.Notifications;
 
 namespace Worka.Services.Quotes
 {
     public class QuoteService : IQuoteService
     {
         private readonly WorkaDbContext _dbContext;
+        private readonly INotificationsService _notifications;
 
-        public QuoteService(WorkaDbContext dbContext)
+        public QuoteService(WorkaDbContext dbContext, INotificationsService notifications = null)
         {
             _dbContext = dbContext;
+            _notifications = notifications;
         }
 
         public async Task<WorkaResponse<QuoteResponseDTO>> CreateQuoteAsync(string userId, CreateQuoteDTO quoteDto)
@@ -67,6 +70,17 @@ namespace Worka.Services.Quotes
 
                 _dbContext.Quotes.Add(quote);
                 await _dbContext.SaveChangesAsync();
+
+                // Let the job's customer know a new quote arrived.
+                if (jobOwner != null && _notifications != null)
+                {
+                    await _notifications.NotifyAsync(
+                        jobOwner.UserId,
+                        "quote",
+                        "New quote received",
+                        $"{professional.FirstName} {professional.LastName}".Trim() + $" sent a quote on \"{job.Name}\".",
+                        job.JobId);
+                }
 
                 return new WorkaResponse<QuoteResponseDTO>(new QuoteResponseDTO(quote));
             }
