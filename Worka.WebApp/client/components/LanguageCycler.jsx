@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, Easing, StyleSheet, Text, View } from 'react-native';
+import { Animated, StyleSheet, Text, View } from 'react-native';
+import { MOTION } from '../Utils/motion';
 
 /**
  * Softly cross-fades a line of text through several languages.
@@ -11,12 +12,12 @@ import { Animated, Easing, StyleSheet, Text, View } from 'react-native';
  * Performance: only opacity/transform animate, with the native driver,
  * so the animation stays off the JS thread.
  */
-const LanguageCycler = ({ items, textStyle, containerStyle, interval = 4200 }) => {
+const LanguageCycler = ({ items, textStyle, containerStyle, interval = 4200, entranceDelay = 0 }) => {
   const [index, setIndex] = useState(0);
   const [maxHeight, setMaxHeight] = useState(0);
   const heightsRef = useRef({});
   const opacity = useRef(new Animated.Value(0)).current;
-  const translateY = useRef(new Animated.Value(10)).current;
+  const translateY = useRef(new Animated.Value(MOTION.rise)).current;
 
   const safeItems = useMemo(() => (Array.isArray(items) ? items.filter(Boolean) : []), [items]);
 
@@ -36,18 +37,21 @@ const LanguageCycler = ({ items, textStyle, containerStyle, interval = 4200 }) =
   }, [safeItems.length]);
 
   useEffect(() => {
-    // Entrance
+    // Entrance — same curve/travel as the rest of the hero cascade, offset by
+    // its slot so the headline rises in sequence with the elements around it.
     Animated.parallel([
       Animated.timing(opacity, {
         toValue: 1,
-        duration: 520,
-        easing: Easing.out(Easing.cubic),
+        duration: MOTION.enter,
+        delay: entranceDelay,
+        easing: MOTION.ease,
         useNativeDriver: true,
       }),
       Animated.timing(translateY, {
         toValue: 0,
-        duration: 520,
-        easing: Easing.out(Easing.cubic),
+        duration: MOTION.enter,
+        delay: entranceDelay,
+        easing: MOTION.ease,
         useNativeDriver: true,
       }),
     ]).start();
@@ -66,30 +70,30 @@ const LanguageCycler = ({ items, textStyle, containerStyle, interval = 4200 }) =
       Animated.parallel([
         Animated.timing(opacity, {
           toValue: 0,
-          duration: 260,
-          easing: Easing.in(Easing.cubic),
+          duration: MOTION.exit,
+          easing: MOTION.easeIn,
           useNativeDriver: true,
         }),
         Animated.timing(translateY, {
-          toValue: -8,
-          duration: 260,
-          easing: Easing.in(Easing.cubic),
+          toValue: -(MOTION.rise * 0.6),
+          duration: MOTION.exit,
+          easing: MOTION.easeIn,
           useNativeDriver: true,
         }),
       ]).start(() => {
         setIndex((current) => (current + 1) % safeItems.length);
-        translateY.setValue(10);
+        translateY.setValue(MOTION.rise);
         Animated.parallel([
           Animated.timing(opacity, {
             toValue: 1,
-            duration: 380,
-            easing: Easing.out(Easing.cubic),
+            duration: MOTION.enter,
+            easing: MOTION.ease,
             useNativeDriver: true,
           }),
           Animated.timing(translateY, {
             toValue: 0,
-            duration: 380,
-            easing: Easing.out(Easing.cubic),
+            duration: MOTION.enter,
+            easing: MOTION.ease,
             useNativeDriver: true,
           }),
         ]).start();
@@ -97,7 +101,7 @@ const LanguageCycler = ({ items, textStyle, containerStyle, interval = 4200 }) =
     }, interval);
 
     return () => clearInterval(id);
-  }, [interval, opacity, safeItems.length, translateY]);
+  }, [interval, opacity, safeItems.length, translateY, entranceDelay]);
 
   if (safeItems.length === 0) return null;
 

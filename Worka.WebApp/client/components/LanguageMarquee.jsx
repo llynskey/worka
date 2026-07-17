@@ -186,7 +186,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     paddingHorizontal: 18,
     paddingVertical: 10,
-    ...(IS_WEB ? { cursor: 'pointer' } : null),
+    // Subtle raised edge so each pill reads as a physical chip.
+    ...(IS_WEB
+      ? {
+          cursor: 'pointer',
+          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.9), 0 1px 2px rgba(0,0,0,0.05)',
+        }
+      : null),
   },
   itemPhone: {
     paddingHorizontal: 15,
@@ -195,6 +201,9 @@ const styles = StyleSheet.create({
   itemActive: {
     backgroundColor: '#111',
     borderColor: '#111',
+    ...(IS_WEB
+      ? { boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.18), 0 6px 14px rgba(0,0,0,0.20)' }
+      : null),
   },
   itemPressed: {
     opacity: 0.85,

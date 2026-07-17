@@ -22,6 +22,7 @@ import LanguageCycler from "../components/LanguageCycler";
 import LanguageMarquee from "../components/LanguageMarquee";
 import Logo from "../components/Logo";
 import Reveal from "../components/Reveal";
+import { MOTION, CSS_EASE } from "../Utils/motion";
 
 // Stable English `value` strings are sent to the API; the labels shown to
 // the user resolve through t(option.key) at render time.
@@ -76,16 +77,41 @@ const FormField: React.FC<FormFieldProps> = ({ label, children }) => (
   </View>
 );
 
+const isWeb = Platform.OS === "web";
+
 // Web-only: eases pressed-state changes (scale/opacity/color) instead of
-// snapping. Compiled to a CSS transition, so it runs on the compositor.
-const webPressTransition =
-  Platform.OS === "web"
-    ? ({
-        transitionProperty: "transform, opacity, background-color, border-color",
-        transitionDuration: "160ms",
-        transitionTimingFunction: "cubic-bezier(0.2, 0.8, 0.4, 1)",
-      } as any)
-    : {};
+// snapping. Uses the shared motion curve so hovers/presses feel of a piece
+// with the entrance and reveal animations.
+const webPressTransition = isWeb
+  ? ({
+      transitionProperty:
+        "transform, opacity, background-color, border-color, box-shadow",
+      transitionDuration: "180ms",
+      transitionTimingFunction: CSS_EASE,
+    } as any)
+  : {};
+
+// Subtle letterpress on dark text over the light page — refined, not loud.
+// Cross-platform via RN text-shadow props.
+const embossTitle = {
+  textShadowColor: "rgba(255,255,255,0.8)",
+  textShadowOffset: { width: 0, height: 1 },
+  textShadowRadius: 0,
+} as const;
+
+// Raised, tactile dark surfaces (primary buttons, active pills): an inner top
+// highlight plus a grounded drop shadow. Web-only layered box-shadow.
+const embossDark = isWeb
+  ? ({
+      boxShadow:
+        "inset 0 1px 0 rgba(255,255,255,0.18), 0 10px 22px rgba(0,0,0,0.22)",
+    } as any)
+  : null;
+
+// A crisp raised edge for the small dark badges (icons, dots).
+const embossBadge = isWeb
+  ? ({ boxShadow: "inset 0 1px 0 rgba(255,255,255,0.22), 0 4px 10px rgba(0,0,0,0.18)" } as any)
+  : null;
 
 const AuthScreen: React.FC = () => {
   const { signInWithToken } = useContext(AuthContext);
@@ -339,23 +365,28 @@ const AuthScreen: React.FC = () => {
     }
   };
 
-  const renderBenefits = (stacked = false) => (
-    <View style={[styles.benefitList, stacked && styles.benefitListStacked]}>
-      {[1, 2, 3].map((n) => (
-        <Reveal key={n} tick={scrollTick} delay={(n - 1) * 130}>
-          <View style={styles.benefitItem}>
-            <View style={styles.benefitIcon}>
-              <MaterialCommunityIcons name="check" size={17} color="#fff" />
+  const renderBenefits = (stacked = false) => {
+    // In the desktop hero the benefits continue the entrance cascade (they sit
+    // below the headline); stacked below the panel they reveal on their own.
+    const base = stacked ? 0 : MOTION.stagger * 4;
+    return (
+      <View style={[styles.benefitList, stacked && styles.benefitListStacked]}>
+        {[1, 2, 3].map((n) => (
+          <Reveal key={n} tick={scrollTick} delay={base + (n - 1) * MOTION.stagger}>
+            <View style={styles.benefitItem}>
+              <View style={styles.benefitIcon}>
+                <MaterialCommunityIcons name="check" size={17} color="#fff" />
+              </View>
+              <View style={styles.benefitCopy}>
+                <Text style={styles.benefitTitle}>{t(`landing.benefit${n}Title`)}</Text>
+                <Text style={styles.benefitText}>{t(`landing.benefit${n}Text`)}</Text>
+              </View>
             </View>
-            <View style={styles.benefitCopy}>
-              <Text style={styles.benefitTitle}>{t(`landing.benefit${n}Title`)}</Text>
-              <Text style={styles.benefitText}>{t(`landing.benefit${n}Text`)}</Text>
-            </View>
-          </View>
-        </Reveal>
-      ))}
-    </View>
-  );
+          </Reveal>
+        ))}
+      </View>
+    );
+  };
 
   const renderError = (message: string) => {
     if (!message) return null;
@@ -372,12 +403,15 @@ const AuthScreen: React.FC = () => {
     );
   };
 
-  const panelShadowStyle =
-    Platform.OS === "web"
-      ? ({
-          boxShadow: isPhone ? "none" : "0 18px 45px rgba(0, 0, 0, 0.10)",
-        } as any)
-      : null;
+  const panelShadowStyle = isWeb
+    ? ({
+        boxShadow: isPhone
+          ? "none"
+          : // layered depth + a crisp inner top highlight so the card reads as
+            // a raised, machined surface rather than a flat box.
+            "0 1px 1px rgba(0,0,0,0.04), 0 14px 30px rgba(0,0,0,0.08), 0 30px 60px rgba(0,0,0,0.07), inset 0 1px 0 rgba(255,255,255,0.9)",
+      } as any)
+    : null;
 
   const webPageStyle =
     Platform.OS === "web" ? ({ minHeight: "100vh" } as any) : null;
@@ -468,21 +502,26 @@ const AuthScreen: React.FC = () => {
             }}
           >
             <View style={[styles.hero, !isStacked && styles.heroDesktop]}>
-              <View style={styles.eyebrowRow}>
-                <View style={styles.eyebrowDot} />
-                <Text style={styles.eyebrow}>{t("landing.eyebrow")}</Text>
-              </View>
+              <Reveal tick={scrollTick} delay={0}>
+                <View style={styles.eyebrowRow}>
+                  <View style={styles.eyebrowDot} />
+                  <Text style={styles.eyebrow}>{t("landing.eyebrow")}</Text>
+                </View>
+              </Reveal>
 
-              <LanguageMarquee
-                languages={languages}
-                activeCode={language}
-                onSelect={setLanguage}
-                isPhone={isPhone}
-                style={styles.bubbles}
-              />
+              <Reveal tick={scrollTick} delay={MOTION.stagger}>
+                <LanguageMarquee
+                  languages={languages}
+                  activeCode={language}
+                  onSelect={setLanguage}
+                  isPhone={isPhone}
+                  style={styles.bubbles}
+                />
+              </Reveal>
 
               <LanguageCycler
                 items={heroTitles}
+                entranceDelay={MOTION.stagger * 2}
                 containerStyle={{ minHeight: isPhone ? 130 : isStacked ? 165 : 230 }}
                 textStyle={[
                   styles.heroTitle,
@@ -494,9 +533,11 @@ const AuthScreen: React.FC = () => {
                 ]}
               />
 
-              <Text style={[styles.heroText, isPhone && styles.heroTextPhone]}>
-                {t("landing.heroText")}
-              </Text>
+              <Reveal tick={scrollTick} delay={MOTION.stagger * 3}>
+                <Text style={[styles.heroText, isPhone && styles.heroTextPhone]}>
+                  {t("landing.heroText")}
+                </Text>
+              </Reveal>
 
               {!isStacked && renderBenefits()}
             </View>
@@ -1284,6 +1325,7 @@ const styles = StyleSheet.create({
   },
   navButton: {
     ...webPressTransition,
+    ...embossDark,
     minHeight: 44,
     flexGrow: 0,
     // Must be allowed to shrink: with longer translations a rigid pill
@@ -1374,6 +1416,7 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 4,
     backgroundColor: "#111",
+    ...embossBadge,
   },
   eyebrow: {
     minWidth: 0,
@@ -1389,6 +1432,7 @@ const styles = StyleSheet.create({
     color: "#050505",
     fontWeight: "900",
     letterSpacing: -1.2,
+    ...embossTitle,
   },
   heroTitleDesktop: {
     fontSize: 58,
@@ -1436,6 +1480,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#111",
     alignItems: "center",
     justifyContent: "center",
+    ...embossBadge,
   },
   benefitCopy: {
     minWidth: 0,
@@ -1505,6 +1550,7 @@ const styles = StyleSheet.create({
     fontSize: 30,
     fontWeight: "900",
     letterSpacing: -0.5,
+    ...embossTitle,
   },
   panelTitlePhone: {
     fontSize: 26,
@@ -1540,6 +1586,7 @@ const styles = StyleSheet.create({
   },
   tabButtonActive: {
     backgroundColor: "#111",
+    ...embossDark,
   },
   tabButtonText: {
     flexShrink: 1,
@@ -1624,6 +1671,7 @@ const styles = StyleSheet.create({
   },
   accountTypeCardActive: {
     backgroundColor: "#111",
+    ...embossDark,
   },
   accountTypeIcon: {
     width: 38,
@@ -1633,6 +1681,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#111",
     alignItems: "center",
     justifyContent: "center",
+    ...embossBadge,
   },
   accountTypeIconActive: {
     backgroundColor: "#fff",
@@ -1680,6 +1729,7 @@ const styles = StyleSheet.create({
   choiceRowActive: {
     borderColor: "#111",
     backgroundColor: "#111",
+    ...embossDark,
   },
   radioOuter: {
     width: 20,
@@ -1731,6 +1781,7 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     ...webPressTransition,
+    ...embossDark,
     width: "100%",
     minHeight: 54,
     borderRadius: 10,
@@ -1809,6 +1860,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 18,
+    ...embossBadge,
   },
   footer: {
     width: "100%",

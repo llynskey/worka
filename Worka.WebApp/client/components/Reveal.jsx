@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Animated, Easing, View, useWindowDimensions } from 'react-native';
+import { Animated, View, useWindowDimensions } from 'react-native';
+import { MOTION } from '../Utils/motion';
 
 /**
  * Reveals its children with a soft rise-and-fade the first time they
@@ -10,7 +11,7 @@ const Reveal = ({ children, tick = 0, delay = 0, style = null }) => {
   const ref = useRef(null);
   const [revealed, setRevealed] = useState(false);
   const opacity = useRef(new Animated.Value(0)).current;
-  const translateY = useRef(new Animated.Value(18)).current;
+  const translateY = useRef(new Animated.Value(MOTION.rise)).current;
   const { height: windowHeight } = useWindowDimensions();
 
   const check = useCallback(() => {
@@ -32,16 +33,16 @@ const Reveal = ({ children, tick = 0, delay = 0, style = null }) => {
     Animated.parallel([
       Animated.timing(opacity, {
         toValue: 1,
-        duration: 480,
+        duration: MOTION.enter,
         delay,
-        easing: Easing.out(Easing.cubic),
+        easing: MOTION.ease,
         useNativeDriver: true,
       }),
       Animated.timing(translateY, {
         toValue: 0,
-        duration: 480,
+        duration: MOTION.enter,
         delay,
-        easing: Easing.out(Easing.cubic),
+        easing: MOTION.ease,
         useNativeDriver: true,
       }),
     ]).start();
