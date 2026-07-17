@@ -161,6 +161,8 @@ export default {
   'jobs.bestQuoteLabel': 'Best quote',
   'jobs.approxLocation': 'Approximate area — the exact address is shared once the job is booked.',
   'jobs.recentActivity': 'Recent activity',
+  'jobs.quickActions': 'Quick actions',
+  'jobs.findAPro': 'Find a pro',
   'jobs.activityBooked': 'Booked',
   'jobs.activityQuote': 'New quote',
   'jobs.activityOn': 'on',

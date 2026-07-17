@@ -1,16 +1,15 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
-  FlatList,
   Linking,
   Modal,
   Platform,
   RefreshControl,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  useWindowDimensions,
   View,
 } from 'react-native';
 import notify, { confirmAction } from '../../Utils/notify';
@@ -22,7 +21,9 @@ import { useI18n } from '../../i18n/I18nContext';
 import JobCard from './JobCard';
 import AppFooter from '../AppFooter';
 import Avatar from '../Avatar';
+import Reveal from '../Reveal';
 import Stars, { StarInput } from '../Stars';
+import { colors, radius, shadow, space, embossDark, embossTitle, useLayout } from '../../Utils/theme';
 
 const WORKA_SERVICE_FEE_RATE = 0.1;
 const WORKA_SERVICE_FEE_MINIMUM = 2;
@@ -43,11 +44,10 @@ const statusLabel = (status) => {
 
 const CustomerJobList = ({ navigation }) => {
   const { t } = useI18n();
-  const { width } = useWindowDimensions();
-  // On wide desktop viewports use more of the width: a roomier container, a
-  // four-across stat row and a two-column job grid instead of one long column.
-  const wide = width >= 1000;
-  const cols = wide ? 2 : 1;
+  const { isDesktop, isPhone } = useLayout();
+  // Desktop is a two-column dashboard (jobs grid + a right rail); phone/tablet
+  // stack into a single column.
+  const [scrollTick, setScrollTick] = useState(0);
   const [account, setAccount] = useState(null);
   const [jobs, setJobs] = useState([]);
   const [quotes, setQuotes] = useState([]);
@@ -326,146 +326,209 @@ const CustomerJobList = ({ navigation }) => {
     );
   }
 
+  const statIcons = ['clipboard-text-outline', 'file-document-outline', 'calendar-check-outline', 'check-decagram-outline'];
+
+  const checkoutBannerEl = checkoutMessage ? (
+    <View style={[styles.checkoutBanner, checkoutMessage.type === 'success' && styles.checkoutBannerSuccess]}>
+      <MaterialCommunityIcons
+        name={checkoutMessage.type === 'success' ? 'check-circle-outline' : 'alert-circle-outline'}
+        size={22}
+        color="#111"
+      />
+      <View style={{ flex: 1 }}>
+        <Text style={styles.checkoutBannerTitle}>
+          {checkoutMessage.type === 'success' ? t('jobs.paymentReceivedTitle') : t('jobs.paymentCancelledTitle')}
+        </Text>
+        <Text style={styles.checkoutBannerText}>
+          {checkoutMessage.type === 'success' ? t('jobs.paymentReceivedText') : t('jobs.paymentCancelledText')}
+        </Text>
+      </View>
+      <TouchableOpacity style={styles.bannerClose} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} onPress={() => setCheckoutMessage(null)}>
+        <MaterialCommunityIcons name="close" size={18} color="#111" />
+      </TouchableOpacity>
+    </View>
+  ) : null;
+
+  const heroBanner = (
+    <View style={[styles.hero, isDesktop && styles.heroDesktop]}>
+      <View style={styles.heroCopy}>
+        <Text style={styles.eyebrow}>{t('jobs.customerEyebrow')}</Text>
+        <Text style={styles.heroTitle}>
+          {account ? t('jobs.greeting', { name: account.firstName }) : t('jobs.pipeline')}
+        </Text>
+        <Text style={styles.heroText}>{t('jobs.heroText')}</Text>
+      </View>
+      <TouchableOpacity style={styles.heroCta} onPress={() => navigation?.navigate('Post a Job')}>
+        <MaterialCommunityIcons name="plus-circle-outline" size={20} color="#111" />
+        <Text style={styles.heroCtaText}>{t('jobs.postJob')}</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  const statsCard = (
+    <View style={styles.statsGrid}>
+      {stats.map((stat, i) => (
+        <View key={stat.label} style={styles.statCard}>
+          <View style={styles.statIcon}>
+            <MaterialCommunityIcons name={statIcons[i]} size={15} color={colors.ink} />
+          </View>
+          <Text style={styles.statValue}>{stat.value}</Text>
+          <Text style={styles.statLabel}>{stat.label}</Text>
+        </View>
+      ))}
+    </View>
+  );
+
+  const activityEl =
+    recentActivity.length > 0 ? (
+      <View style={styles.activityCard}>
+        <Text style={styles.activityTitle}>{t('jobs.recentActivity')}</Text>
+        {recentActivity.map((entry) => (
+          <View key={entry.id} style={styles.activityRow}>
+            <View style={[styles.activityDot, entry.booked && styles.activityDotBooked]}>
+              <MaterialCommunityIcons
+                name={entry.booked ? 'check' : 'file-document-outline'}
+                size={14}
+                color={entry.booked ? colors.accent : colors.ink}
+              />
+            </View>
+            <Text style={styles.activityText}>
+              {entry.booked ? t('jobs.activityBooked') : t('jobs.activityQuote')}{' '}
+              <Text style={styles.activityStrong}>{formatMoney(entry.price, entry.currency)}</Text>
+              {` ${t('jobs.activityOn')} `}
+              <Text style={styles.activityStrong}>{entry.jobName}</Text>
+            </Text>
+            <Text style={styles.activityWhen}>{entry.when}</Text>
+          </View>
+        ))}
+      </View>
+    ) : null;
+
+  const quickActionsEl = (
+    <View style={styles.railCard}>
+      <Text style={styles.railTitle}>{t('jobs.quickActions')}</Text>
+      <TouchableOpacity style={styles.quickAction} onPress={() => navigation?.navigate('Post a Job')}>
+        <View style={styles.quickIcon}>
+          <MaterialCommunityIcons name="plus-circle-outline" size={18} color={colors.ink} />
+        </View>
+        <Text style={styles.quickText}>{t('jobs.postJob')}</Text>
+        <MaterialCommunityIcons name="chevron-right" size={20} color={colors.mutedSoft} />
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.quickAction} onPress={() => navigation?.navigate('Find Pros')}>
+        <View style={styles.quickIcon}>
+          <MaterialCommunityIcons name="account-search-outline" size={18} color={colors.ink} />
+        </View>
+        <Text style={styles.quickText}>{t('jobs.findAPro')}</Text>
+        <MaterialCommunityIcons name="chevron-right" size={20} color={colors.mutedSoft} />
+      </TouchableOpacity>
+    </View>
+  );
+
+  const segmentRowEl = (
+    <View style={styles.segmentRow}>
+      <TouchableOpacity
+        style={[styles.segment, jobFilter === 'active' && styles.segmentActive]}
+        onPress={() => setJobFilter('active')}
+      >
+        <Text style={[styles.segmentText, jobFilter === 'active' && styles.segmentTextActive]}>
+          {t('jobs.activeCount', { count: activeJobs.length })}
+        </Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[styles.segment, jobFilter === 'past' && styles.segmentActive]}
+        onPress={() => setJobFilter('past')}
+      >
+        <Text style={[styles.segmentText, jobFilter === 'past' && styles.segmentTextActive]}>
+          {t('jobs.pastCount', { count: pastJobs.length })}
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  const emptyEl =
+    jobFilter === 'past' ? (
+      <View style={styles.emptyState}>
+        <MaterialCommunityIcons name="history" size={40} color="#111" />
+        <Text style={styles.emptyTitle}>{t('jobs.noPastTitle')}</Text>
+        <Text style={styles.mutedText}>{t('jobs.noPastText')}</Text>
+      </View>
+    ) : (
+      <View style={styles.emptyState}>
+        <MaterialCommunityIcons name="clipboard-plus-outline" size={40} color="#111" />
+        <Text style={styles.emptyTitle}>{t('jobs.noActiveTitle')}</Text>
+        <Text style={styles.mutedText}>{t('jobs.noActiveText')}</Text>
+        <TouchableOpacity
+          style={[styles.primaryButton, styles.primaryButtonCentered]}
+          onPress={() => navigation?.navigate('Post a Job')}
+        >
+          <Text style={styles.primaryButtonText}>{t('jobs.postJob')}</Text>
+        </TouchableOpacity>
+      </View>
+    );
+
+  const jobsGrid =
+    visibleJobs.length === 0 ? (
+      emptyEl
+    ) : (
+      <View style={styles.grid}>
+        {visibleJobs.map((item, i) => (
+          <Reveal key={item.jobId} tick={scrollTick} delay={Math.min(i, 8) * 55} style={[styles.gridCell, isPhone && styles.gridCellFull]}>
+            <JobCard
+              job={item}
+              quotes={quotesByJob[item.jobId] ?? []}
+              onAcceptQuote={(quote) => setCheckoutPreview({ job: item, quote })}
+              onEditJob={openEditJob}
+              onDeleteJob={deleteJob}
+              onCompleteJob={completeJob}
+              onReviewJob={openReview}
+            />
+          </Reveal>
+        ))}
+      </View>
+    );
+
+  const jobsColumn = (
+    <View style={styles.mainCol}>
+      {segmentRowEl}
+      <Text style={styles.sectionTitle}>{t('jobs.yourJobs')}</Text>
+      {jobsGrid}
+    </View>
+  );
+
   return (
     <>
-    <FlatList
-      data={visibleJobs}
-      keyExtractor={(item) => String(item.jobId)}
-      key={`cols-${cols}`}
-      numColumns={cols}
-      columnWrapperStyle={cols > 1 ? styles.columnWrap : undefined}
+    <ScrollView
+      style={styles.screen}
+      contentContainerStyle={styles.content}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} />}
-      contentContainerStyle={[styles.listContent, wide && styles.listContentWide]}
-      ListFooterComponent={<AppFooter />}
-      ListHeaderComponent={
-        <View>
-          {checkoutMessage ? (
-            <View style={[styles.checkoutBanner, checkoutMessage.type === 'success' && styles.checkoutBannerSuccess]}>
-              <MaterialCommunityIcons
-                name={checkoutMessage.type === 'success' ? 'check-circle-outline' : 'alert-circle-outline'}
-                size={22}
-                color="#111"
-              />
-              <View style={{ flex: 1 }}>
-                <Text style={styles.checkoutBannerTitle}>
-                  {checkoutMessage.type === 'success'
-                    ? t('jobs.paymentReceivedTitle')
-                    : t('jobs.paymentCancelledTitle')}
-                </Text>
-                <Text style={styles.checkoutBannerText}>
-                  {checkoutMessage.type === 'success'
-                    ? t('jobs.paymentReceivedText')
-                    : t('jobs.paymentCancelledText')}
-                </Text>
-              </View>
-              <TouchableOpacity style={styles.bannerClose} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} onPress={() => setCheckoutMessage(null)}>
-                <MaterialCommunityIcons name="close" size={18} color="#111" />
-              </TouchableOpacity>
-            </View>
-          ) : null}
+      onScroll={(event) => {
+        const bucket = Math.round(event.nativeEvent.contentOffset.y / 60);
+        setScrollTick((current) => (current === bucket ? current : bucket));
+      }}
+      scrollEventThrottle={80}
+    >
+      {checkoutBannerEl}
+      <Reveal tick={scrollTick} delay={0}>{heroBanner}</Reveal>
 
-          <View style={styles.hero}>
-            <Text style={styles.eyebrow}>{t('jobs.customerEyebrow')}</Text>
-            <Text style={styles.heroTitle}>
-              {account ? t('jobs.greeting', { name: account.firstName }) : t('jobs.pipeline')}
-            </Text>
-            <Text style={styles.heroText}>{t('jobs.heroText')}</Text>
-            <TouchableOpacity style={styles.primaryButton} onPress={() => navigation?.navigate('Post a Job')}>
-              <MaterialCommunityIcons name="plus-circle-outline" size={20} color="#fff" />
-              <Text style={styles.primaryButtonText}>{t('jobs.postJob')}</Text>
-            </TouchableOpacity>
+      {isDesktop ? (
+        <View style={styles.dashRow}>
+          {jobsColumn}
+          <View style={styles.rail}>
+            {statsCard}
+            {activityEl}
+            {quickActionsEl}
           </View>
-
-          <View style={styles.statsGrid}>
-            {stats.map((stat) => (
-              <View key={stat.label} style={[styles.statCard, wide && styles.statCardWide]}>
-                <Text style={styles.statValue}>{stat.value}</Text>
-                <Text style={styles.statLabel}>{stat.label}</Text>
-              </View>
-            ))}
-          </View>
-
-          {recentActivity.length > 0 ? (
-            <View style={styles.activityCard}>
-              <Text style={styles.activityTitle}>{t('jobs.recentActivity')}</Text>
-              {recentActivity.map((entry) => (
-                <View key={entry.id} style={styles.activityRow}>
-                  <View style={[styles.activityDot, entry.booked && styles.activityDotBooked]}>
-                    <MaterialCommunityIcons
-                      name={entry.booked ? 'check' : 'file-document-outline'}
-                      size={14}
-                      color={entry.booked ? '#24513b' : '#111'}
-                    />
-                  </View>
-                  <Text style={styles.activityText}>
-                    {entry.booked ? t('jobs.activityBooked') : t('jobs.activityQuote')}{' '}
-                    <Text style={styles.activityStrong}>{formatMoney(entry.price, entry.currency)}</Text>
-                    {` ${t('jobs.activityOn')} `}
-                    <Text style={styles.activityStrong}>{entry.jobName}</Text>
-                  </Text>
-                  <Text style={styles.activityWhen}>{entry.when}</Text>
-                </View>
-              ))}
-            </View>
-          ) : null}
-
-          <View style={styles.segmentRow}>
-            <TouchableOpacity
-              style={[styles.segment, jobFilter === 'active' && styles.segmentActive]}
-              onPress={() => setJobFilter('active')}
-            >
-              <Text style={[styles.segmentText, jobFilter === 'active' && styles.segmentTextActive]}>
-                {t('jobs.activeCount', { count: activeJobs.length })}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.segment, jobFilter === 'past' && styles.segmentActive]}
-              onPress={() => setJobFilter('past')}
-            >
-              <Text style={[styles.segmentText, jobFilter === 'past' && styles.segmentTextActive]}>
-                {t('jobs.pastCount', { count: pastJobs.length })}
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          <Text style={styles.sectionTitle}>{t('jobs.yourJobs')}</Text>
         </View>
-      }
-      ListEmptyComponent={
-        jobFilter === 'past' ? (
-          <View style={styles.emptyState}>
-            <MaterialCommunityIcons name="history" size={40} color="#111" />
-            <Text style={styles.emptyTitle}>{t('jobs.noPastTitle')}</Text>
-            <Text style={styles.mutedText}>{t('jobs.noPastText')}</Text>
-          </View>
-        ) : (
-          <View style={styles.emptyState}>
-            <MaterialCommunityIcons name="clipboard-plus-outline" size={40} color="#111" />
-            <Text style={styles.emptyTitle}>{t('jobs.noActiveTitle')}</Text>
-            <Text style={styles.mutedText}>{t('jobs.noActiveText')}</Text>
-            <TouchableOpacity
-              style={[styles.primaryButton, styles.primaryButtonCentered]}
-              onPress={() => navigation?.navigate('Post a Job')}
-            >
-              <Text style={styles.primaryButtonText}>{t('jobs.postJob')}</Text>
-            </TouchableOpacity>
-          </View>
-        )
-      }
-      renderItem={({ item }) => (
-        <View style={cols > 1 ? styles.gridCell : undefined}>
-          <JobCard
-            job={item}
-            quotes={quotesByJob[item.jobId] ?? []}
-            onAcceptQuote={(quote) => setCheckoutPreview({ job: item, quote })}
-            onEditJob={openEditJob}
-            onDeleteJob={deleteJob}
-            onCompleteJob={completeJob}
-            onReviewJob={openReview}
-          />
+      ) : (
+        <View style={styles.dashCol}>
+          {statsCard}
+          {activityEl}
+          {jobsColumn}
         </View>
       )}
-    />
+
+      <AppFooter />
+    </ScrollView>
 
     <Modal
       visible={!!checkoutPreview}
@@ -662,61 +725,118 @@ const CustomerJobList = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  listContent: {
-    padding: 16,
+  screen: {
+    flex: 1,
+    minHeight: 0,
+    backgroundColor: colors.paper,
+  },
+  content: {
+    padding: space.lg,
     paddingBottom: 28,
     flexGrow: 1,
-    backgroundColor: '#f7f5ef',
+    backgroundColor: colors.paper,
     width: '100%',
-    maxWidth: 880,
+    maxWidth: 1240,
     alignSelf: 'center',
   },
-  listContentWide: {
-    maxWidth: 1180,
+  dashRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: space.lg,
   },
-  columnWrap: {
-    gap: 14,
-    alignItems: 'stretch',
+  dashCol: {
+    width: '100%',
   },
-  gridCell: {
+  mainCol: {
     flex: 1,
     minWidth: 0,
   },
+  rail: {
+    width: 340,
+    flexShrink: 0,
+    gap: space.lg,
+  },
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    columnGap: space.lg,
+  },
+  gridCell: {
+    flexGrow: 1,
+    flexBasis: 340,
+    minWidth: 300,
+    maxWidth: '100%',
+  },
+  gridCellFull: {
+    flexBasis: '100%',
+    minWidth: '100%',
+  },
   hero: {
-    backgroundColor: '#18201d',
-    borderRadius: 8,
-    padding: 18,
-    marginBottom: 14,
+    backgroundColor: colors.hero,
+    borderRadius: radius.md,
+    padding: 20,
+    marginBottom: space.lg,
+    ...shadow.card,
+  },
+  heroDesktop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: space.xl,
+    padding: 26,
+  },
+  heroCopy: {
+    flex: 1,
+    minWidth: 0,
   },
   eyebrow: {
-    color: '#d6f36a',
+    color: colors.accentOnDark,
     fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 0,
+    fontWeight: '900',
+    letterSpacing: 0.6,
     textTransform: 'uppercase',
     marginBottom: 8,
   },
   heroTitle: {
     color: '#fff',
     fontSize: 26,
-    fontWeight: '800',
+    fontWeight: '900',
     marginBottom: 8,
+    letterSpacing: -0.3,
   },
   heroText: {
-    color: '#d8ded8',
+    color: colors.onHero,
     fontSize: 15,
     lineHeight: 21,
-    marginBottom: 16,
+  },
+  heroCta: {
+    marginTop: 16,
+    alignSelf: 'flex-start',
+    minHeight: 48,
+    backgroundColor: '#fff',
+    borderRadius: radius.sm,
+    paddingVertical: 12,
+    paddingHorizontal: 18,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    ...(shadow.card),
+  },
+  heroCtaText: {
+    color: colors.ink,
+    fontWeight: '900',
+    fontSize: 15,
   },
   primaryButton: {
-    backgroundColor: '#111',
-    borderRadius: 8,
+    backgroundColor: colors.ink,
+    borderRadius: radius.sm,
     paddingVertical: 12,
     paddingHorizontal: 14,
     alignSelf: 'flex-start',
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    ...(embossDark || {}),
   },
   primaryButtonCentered: {
     alignSelf: 'center',
@@ -731,32 +851,81 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 10,
-    marginBottom: 18,
+    marginBottom: space.lg,
   },
   statCard: {
     flexGrow: 1,
     flexBasis: '46%',
-    minWidth: 150,
-    minHeight: 82,
-    backgroundColor: '#fff',
-    borderRadius: 8,
+    minWidth: 140,
+    minHeight: 92,
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
     padding: 14,
     borderWidth: 1,
-    borderColor: '#e3dfd2',
+    borderColor: colors.border,
+    ...shadow.card,
   },
-  statCardWide: {
-    flexBasis: '22%',
-    minWidth: 160,
+  statIcon: {
+    width: 30,
+    height: 30,
+    borderRadius: 8,
+    backgroundColor: colors.surfaceAlt,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
   },
   statValue: {
     fontSize: 24,
     fontWeight: '900',
-    color: '#111',
+    color: colors.ink,
   },
   statLabel: {
     marginTop: 4,
-    color: '#62645c',
+    color: colors.muted,
     fontWeight: '700',
+    fontSize: 13,
+  },
+  railCard: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 14,
+    ...shadow.card,
+  },
+  railTitle: {
+    color: colors.ink,
+    fontWeight: '900',
+    fontSize: 15,
+    marginBottom: 10,
+  },
+  quickAction: {
+    minHeight: 48,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 8,
+    borderTopWidth: 1,
+    borderTopColor: colors.line,
+  },
+  quickIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 8,
+    backgroundColor: colors.surfaceAlt,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  quickText: {
+    flex: 1,
+    minWidth: 0,
+    color: colors.ink,
+    fontWeight: '800',
+    fontSize: 14,
   },
   activityCard: {
     backgroundColor: '#fff',

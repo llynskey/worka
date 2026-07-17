@@ -45,6 +45,14 @@ const createWebNavigation = (setActiveTab) => ({
       setActiveTab('post');
       return;
     }
+    if (routeName === 'Find Pros' || routeName === 'pros') {
+      setActiveTab('pros');
+      return;
+    }
+    if (routeName === 'Messages' || routeName === 'messages') {
+      setActiveTab('messages');
+      return;
+    }
 
     setActiveTab('jobs');
   },
