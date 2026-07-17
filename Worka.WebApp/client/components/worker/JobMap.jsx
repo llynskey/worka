@@ -19,7 +19,7 @@ import { useDistanceUnit, milesToKm } from '../../Utils/distanceUnit';
 import { useI18n } from '../../i18n/I18nContext';
 import { categoryLabel } from '../../i18n/categories';
 import AppFooter from '../AppFooter';
-import MapPreview from '../MapPreview';
+import JobsMapView from '../JobsMapView';
 import Slider from '../Slider';
 
 const hasCoordinates = (job) => Number.isFinite(Number(job.latitude)) && Number.isFinite(Number(job.longitude));
@@ -61,36 +61,6 @@ const openExternalMap = (job, currentLocation) => {
     ? `https://www.google.com/maps/dir/?api=1&origin=${currentLocation.latitude},${currentLocation.longitude}&destination=${latitude},${longitude}`
     : `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
   Linking.openURL(url);
-};
-
-const WebMapFrame = ({ job, minHeight = 420, fill = false, userLocation = null }) => {
-  const { t } = useI18n();
-
-  if (!job || !hasCoordinates(job)) {
-    return (
-      <View style={[styles.mapPlaceholder, fill ? styles.mapPlaceholderFill : { minHeight }]}>
-        <MaterialCommunityIcons name="map-marker-off-outline" size={36} color="#111" />
-        <Text style={styles.placeholderTitle}>{t('map.chooseLocatedJob')}</Text>
-        <Text style={styles.placeholderText}>{t('map.placeholderText')}</Text>
-      </View>
-    );
-  }
-
-  // MapPreview renders the branded static map with a pin on the job and,
-  // when set, a second pin on the worker's current location plus distance.
-  // (The interactive Mapbox embed cannot draw markers, which made the map
-  // ambiguous — pins beat panning here.) `fill` makes it grow to the pane so
-  // the desktop map box has no empty space and never overflows the viewport.
-  return (
-    <MapPreview
-      latitude={job.latitude}
-      longitude={job.longitude}
-      userLocation={userLocation}
-      locationLabel={getLocationLabel(job, t('map.notSet'))}
-      fill={fill}
-      height={Math.max(minHeight - 56, 180)}
-    />
-  );
 };
 
 const JobMap = () => {
@@ -372,7 +342,12 @@ const JobMap = () => {
         {locationBarBlock}
         {radiusBlock}
         <View style={[styles.mapPaneNarrow, { height: mapHeight }]}>
-          <WebMapFrame job={selectedJob} minHeight={mapHeight} userLocation={currentLocation} />
+          <JobsMapView
+            jobs={locatedJobs}
+            selectedJobId={selectedJobId}
+            onSelectJob={setSelectedJobId}
+            userLocation={currentLocation}
+          />
         </View>
         <View style={styles.narrowList}>{listBody}</View>
         <AppFooter />
@@ -388,7 +363,12 @@ const JobMap = () => {
 
       <View style={styles.mapLayout}>
         <View style={styles.mapPane}>
-          <WebMapFrame job={selectedJob} fill userLocation={currentLocation} />
+          <JobsMapView
+            jobs={locatedJobs}
+            selectedJobId={selectedJobId}
+            onSelectJob={setSelectedJobId}
+            userLocation={currentLocation}
+          />
         </View>
 
         <ScrollView style={styles.listPane} contentContainerStyle={styles.listContent}>
