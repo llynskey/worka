@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useLayout } from '../Utils/theme';
 
 /**
  * Responsive web workspace shell.
@@ -8,28 +9,36 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
  * Narrow viewports: horizontal tab bar across the top.
  */
 // The pill-tab section bar shown across the top.
-const SectionBar = ({ eyebrow, title, tabs, activeTab, onTabChange, onLayout }) => (
-  <View style={styles.topBar} onLayout={onLayout}>
-    <Text style={styles.topBarTitle}>
-      {eyebrow} <Text style={styles.topBarTitleStrong}>{title}</Text>
-    </Text>
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.topTabs}>
-      {tabs.map((tab) => {
-        const active = activeTab === tab.key;
-        return (
-          <Pressable
-            key={tab.key}
-            onPress={() => onTabChange(tab.key)}
-            style={[styles.topTab, active && styles.topTabActive]}
-          >
-            <MaterialCommunityIcons name={tab.icon} size={18} color={active ? '#fff' : '#111'} />
-            <Text style={[styles.topTabLabel, active && styles.topTabLabelActive]}>{tab.label}</Text>
-          </Pressable>
-        );
-      })}
-    </ScrollView>
-  </View>
-);
+const SectionBar = ({ eyebrow, title, tabs, activeTab, onTabChange, onLayout }) => {
+  const { isDesktop } = useLayout();
+  return (
+    <View style={[styles.topBar, isDesktop && styles.topBarRow]} onLayout={onLayout}>
+      <Text style={[styles.topBarTitle, isDesktop && styles.topBarTitleInline]} numberOfLines={1}>
+        {eyebrow} <Text style={styles.topBarTitleStrong}>{title}</Text>
+      </Text>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={isDesktop ? styles.topTabsScrollDesktop : undefined}
+        contentContainerStyle={styles.topTabs}
+      >
+        {tabs.map((tab) => {
+          const active = activeTab === tab.key;
+          return (
+            <Pressable
+              key={tab.key}
+              onPress={() => onTabChange(tab.key)}
+              style={[styles.topTab, active && styles.topTabActive]}
+            >
+              <MaterialCommunityIcons name={tab.icon} size={18} color={active ? '#fff' : '#111'} />
+              <Text style={[styles.topTabLabel, active && styles.topTabLabelActive]}>{tab.label}</Text>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
+    </View>
+  );
+};
 
 // Web: the section bar auto-hides once the content is scrolled and slides back in
 // at the top of the content or when the cursor reaches the top edge.
@@ -153,6 +162,23 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
     paddingHorizontal: 16,
     gap: 10,
+  },
+  // Desktop: title and pills share one compact row instead of stacking, so the
+  // bar doesn't form a tall second header above each page's hero.
+  topBarRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+    paddingTop: 8,
+    paddingBottom: 8,
+  },
+  topBarTitleInline: {
+    flexShrink: 1,
+    minWidth: 0,
+  },
+  topTabsScrollDesktop: {
+    flexGrow: 0,
+    flexShrink: 1,
   },
   topBarTitle: {
     color: '#666',

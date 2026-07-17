@@ -325,7 +325,7 @@ const styles = StyleSheet.create({
   hero: {
     backgroundColor: colors.hero,
     borderRadius: radius.md,
-    padding: 20,
+    padding: 16,
     marginBottom: space.lg,
     ...shadow.card,
   },
@@ -335,13 +335,13 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     letterSpacing: 0,
     textTransform: 'uppercase',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   heroTitle: {
     color: '#fff',
-    fontSize: 26,
+    fontSize: 22,
     fontWeight: '900',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   heroText: {
     color: '#d8ded8',
