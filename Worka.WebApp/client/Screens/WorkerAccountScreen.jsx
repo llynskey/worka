@@ -19,6 +19,7 @@ import AppFooter from '../components/AppFooter';
 import Avatar from '../components/Avatar';
 import LanguagePicker from '../components/LanguagePicker';
 import { useI18n } from '../i18n/I18nContext';
+import { useLayout } from '../Utils/theme';
 
 const getAssetName = (asset) => {
   if (asset.fileName) return asset.fileName;
@@ -54,6 +55,7 @@ const appendAssetToForm = async (upload, asset) => {
 
 const WorkerAccountScreen = () => {
   const { t } = useI18n();
+  const { isDesktop } = useLayout();
   const [form, setForm] = useState({
     firstName: '',
     lastName: '',
@@ -304,7 +306,7 @@ const WorkerAccountScreen = () => {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.content}>
+    <ScrollView contentContainerStyle={[styles.content, isDesktop && styles.contentWide]}>
       <View style={styles.headerCard}>
         <MaterialCommunityIcons name="briefcase-account-outline" size={34} color="#111" />
         <View style={{ flex: 1 }}>
@@ -313,7 +315,8 @@ const WorkerAccountScreen = () => {
         </View>
       </View>
 
-      <View style={styles.strengthCard}>
+      <View style={isDesktop ? styles.cardsRow : undefined}>
+      <View style={[styles.strengthCard, isDesktop && styles.cardHalf]}>
         <View style={styles.strengthHeader}>
           <Text style={styles.strengthTitle}>{t('account.profileStrength')}</Text>
           <Text style={styles.strengthPercent}>{profileStrength.percent}%</Text>
@@ -324,7 +327,7 @@ const WorkerAccountScreen = () => {
         <Text style={styles.strengthHint}>{strengthHint}</Text>
       </View>
 
-      <View style={styles.payoutCard}>
+      <View style={[styles.payoutCard, isDesktop && styles.cardHalf]}>
         <View style={styles.payoutHeader}>
           <MaterialCommunityIcons name="bank-transfer" size={28} color="#111" />
           <View style={{ flex: 1 }}>
@@ -370,7 +373,7 @@ const WorkerAccountScreen = () => {
         </TouchableOpacity>
       </View>
 
-      <View style={[styles.formCard, styles.workCard]}>
+      <View style={[styles.formCard, styles.workCard, isDesktop && styles.cardHalf]}>
         <Text style={styles.workTitle}>{t('account.workLocation')}</Text>
         <Text style={styles.workHint}>{t('account.workLocationHint')}</Text>
 
@@ -423,7 +426,7 @@ const WorkerAccountScreen = () => {
         ) : null}
       </View>
 
-      <View style={styles.formCard}>
+      <View style={[styles.formCard, isDesktop && styles.cardHalf]}>
         <View style={styles.photoRow}>
           <Avatar photoUrl={form.photoUrl} firstName={form.firstName} lastName={form.lastName} size={64} />
           <TouchableOpacity
@@ -509,6 +512,7 @@ const WorkerAccountScreen = () => {
           )}
         </TouchableOpacity>
       </View>
+      </View>
 
       <AppFooter />
     </ScrollView>
@@ -564,6 +568,20 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 720,
     alignSelf: 'center',
+  },
+  contentWide: {
+    maxWidth: 1040,
+  },
+  cardsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    columnGap: 14,
+    alignItems: 'flex-start',
+  },
+  cardHalf: {
+    flexGrow: 1,
+    flexBasis: '47%',
+    minWidth: 320,
   },
   headerCard: {
     backgroundColor: '#fff',
