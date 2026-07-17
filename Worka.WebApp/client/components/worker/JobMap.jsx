@@ -41,18 +41,6 @@ const jobImage = (job) =>
   categoryImages[String(job?.category ?? '').toLowerCase()] ||
   categoryImages.repairs;
 
-// The nearest actually-scrolling ancestor of a DOM node (web). Used to scroll a
-// specific container reliably — scrollIntoView picks the wrong scroller on iOS.
-const nearestScroller = (el) => {
-  let n = el && el.parentElement;
-  while (n) {
-    const oy = window.getComputedStyle(n).overflowY;
-    if ((oy === 'auto' || oy === 'scroll') && n.scrollHeight > n.clientHeight + 1) return n;
-    n = n.parentElement;
-  }
-  return null;
-};
-
 const MAPBOX_TOKEN = process.env.EXPO_PUBLIC_MAPBOX_TOKEN;
 
 const getMapUrl = (job) => {
@@ -111,6 +99,9 @@ const JobMap = () => {
   const isNarrow = windowWidth < 700;
   const mapHeight = Math.min(300, Math.round(windowHeight * 0.45));
   const scrollRef = useRef(null);
+  const itemOffsets = useRef({});
+  const [shellH, setShellH] = useState(0);
+  const [topH, setTopH] = useState(0);
 
   const unit = useDistanceUnit();
   // Discrete distance presets that step up to National and Everywhere (no cap),
@@ -173,26 +164,16 @@ const JobMap = () => {
     requestCurrentLocation().then(setCurrentLocation).catch(() => {});
   }, []);
 
-  // Selecting a job (e.g. by tapping its map pin) scrolls the list so that job
-  // sits at the top of the list. Scroll the KNOWN ScrollView node (via its ref)
-  // rather than guessing the scroller from the DOM — on iOS a DOM guess scrolls
-  // the whole page instead of the list.
+  // Selecting a job (e.g. by tapping its map pin) scrolls the list ScrollView so
+  // that job sits at the top of the list. The list is its own scroller (mobile:
+  // fixed map above, explicit-height list below; desktop: the side list pane),
+  // so scrolling it never moves the page or the map.
   useEffect(() => {
-    if (Platform.OS !== 'web' || !selectedJobId || typeof document === 'undefined') return;
-    // Defer so the item is laid out before we measure it.
-    const id = requestAnimationFrame(() => {
-      const item = document.getElementById(`jobmap-item-${selectedJobId}`);
-      const sv = scrollRef.current;
-      const scroller = sv && sv.getScrollableNode ? sv.getScrollableNode() : nearestScroller(item);
-      if (!item || !scroller || typeof scroller.scrollTop !== 'number') return;
-      // Land the item just below the sticky map (mobile) rather than behind it.
-      const sticky = document.getElementById('jobmap-sticky');
-      const stickyH = sticky ? sticky.getBoundingClientRect().height : 0;
-      const delta = item.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
-      const top = Math.max(0, scroller.scrollTop + delta - stickyH - 8);
-      scroller.scrollTo ? scroller.scrollTo({ top, behavior: 'smooth' }) : (scroller.scrollTop = top);
-    });
-    return () => cancelAnimationFrame(id);
+    if (!selectedJobId || !scrollRef.current) return;
+    const y = itemOffsets.current[selectedJobId];
+    if (typeof y === 'number') {
+      scrollRef.current.scrollTo({ y: Math.max(0, y - 8), animated: true });
+    }
   }, [selectedJobId]);
 
   // Load the saved work location so distances default to the worker's base.
@@ -501,8 +482,10 @@ const JobMap = () => {
           return (
             <TouchableOpacity
               key={job.jobId}
-              nativeID={`jobmap-item-${job.jobId}`}
               style={[styles.jobItem, active && styles.jobItemActive]}
+              onLayout={(e) => {
+                itemOffsets.current[job.jobId] = e.nativeEvent.layout.y;
+              }}
               onPress={() => handleSelectJob(job.jobId)}
             >
               <View style={styles.jobItemHeader}>
@@ -544,39 +527,40 @@ const JobMap = () => {
   );
 
   if (isNarrow) {
-    const narrowMap = (
-      <View style={[styles.mapPaneNarrow, { height: mapHeight }]}>
-        <JobsMapView
-          jobs={locatedJobs}
-          selectedJobId={selectedJobId}
-          onSelectJob={handleSelectJob}
-          onLocate={useCurrentLocation}
-          userLocation={currentLocation}
-          origin={origin}
-          radiusKm={Number.isFinite(radiusKm) ? radiusKm : null}
-          inRadiusIds={inRadiusIds}
-        />
-      </View>
-    );
-    // Keep the map in view while the list scrolls beneath it — sticky works on
-    // iOS inside the single ScrollView (a nested ScrollView doesn't get height).
-    const stickyMap =
-      Platform.OS === 'web'
-        ? React.createElement(
-            'div',
-            { id: 'jobmap-sticky', style: { position: 'sticky', top: 0, zIndex: 5, background: '#f7f5ef', paddingBottom: 8 } },
-            narrowMap
-          )
-        : narrowMap;
+    // Fixed top (header + distance + map) that never scrolls, and a list that
+    // scrolls on its own. The list gets an EXPLICIT pixel height (not flex) so
+    // it actually scrolls on iOS Safari, where a nested flex ScrollView gets no
+    // height. This keeps both the map and the list in view and means selecting a
+    // job scrolls only the list, never the whole page.
+    const listH = Math.max(160, shellH - topH);
     return (
       <>
-        <ScrollView ref={scrollRef} style={styles.narrowShell} contentContainerStyle={styles.narrowContent}>
-          {headerBlock}
-          {radiusBlock}
-          {stickyMap}
-          <View style={styles.narrowList}>{listBody}</View>
-          <AppFooter />
-        </ScrollView>
+        <View style={styles.narrowShell} onLayout={(e) => setShellH(e.nativeEvent.layout.height)}>
+          <View style={styles.narrowTop} onLayout={(e) => setTopH(e.nativeEvent.layout.height)}>
+            {headerBlock}
+            {radiusBlock}
+            <View style={[styles.mapPaneNarrow, { height: mapHeight }]}>
+              <JobsMapView
+                jobs={locatedJobs}
+                selectedJobId={selectedJobId}
+                onSelectJob={handleSelectJob}
+                onLocate={useCurrentLocation}
+                userLocation={currentLocation}
+                origin={origin}
+                radiusKm={Number.isFinite(radiusKm) ? radiusKm : null}
+                inRadiusIds={inRadiusIds}
+              />
+            </View>
+          </View>
+          <ScrollView
+            ref={scrollRef}
+            style={{ height: listH }}
+            contentContainerStyle={styles.narrowListContent}
+          >
+            {listBody}
+            <AppFooter />
+          </ScrollView>
+        </View>
         {modals}
       </>
     );
