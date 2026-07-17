@@ -99,19 +99,11 @@ const embossTitle = {
   textShadowRadius: 0,
 } as const;
 
-// Raised, tactile dark surfaces (primary buttons, active pills): an inner top
-// highlight plus a grounded drop shadow. Web-only layered box-shadow.
-const embossDark = isWeb
-  ? ({
-      boxShadow:
-        "inset 0 1px 0 rgba(255,255,255,0.18), 0 10px 22px rgba(0,0,0,0.22)",
-    } as any)
-  : null;
-
-// A crisp raised edge for the small dark badges (icons, dots).
-const embossBadge = isWeb
-  ? ({ boxShadow: "inset 0 1px 0 rgba(255,255,255,0.22), 0 4px 10px rgba(0,0,0,0.18)" } as any)
-  : null;
+// Flat, clean surfaces — the earlier drop-shadow emboss read as heavy, so the
+// dark buttons/pills and small badges stay shadowless and rely on the crisp
+// black border + fill instead.
+const embossDark = null;
+const embossBadge = null;
 
 const AuthScreen: React.FC = () => {
   const { signInWithToken } = useContext(AuthContext);
@@ -128,6 +120,7 @@ const AuthScreen: React.FC = () => {
   const isPhone = width < 640;
   const isSmallPhone = width < 390;
   const isStacked = width < 1180;
+  const isWideDesktop = width >= 1440;
   const horizontalGutter = isPhone ? 16 : width < 1280 ? 24 : 32;
 
   const [interestForm, setInterestForm] = useState(emptyInterestForm);
@@ -403,15 +396,9 @@ const AuthScreen: React.FC = () => {
     );
   };
 
-  const panelShadowStyle = isWeb
-    ? ({
-        boxShadow: isPhone
-          ? "none"
-          : // layered depth + a crisp inner top highlight so the card reads as
-            // a raised, machined surface rather than a flat box.
-            "0 1px 1px rgba(0,0,0,0.04), 0 14px 30px rgba(0,0,0,0.08), 0 30px 60px rgba(0,0,0,0.07), inset 0 1px 0 rgba(255,255,255,0.9)",
-      } as any)
-    : null;
+  // No drop shadow — the auth card is a clean bordered surface (the earlier
+  // layered shadow read as heavy). Cancels the RN shadow props on `panel` too.
+  const panelShadowStyle = isWeb ? ({ boxShadow: "none" } as any) : null;
 
   const webPageStyle =
     Platform.OS === "web" ? ({ minHeight: "100vh" } as any) : null;
@@ -522,14 +509,16 @@ const AuthScreen: React.FC = () => {
               <LanguageCycler
                 items={heroTitles}
                 entranceDelay={MOTION.stagger * 2}
-                containerStyle={{ minHeight: isPhone ? 130 : isStacked ? 165 : 230 }}
+                containerStyle={{ minHeight: isPhone ? 130 : isStacked ? 165 : isWideDesktop ? 270 : 230 }}
                 textStyle={[
                   styles.heroTitle,
                   isPhone
                     ? styles.heroTitlePhone
                     : isStacked
                       ? styles.heroTitleTablet
-                      : styles.heroTitleDesktop,
+                      : isWideDesktop
+                        ? styles.heroTitleWide
+                        : styles.heroTitleDesktop,
                 ]}
               />
 
@@ -546,6 +535,7 @@ const AuthScreen: React.FC = () => {
               style={[
                 styles.panel,
                 isStacked ? styles.panelStacked : styles.panelDesktop,
+                !isStacked && isWideDesktop && styles.panelWide,
                 isPhone && styles.panelPhone,
                 panelShadowStyle,
               ]}
@@ -1280,7 +1270,7 @@ const styles = StyleSheet.create({
   },
   shell: {
     width: "100%",
-    maxWidth: 1180,
+    maxWidth: 1320,
     alignSelf: "center",
   },
   header: {
@@ -1437,6 +1427,10 @@ const styles = StyleSheet.create({
   heroTitleDesktop: {
     fontSize: 58,
   },
+  heroTitleWide: {
+    maxWidth: 860,
+    fontSize: 68,
+  },
   heroTitleTablet: {
     maxWidth: 760,
     fontSize: 48,
@@ -1522,6 +1516,10 @@ const styles = StyleSheet.create({
     flexBasis: 500,
     flexGrow: 0,
     flexShrink: 0,
+  },
+  panelWide: {
+    maxWidth: 540,
+    flexBasis: 540,
   },
   panelStacked: {
     maxWidth: 620,
