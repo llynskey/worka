@@ -553,6 +553,8 @@ export default {
   // Messages inbox
   'messages.empty': 'No messages yet',
   'messages.emptyHint': 'Your conversations with professionals and customers will appear here.',
+  'messages.selectTitle': 'Select a conversation',
+  'messages.selectHint': 'Pick a thread on the left to read and reply.',
   'messages.you': 'You:',
   'messages.loadError': 'Could not load messages',
   'messages.unreadCount': '{count} unread',
