@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Linking,
@@ -95,6 +95,8 @@ const JobMap = () => {
   const [quoteForm, setQuoteForm] = useState({ price: '', description: '' });
   const [submittingQuote, setSubmittingQuote] = useState(false);
   const [distanceOpen, setDistanceOpen] = useState(true);
+  const listScrollRef = useRef(null);
+  const itemOffsets = useRef({});
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const isNarrow = windowWidth < 700;
   const mapHeight = Math.min(300, Math.round(windowHeight * 0.45));
@@ -159,6 +161,15 @@ const JobMap = () => {
   useEffect(() => {
     requestCurrentLocation().then(setCurrentLocation).catch(() => {});
   }, []);
+
+  // Selecting a job (e.g. by tapping its map pin) scrolls the list to it.
+  useEffect(() => {
+    if (!selectedJobId || !listScrollRef.current) return;
+    const y = itemOffsets.current[selectedJobId];
+    if (typeof y === 'number') {
+      listScrollRef.current.scrollTo({ y: Math.max(y - 12, 0), animated: true });
+    }
+  }, [selectedJobId]);
 
   // Load the saved work location so distances default to the worker's base.
   useEffect(() => {
@@ -399,7 +410,7 @@ const JobMap = () => {
 
   const radiusText = presetLabel(radius);
 
-  const radiusBlock = origin ? (
+  const radiusCard = (
     <View style={styles.filterCard}>
       <TouchableOpacity style={styles.filterHeader} activeOpacity={0.7} onPress={() => setDistanceOpen((v) => !v)}>
         <Text style={styles.filterLabel}>
@@ -425,7 +436,27 @@ const JobMap = () => {
         </ScrollView>
       ) : null}
     </View>
-  ) : null;
+  );
+
+  // Smoothly reveal the distance section once a location is found (web animates
+  // the collapse/expand; native just shows it when there's an origin).
+  const radiusBlock =
+    Platform.OS === 'web'
+      ? React.createElement(
+          'div',
+          {
+            style: {
+              overflow: 'hidden',
+              transition: 'max-height 320ms ease, opacity 320ms ease',
+              maxHeight: origin ? 260 : 0,
+              opacity: origin ? 1 : 0,
+            },
+          },
+          radiusCard
+        )
+      : origin
+        ? radiusCard
+        : null;
 
   const listBody = (
     <>
@@ -447,6 +478,9 @@ const JobMap = () => {
             <TouchableOpacity
               key={job.jobId}
               style={[styles.jobItem, active && styles.jobItemActive]}
+              onLayout={(e) => {
+                itemOffsets.current[job.jobId] = e.nativeEvent.layout.y;
+              }}
               onPress={() => handleSelectJob(job.jobId)}
             >
               <View style={styles.jobItemHeader}>
@@ -533,7 +567,7 @@ const JobMap = () => {
             />
           </View>
 
-          <ScrollView style={styles.listPane} contentContainerStyle={styles.listContent}>
+          <ScrollView ref={listScrollRef} style={styles.listPane} contentContainerStyle={styles.listContent}>
             {listBody}
             <AppFooter />
           </ScrollView>
