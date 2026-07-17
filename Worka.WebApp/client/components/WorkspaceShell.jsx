@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLayout } from '../Utils/theme';
 import NotificationCenter from './NotificationCenter';
@@ -45,107 +45,17 @@ const SectionBar = ({ eyebrow, title, tabs, activeTab, onTabChange, onLayout }) 
   );
 };
 
-// Web: the section bar auto-hides once the content is scrolled and slides back in
-// at the top of the content or when the cursor reaches the top edge.
-const WebShell = ({ eyebrow, title, tabs, activeTab, onTabChange, children }) => {
-  const [barH, setBarH] = useState(88);
-  const [hidden, setHidden] = useState(false);
-  const [hover, setHover] = useState(false);
-  const lastY = useRef(0);
-  const activeTabRef = useRef(activeTab);
-  const visible = hover || !hidden;
-
-  // Show the bar again when switching sections. Also clear the hover latch:
-  // clicking a tab leaves the cursor over the bar, and without a mouse move a
-  // stuck hover would keep `visible` true and stop the bar ever retracting.
-  useEffect(() => {
-    activeTabRef.current = activeTab;
-    lastY.current = 0;
-    setHidden(false);
-    setHover(false);
-  }, [activeTab]);
-
-  useEffect(() => {
-    let raf = 0;
-    const onScroll = (e) => {
-      const el = e.target;
-      if (!el || typeof el.scrollTop !== 'number' || raf) return;
-      raf = requestAnimationFrame(() => {
-        raf = 0;
-        const y = el.scrollTop;
-        const max = (el.scrollHeight || 0) - (el.clientHeight || 0);
-        if (y < 0 || y > max) return; // ignore rubber-band overscroll (bounce)
-        const last = lastY.current;
-        lastY.current = y;
-        // The map view keeps the bar fixed so the map panel never shifts.
-        if (activeTabRef.current === 'map') setHidden(false);
-        else if (y <= 24) setHidden(false); // at the top
-        else if (y > last + 8) {
-          setHidden(true); // scrolling down
-          setHover(false); // drop any stale hover latch so it can actually hide
-        } else if (y < last - 8) setHidden(false); // scrolling up
-      });
-    };
-    // Capture phase so nested screen scrollers are caught (scroll doesn't bubble).
-    document.addEventListener('scroll', onScroll, true);
-    return () => {
-      if (raf) cancelAnimationFrame(raf);
-      document.removeEventListener('scroll', onScroll, true);
-    };
-  }, []);
-
-  return (
-    <View style={styles.shellColumn}>
-      {React.createElement('div', {
-        onMouseEnter: () => setHover(true),
-        onMouseLeave: () => setHover(false),
-        style: { position: 'absolute', top: 0, left: 0, right: 0, height: 16, zIndex: 30 },
-      })}
-      {React.createElement(
-        'div',
-        {
-          onMouseEnter: () => setHover(true),
-          onMouseLeave: () => setHover(false),
-          style: {
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            zIndex: 20,
-            transform: `translateY(${visible ? 0 : -(barH + 6)}px)`,
-            transition: 'transform 260ms ease',
-          },
-        },
-        <SectionBar
-          eyebrow={eyebrow}
-          title={title}
-          tabs={tabs}
-          activeTab={activeTab}
-          onTabChange={onTabChange}
-          onLayout={(e) => setBarH(Math.round(e.nativeEvent.layout.height))}
-        />
-      )}
-      <View
-        style={[
-          styles.main,
-          { paddingTop: visible ? barH : 0, transitionProperty: 'padding-top', transitionDuration: '260ms' },
-        ]}
-      >
-        {children}
-      </View>
-    </View>
-  );
-};
-
-const WorkspaceShell = (props) => {
-  if (Platform.OS === 'web') return <WebShell {...props} />;
-  return (
-    <View style={styles.shellColumn}>
-      <SectionBar {...props} />
-      <View style={styles.main}>{props.children}</View>
-    </View>
-  );
-};
+// The section bar stays static at the top of the workspace. An earlier
+// auto-hide-on-scroll version was removed: with a shared shell above per-screen
+// scrollers it couldn't collapse without reflowing content mid-scroll (jerky),
+// and its document-wide scroll listener also reacted to modal scrolling and
+// rubber-band overscroll (spasming). A static, compact bar is the robust choice.
+const WorkspaceShell = (props) => (
+  <View style={styles.shellColumn}>
+    <SectionBar {...props} />
+    <View style={styles.main}>{props.children}</View>
+  </View>
+);
 
 const styles = StyleSheet.create({
   shellRow: {
