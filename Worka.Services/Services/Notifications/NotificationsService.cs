@@ -3,6 +3,7 @@ using Worka.Services.Common;
 using Worka.Services.Database;
 using Worka.Services.Database.DatabaseModels;
 using Worka.Services.DTOs.Notifications;
+using Worka.Services.Email;
 
 namespace Worka.Services.Notifications
 {
@@ -12,10 +13,12 @@ namespace Worka.Services.Notifications
         private const int MaxBody = 1000;
 
         private readonly WorkaDbContext _dbContext;
+        private readonly IEmailService _email;
 
-        public NotificationsService(WorkaDbContext dbContext)
+        public NotificationsService(WorkaDbContext dbContext, IEmailService email = null)
         {
             _dbContext = dbContext;
+            _email = email;
         }
 
         public async Task NotifyAsync(Guid recipientUserId, string type, string title, string body, Guid? jobId = null)
@@ -53,6 +56,33 @@ namespace Worka.Services.Notifications
                 {
                     // ignore
                 }
+            }
+
+            // Mirror the notification to email, best-effort.
+            await TrySendEmailAsync(recipientUserId, notification.Title, notification.Body);
+        }
+
+        private async Task TrySendEmailAsync(Guid recipientUserId, string subject, string body)
+        {
+            try
+            {
+                if (_email == null || !_email.IsConfigured)
+                {
+                    return;
+                }
+
+                var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.UserId == recipientUserId);
+                if (user == null || string.IsNullOrWhiteSpace(user.Email))
+                {
+                    return;
+                }
+
+                var text = $"{body}\n\nOpen Fixa to respond: https://fixa.site\n\n— Fixa";
+                await _email.SendAsync(user.Email, subject, text);
+            }
+            catch
+            {
+                // Best-effort: email failures never affect the triggering action.
             }
         }
 

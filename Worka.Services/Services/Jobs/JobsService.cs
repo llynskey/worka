@@ -4,16 +4,19 @@ using Worka.Services.Database;
 using Worka.Services.Database.DatabaseModels;
 using Worka.Services.DTOs.Jobs;
 using Worka.Services.Enums;
+using Worka.Services.Notifications;
 
 namespace Worka.Services.Jobs
 {
     public class JobsService : IJobsService
     {
         private readonly WorkaDbContext _dbContext;
+        private readonly INotificationsService _notifications;
 
-        public JobsService(WorkaDbContext dbContext)
+        public JobsService(WorkaDbContext dbContext, INotificationsService notifications = null)
         {
             _dbContext = dbContext;
+            _notifications = notifications;
         }
 
 
@@ -186,6 +189,27 @@ namespace Worka.Services.Jobs
                 job.Status = JobStatusEnum.Completed;
                 job.UpdatedAt = DateTimeOffset.UtcNow;
                 await _dbContext.SaveChangesAsync();
+
+                // Let the booked professional know the job was marked complete.
+                if (_notifications != null && job.AcceptedQuoteId != null)
+                {
+                    var acceptedQuote = await _dbContext.Quotes
+                        .FirstOrDefaultAsync(q => q.QuoteId == job.AcceptedQuoteId);
+                    if (acceptedQuote != null)
+                    {
+                        var pro = await _dbContext.Professionals
+                            .FirstOrDefaultAsync(p => p.ProfessionalId == acceptedQuote.ProfessionalId);
+                        if (pro != null)
+                        {
+                            await _notifications.NotifyAsync(
+                                pro.UserId,
+                                "completed",
+                                "Job marked complete",
+                                $"\"{job.Name}\" was marked complete. Your payout is on its way.",
+                                job.JobId);
+                        }
+                    }
+                }
 
                 return new WorkaResponse<JobResponseDTO>(new JobResponseDTO(job));
             }

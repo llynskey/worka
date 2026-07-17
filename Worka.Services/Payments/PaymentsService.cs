@@ -7,6 +7,7 @@ using Worka.Services.Database;
 using Worka.Services.Database.DatabaseModels;
 using Worka.Services.DTOs.Payments;
 using Worka.Services.Enums;
+using Worka.Services.Notifications;
 
 namespace Worka.Services.Payments
 {
@@ -17,6 +18,7 @@ namespace Worka.Services.Payments
 
         private readonly WorkaDbContext _dbContext;
         private readonly IConfiguration _configuration;
+        private readonly INotificationsService _notifications;
         private readonly string _stripeSecretKey;
         private readonly string _webhookSecret;
         private readonly decimal _serviceFeePercent;
@@ -24,10 +26,11 @@ namespace Worka.Services.Payments
         private readonly string _currency;
         private readonly string _defaultCountry;
 
-        public PaymentsService(WorkaDbContext dbContext, IConfiguration configuration)
+        public PaymentsService(WorkaDbContext dbContext, IConfiguration configuration, INotificationsService notifications = null)
         {
             _dbContext = dbContext;
             _configuration = configuration;
+            _notifications = notifications;
             _stripeSecretKey = configuration["Stripe:SecretKey"] ?? configuration["Stripe__SecretKey"] ?? string.Empty;
             _webhookSecret = configuration["Stripe:WebhookSecret"] ?? configuration["Stripe__WebhookSecret"] ?? string.Empty;
             _currency = (configuration["Stripe:Currency"] ?? configuration["Stripe__Currency"] ?? "gbp").ToLowerInvariant();
@@ -335,6 +338,34 @@ namespace Worka.Services.Payments
             payment.UpdatedAt = DateTimeOffset.UtcNow;
 
             await _dbContext.SaveChangesAsync();
+
+            // Notify both sides that the job is now booked.
+            if (_notifications != null)
+            {
+                var pro = await _dbContext.Professionals
+                    .FirstOrDefaultAsync(p => p.ProfessionalId == payment.ProfessionalId);
+                if (pro != null)
+                {
+                    await _notifications.NotifyAsync(
+                        pro.UserId,
+                        "booking",
+                        "You're booked!",
+                        $"Your quote on \"{job.Name}\" was accepted and paid. Head to your bookings to plan the work.",
+                        job.JobId);
+                }
+
+                var bookingCustomer = await _dbContext.Customers
+                    .FirstOrDefaultAsync(c => c.CustomerId == payment.CustomerId);
+                if (bookingCustomer != null)
+                {
+                    await _notifications.NotifyAsync(
+                        bookingCustomer.UserId,
+                        "booking",
+                        "Booking confirmed",
+                        $"Your payment for \"{job.Name}\" went through. You can now message your professional directly.",
+                        job.JobId);
+                }
+            }
 
             return new WorkaResponse<PaymentResponseDTO>(new PaymentResponseDTO(payment));
         }
