@@ -110,6 +110,7 @@ const JobMap = () => {
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const isNarrow = windowWidth < 700;
   const mapHeight = Math.min(300, Math.round(windowHeight * 0.45));
+  const scrollRef = useRef(null);
 
   const unit = useDistanceUnit();
   // Discrete distance presets that step up to National and Everywhere (no cap),
@@ -173,23 +174,23 @@ const JobMap = () => {
   }, []);
 
   // Selecting a job (e.g. by tapping its map pin) scrolls the list so that job
-  // sits at the top of the visible list. scrollIntoView handles the nesting.
+  // sits at the top of the list. Scroll the KNOWN ScrollView node (via its ref)
+  // rather than guessing the scroller from the DOM — on iOS a DOM guess scrolls
+  // the whole page instead of the list.
   useEffect(() => {
     if (Platform.OS !== 'web' || !selectedJobId || typeof document === 'undefined') return;
-    // Defer so the item is laid out, then scroll its own container to it.
+    // Defer so the item is laid out before we measure it.
     const id = requestAnimationFrame(() => {
       const item = document.getElementById(`jobmap-item-${selectedJobId}`);
-      if (!item) return;
-      const scroller = nearestScroller(item);
-      if (scroller) {
-        // Land the item just below the sticky map (mobile) rather than behind it.
-        const sticky = document.getElementById('jobmap-sticky');
-        const stickyH = sticky ? sticky.getBoundingClientRect().height : 0;
-        const delta = item.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
-        scroller.scrollTo({ top: scroller.scrollTop + delta - stickyH - 8, behavior: 'smooth' });
-      } else {
-        item.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
+      const sv = scrollRef.current;
+      const scroller = sv && sv.getScrollableNode ? sv.getScrollableNode() : nearestScroller(item);
+      if (!item || !scroller || typeof scroller.scrollTop !== 'number') return;
+      // Land the item just below the sticky map (mobile) rather than behind it.
+      const sticky = document.getElementById('jobmap-sticky');
+      const stickyH = sticky ? sticky.getBoundingClientRect().height : 0;
+      const delta = item.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
+      const top = Math.max(0, scroller.scrollTop + delta - stickyH - 8);
+      scroller.scrollTo ? scroller.scrollTo({ top, behavior: 'smooth' }) : (scroller.scrollTop = top);
     });
     return () => cancelAnimationFrame(id);
   }, [selectedJobId]);
@@ -569,7 +570,7 @@ const JobMap = () => {
         : narrowMap;
     return (
       <>
-        <ScrollView style={styles.narrowShell} contentContainerStyle={styles.narrowContent}>
+        <ScrollView ref={scrollRef} style={styles.narrowShell} contentContainerStyle={styles.narrowContent}>
           {headerBlock}
           {radiusBlock}
           {stickyMap}
@@ -601,7 +602,7 @@ const JobMap = () => {
             />
           </View>
 
-          <ScrollView style={styles.listPane} contentContainerStyle={styles.listContent}>
+          <ScrollView ref={scrollRef} style={styles.listPane} contentContainerStyle={styles.listContent}>
             {listBody}
             <AppFooter />
           </ScrollView>
