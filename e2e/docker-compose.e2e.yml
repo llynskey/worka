@@ -1,0 +1,18 @@
+# Throwaway Postgres for E2E runs. Data lives in tmpfs — every `down -v`/restart
+# starts clean. Port 55432 so it never clashes with a local Postgres.
+services:
+  postgres-e2e:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: worku_e2e
+      POSTGRES_USER: worku
+      POSTGRES_PASSWORD: worku_e2e_password
+    ports:
+      - "55432:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U worku -d worku_e2e"]
+      interval: 2s
+      timeout: 3s
+      retries: 30

@@ -5,7 +5,7 @@ namespace Worka.WebApp.Controllers
 {
     [ApiController]
     [Authorize]
-    [Route("")]
+    [Route("api")]
     public class NotificationController : ControllerBase
     {
         private readonly INotificationsService _notificationsService;
@@ -16,6 +16,7 @@ namespace Worka.WebApp.Controllers
         }
 
         [HttpGet("notifications")]
+        [HttpGet("~/notifications")]
         public async Task<IActionResult> List()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -29,6 +30,7 @@ namespace Worka.WebApp.Controllers
         }
 
         [HttpGet("notifications/unreadCount")]
+        [HttpGet("~/notifications/unreadCount")]
         public async Task<IActionResult> UnreadCount()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -42,6 +44,7 @@ namespace Worka.WebApp.Controllers
         }
 
         [HttpPost("notifications/{notificationId}/read")]
+        [HttpPost("~/notifications/{notificationId}/read")]
         public async Task<IActionResult> MarkRead(string notificationId)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -55,6 +58,7 @@ namespace Worka.WebApp.Controllers
         }
 
         [HttpPost("notifications/readAll")]
+        [HttpPost("~/notifications/readAll")]
         public async Task<IActionResult> MarkAllRead()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
