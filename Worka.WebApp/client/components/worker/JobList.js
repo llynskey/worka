@@ -593,7 +593,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   listContentWide: {
-    maxWidth: 1180,
+    maxWidth: 1240,
   },
   columnWrap: {
     gap: 14,

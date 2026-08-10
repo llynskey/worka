@@ -297,7 +297,7 @@ const styles = StyleSheet.create({
     paddingBottom: 28,
     flexGrow: 1,
     width: '100%',
-    maxWidth: 1100,
+    maxWidth: 1240,
     alignSelf: 'center',
   },
   layout: {

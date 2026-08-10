@@ -99,8 +99,11 @@ const WorkerSettingsScreen = ({ navigation }) => {
         </View>
       </View>
 
-      <View style={isDesktop ? styles.cardsRow : undefined}>
-      <View style={[styles.card, isDesktop && styles.cardHalf]}>
+      {/* Desktop: two independent columns so mismatched card heights never
+          leave holes (a wrapping grid did). */}
+      <View style={isDesktop ? styles.columnsRow : undefined}>
+      <View style={isDesktop ? styles.column : undefined}>
+      <View style={styles.card}>
         <View style={styles.settingRow}>
           <View style={{ flex: 1 }}>
             <Text style={styles.settingTitle}>{t('settings.availableForWork')}</Text>
@@ -126,7 +129,7 @@ const WorkerSettingsScreen = ({ navigation }) => {
         </View>
       </View>
 
-      <TouchableOpacity style={[styles.linkCard, isDesktop && styles.cardHalf]} onPress={() => navigation.navigate('Account')}>
+      <TouchableOpacity style={styles.linkCard} onPress={() => navigation.navigate('Account')}>
         <MaterialCommunityIcons name="account-hard-hat-outline" size={24} color="#111" />
         <Text style={styles.linkText}>{t('settings.manageProfile')}</Text>
         <MaterialCommunityIcons name="chevron-right" size={24} color="#111" />
@@ -134,7 +137,7 @@ const WorkerSettingsScreen = ({ navigation }) => {
 
 
 
-      <View style={[styles.card, isDesktop && styles.cardHalf]}>
+      <View style={styles.card}>
         <Text style={styles.settingTitle}>{t('settings.language')}</Text>
         <Text style={styles.settingText}>{t('settings.languageHint')}</Text>
         <View style={styles.languageSelect}>
@@ -148,7 +151,7 @@ const WorkerSettingsScreen = ({ navigation }) => {
         </View>
       </View>
 
-      <View style={[styles.card, isDesktop && styles.cardHalf]}>
+      <View style={styles.card}>
         <Text style={styles.settingTitle}>{t('settings.distanceUnit')}</Text>
         <Text style={styles.settingText}>{t('settings.distanceUnitHint')}</Text>
         <View style={styles.unitToggle}>
@@ -169,7 +172,10 @@ const WorkerSettingsScreen = ({ navigation }) => {
         </View>
       </View>
 
-      <View style={[styles.card, isDesktop && styles.cardHalf]}>
+      </View>
+
+      <View style={isDesktop ? styles.column : undefined}>
+      <View style={styles.card}>
         <Text style={styles.settingTitle}>{t('settings.changePassword')}</Text>
         <TextInput
           style={styles.securityInput}
@@ -198,7 +204,7 @@ const WorkerSettingsScreen = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      <View style={[styles.card, styles.dangerCard, isDesktop && styles.cardHalf]}>
+      <View style={[styles.card, styles.dangerCard]}>
         <Text style={styles.settingTitle}>{t('settings.deleteAccount')}</Text>
         <Text style={styles.settingText}>{t('settings.deleteAccountText')}</Text>
         <TextInput
@@ -219,7 +225,7 @@ const WorkerSettingsScreen = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      <View style={[styles.card, isDesktop && styles.cardHalf]}>
+      <View style={styles.card}>
         <Text style={styles.settingTitle}>{t('settings.support')}</Text>
         <Text style={styles.settingText}>pros@worku.site</Text>
         <Text style={styles.settingText}>{t('settings.supportProText')}</Text>
@@ -232,6 +238,7 @@ const WorkerSettingsScreen = ({ navigation }) => {
             <Text style={styles.legalLink}>{t('settings.terms')}</Text>
           </TouchableOpacity>
         </View>
+      </View>
       </View>
       </View>
 
@@ -358,17 +365,16 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   contentWide: {
-    maxWidth: 1000,
+    maxWidth: 1040,
   },
-  cardsRow: {
+  columnsRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    columnGap: 14,
+    alignItems: 'flex-start',
+    gap: 14,
   },
-  cardHalf: {
-    flexGrow: 1,
-    flexBasis: '47%',
-    minWidth: 300,
+  column: {
+    flex: 1,
+    minWidth: 0,
   },
   headerCard: {
     backgroundColor: '#fff',

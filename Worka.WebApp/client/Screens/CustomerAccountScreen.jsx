@@ -199,28 +199,45 @@ const CustomerAccountScreen = () => {
                 <Text style={styles.summaryMeta} numberOfLines={1}>{form.address}</Text>
               </View>
             ) : null}
+            <TouchableOpacity
+              style={styles.summaryPhotoButton}
+              onPress={pickAndUploadProfilePhoto}
+              disabled={uploadingPhoto}
+            >
+              {uploadingPhoto ? (
+                <ActivityIndicator color="#111" />
+              ) : (
+                <>
+                  <MaterialCommunityIcons name="camera-outline" size={18} color="#111" />
+                  <Text style={styles.photoButtonText}>{t('account.changePhoto')}</Text>
+                </>
+              )}
+            </TouchableOpacity>
           </View>
         </View>
       ) : null}
 
       <View style={[styles.formCard, isDesktop && styles.formCardCol]}>
-        <View style={styles.photoRow}>
-          <Avatar photoUrl={form.photoUrl} firstName={form.firstName} lastName={form.lastName} size={64} />
-          <TouchableOpacity
-            style={styles.photoButton}
-            onPress={pickAndUploadProfilePhoto}
-            disabled={uploadingPhoto}
-          >
-            {uploadingPhoto ? (
-              <ActivityIndicator color="#111" />
-            ) : (
-              <>
-                <MaterialCommunityIcons name="camera-outline" size={18} color="#111" />
-                <Text style={styles.photoButtonText}>{t('account.changePhoto')}</Text>
-              </>
-            )}
-          </TouchableOpacity>
-        </View>
+        {/* On desktop the photo lives in the summary rail instead. */}
+        {!isDesktop ? (
+          <View style={styles.photoRow}>
+            <Avatar photoUrl={form.photoUrl} firstName={form.firstName} lastName={form.lastName} size={64} />
+            <TouchableOpacity
+              style={styles.photoButton}
+              onPress={pickAndUploadProfilePhoto}
+              disabled={uploadingPhoto}
+            >
+              {uploadingPhoto ? (
+                <ActivityIndicator color="#111" />
+              ) : (
+                <>
+                  <MaterialCommunityIcons name="camera-outline" size={18} color="#111" />
+                  <Text style={styles.photoButtonText}>{t('account.changePhoto')}</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
+        ) : null}
 
         <TextInput
           style={styles.input}
@@ -352,6 +369,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 5,
     maxWidth: '100%',
+  },
+  summaryPhotoButton: {
+    marginTop: 14,
+    minHeight: 42,
+    alignSelf: 'stretch',
+    borderWidth: 1,
+    borderColor: '#111',
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#fff',
   },
   formCardCol: {
     flex: 1,

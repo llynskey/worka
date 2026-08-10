@@ -127,8 +127,11 @@ const CustomerSettingsScreen = ({ navigation }) => {
 
       <PaymentsPanel mode="history" />
 
-      <View style={isDesktop ? styles.cardsRow : undefined}>
-      <View style={[styles.card, isDesktop && styles.cardHalf]}>
+      {/* Desktop: two independent columns so mismatched card heights never
+          leave holes (a wrapping grid did). */}
+      <View style={isDesktop ? styles.columnsRow : undefined}>
+      <View style={isDesktop ? styles.column : undefined}>
+      <View style={styles.card}>
         <View style={styles.settingRow}>
           <View style={{ flex: 1 }}>
             <Text style={styles.settingTitle}>{t('settings.quoteAlerts')}</Text>
@@ -146,7 +149,7 @@ const CustomerSettingsScreen = ({ navigation }) => {
         </View>
       </View>
 
-      <TouchableOpacity style={[styles.linkCard, isDesktop && styles.cardHalf]} onPress={() => navigation.navigate('Account')}>
+      <TouchableOpacity style={styles.linkCard} onPress={() => navigation.navigate('Account')}>
         <MaterialCommunityIcons name="account-edit-outline" size={24} color="#111" />
         <Text style={styles.linkText}>{t('settings.manageAccount')}</Text>
         <MaterialCommunityIcons name="chevron-right" size={24} color="#111" />
@@ -154,7 +157,7 @@ const CustomerSettingsScreen = ({ navigation }) => {
 
 
 
-      <View style={[styles.card, isDesktop && styles.cardHalf]}>
+      <View style={styles.card}>
         <Text style={styles.settingTitle}>{t('settings.language')}</Text>
         <Text style={styles.settingText}>{t('settings.languageHint')}</Text>
         <View style={styles.languageSelect}>
@@ -168,7 +171,23 @@ const CustomerSettingsScreen = ({ navigation }) => {
         </View>
       </View>
 
-      <View style={[styles.card, isDesktop && styles.cardHalf]}>
+      <View style={styles.card}>
+        <Text style={styles.settingTitle}>{t('settings.support')}</Text>
+        <Text style={styles.settingText}>support@worku.site</Text>
+        <Text style={styles.settingText}>{t('settings.supportResponse')}</Text>
+        <View style={styles.legalLinksRow}>
+          <TouchableOpacity onPress={() => Linking.openURL('https://worku.site/privacy.html')}>
+            <Text style={styles.legalLink}>{t('settings.privacyPolicy')}</Text>
+          </TouchableOpacity>
+          <Text style={styles.settingText}>·</Text>
+          <TouchableOpacity onPress={() => Linking.openURL('https://worku.site/terms.html')}>
+            <Text style={styles.legalLink}>{t('settings.terms')}</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <View style={isDesktop ? styles.column : undefined}>
+      <View style={styles.card}>
         <Text style={styles.settingTitle}>{t('settings.changePassword')}</Text>
         <TextInput
           style={styles.securityInput}
@@ -197,7 +216,7 @@ const CustomerSettingsScreen = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      <View style={[styles.card, styles.dangerCard, isDesktop && styles.cardHalf]}>
+      <View style={[styles.card, styles.dangerCard]}>
         <Text style={styles.settingTitle}>{t('settings.deleteAccount')}</Text>
         <Text style={styles.settingText}>{t('settings.deleteAccountText')}</Text>
         <TextInput
@@ -218,19 +237,7 @@ const CustomerSettingsScreen = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      <View style={[styles.card, isDesktop && styles.cardHalf]}>
-        <Text style={styles.settingTitle}>{t('settings.support')}</Text>
-        <Text style={styles.settingText}>support@worku.site</Text>
-        <Text style={styles.settingText}>{t('settings.supportResponse')}</Text>
-        <View style={styles.legalLinksRow}>
-          <TouchableOpacity onPress={() => Linking.openURL('https://worku.site/privacy.html')}>
-            <Text style={styles.legalLink}>{t('settings.privacyPolicy')}</Text>
-          </TouchableOpacity>
-          <Text style={styles.settingText}>·</Text>
-          <TouchableOpacity onPress={() => Linking.openURL('https://worku.site/terms.html')}>
-            <Text style={styles.legalLink}>{t('settings.terms')}</Text>
-          </TouchableOpacity>
-        </View>
+      </View>
       </View>
       </View>
 
@@ -331,17 +338,16 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   contentWide: {
-    maxWidth: 1000,
+    maxWidth: 1040,
   },
-  cardsRow: {
+  columnsRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    columnGap: 14,
+    alignItems: 'flex-start',
+    gap: 14,
   },
-  cardHalf: {
-    flexGrow: 1,
-    flexBasis: '47%',
-    minWidth: 300,
+  column: {
+    flex: 1,
+    minWidth: 0,
   },
   headerCard: {
     backgroundColor: '#fff',

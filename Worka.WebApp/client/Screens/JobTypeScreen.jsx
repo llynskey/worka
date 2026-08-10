@@ -514,7 +514,7 @@ const styles = StyleSheet.create({
     paddingBottom: 28,
     flexGrow: 1,
     width: '100%',
-    maxWidth: 1160,
+    maxWidth: 1240,
     alignSelf: 'center',
   },
   layout: {

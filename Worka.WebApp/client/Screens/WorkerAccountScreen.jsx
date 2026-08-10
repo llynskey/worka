@@ -316,8 +316,12 @@ const WorkerAccountScreen = () => {
         </View>
       </View>
 
-      <View style={isDesktop ? styles.cardsRow : undefined}>
-      <View style={[styles.strengthCard, isDesktop && styles.cardHalf]}>
+      {/* Desktop: two balanced columns — the short status cards stack on the
+          left, the tall profile form owns the right. A wrapping grid left big
+          holes beside mismatched-height cards. */}
+      <View style={isDesktop ? styles.columnsRow : undefined}>
+      <View style={isDesktop ? styles.column : undefined}>
+      <View style={styles.strengthCard}>
         <View style={styles.strengthHeader}>
           <Text style={styles.strengthTitle}>{t('account.profileStrength')}</Text>
           <Text style={styles.strengthPercent}>{profileStrength.percent}%</Text>
@@ -328,7 +332,7 @@ const WorkerAccountScreen = () => {
         <Text style={styles.strengthHint}>{strengthHint}</Text>
       </View>
 
-      <View style={[styles.payoutCard, isDesktop && styles.cardHalf]}>
+      <View style={styles.payoutCard}>
         <View style={styles.payoutHeader}>
           <MaterialCommunityIcons name="bank-transfer" size={28} color="#111" />
           <View style={{ flex: 1 }}>
@@ -374,7 +378,7 @@ const WorkerAccountScreen = () => {
         </TouchableOpacity>
       </View>
 
-      <View style={[styles.formCard, styles.workCard, isDesktop && styles.cardHalf]}>
+      <View style={[styles.formCard, styles.workCard]}>
         <Text style={styles.workTitle}>{t('account.workLocation')}</Text>
         <Text style={styles.workHint}>{t('account.workLocationHint')}</Text>
 
@@ -426,8 +430,10 @@ const WorkerAccountScreen = () => {
           </View>
         ) : null}
       </View>
+      </View>
 
-      <View style={[styles.formCard, isDesktop && styles.cardHalf]}>
+      <View style={isDesktop ? styles.column : undefined}>
+      <View style={styles.formCard}>
         <View style={styles.photoRow}>
           <Avatar photoUrl={form.photoUrl} firstName={form.firstName} lastName={form.lastName} size={64} />
           <TouchableOpacity
@@ -514,6 +520,7 @@ const WorkerAccountScreen = () => {
         </TouchableOpacity>
       </View>
       </View>
+      </View>
 
       <PaymentsPanel mode="earnings" />
 
@@ -575,16 +582,14 @@ const styles = StyleSheet.create({
   contentWide: {
     maxWidth: 1040,
   },
-  cardsRow: {
+  columnsRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    columnGap: 14,
     alignItems: 'flex-start',
+    gap: 14,
   },
-  cardHalf: {
-    flexGrow: 1,
-    flexBasis: '47%',
-    minWidth: 320,
+  column: {
+    flex: 1,
+    minWidth: 0,
   },
   headerCard: {
     backgroundColor: '#fff',
