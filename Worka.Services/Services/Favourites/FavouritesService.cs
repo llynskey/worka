@@ -26,7 +26,9 @@ namespace Worka.Services.Favourites
                 var customer = await _dbContext.Customers.FirstOrDefaultAsync(c => c.UserId == userGuid);
                 if (customer == null)
                 {
-                    return new WorkaResponse<List<string>>(new List<string>());
+                    // data: named arg — with T = List<string> a bare list binds to
+                    // the List<string> ERRORS constructor and reports failure.
+                    return new WorkaResponse<List<string>>(data: new List<string>());
                 }
 
                 var ids = await _dbContext.Favourites
@@ -34,7 +36,7 @@ namespace Worka.Services.Favourites
                     .Select(f => f.ProfessionalId.ToString())
                     .ToListAsync();
 
-                return new WorkaResponse<List<string>>(ids);
+                return new WorkaResponse<List<string>>(data: ids);
             }
             catch (Exception ex)
             {

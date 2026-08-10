@@ -169,8 +169,10 @@ namespace Worka.Services.Dev
 
                 await _dbContext.SaveChangesAsync();
 
+                // data: named arg — with T = string a bare string binds to the
+                // MESSAGE (failure) constructor and reports failure.
                 return new WorkaResponse<string>(
-                    "Seeded 3 sample jobs (open, booked, completed) with paid bookings you can cancel/refund and review.");
+                    data: "Seeded 3 sample jobs (open, booked, completed) with paid bookings you can cancel/refund and review.");
             }
             catch (Exception ex)
             {
