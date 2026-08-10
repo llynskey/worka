@@ -77,7 +77,7 @@ namespace Worka.Services.Notifications
                     return;
                 }
 
-                var text = $"{body}\n\nOpen Fixa to respond: https://fixa.site\n\n— Fixa";
+                var text = $"{body}\n\nOpen Worku to respond: https://worku.site\n\n— Worku";
                 await _email.SendAsync(user.Email, subject, text);
             }
             catch

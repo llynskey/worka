@@ -1,5 +1,5 @@
-# Fixa — https://fixa.site
+# Worku — https://worku.site
 User-agent: *
 Allow: /
 
-Sitemap: https://fixa.site/sitemap.xml
+Sitemap: https://worku.site/sitemap.xml

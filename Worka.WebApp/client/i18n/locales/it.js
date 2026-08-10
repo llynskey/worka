@@ -1,6 +1,6 @@
 export default {
   // Landing
-  'landing.eyebrow': 'Fixa per expat',
+  'landing.eyebrow': 'Worku per expat',
   'landing.heroTitle': 'Fai le cose con qualcuno che parla la tua lingua.',
   'landing.heroText':
     'Trova persone del posto affidabili per riparazioni, traslochi, pulizie, pratiche burocratiche, installazioni e lavori di tutti i giorni, con la lingua giusta fin dall\'inizio.',
@@ -33,25 +33,25 @@ export default {
   'waitlist.optCanWork': 'Posso lavorare per gli expat',
   'waitlist.optUpdates': 'Voglio ricevere aggiornamenti',
   'waitlist.anythingElse': 'Altro? (facoltativo)',
-  'waitlist.messagePlaceholder': 'Quale lavoro o barriera linguistica dovrebbe risolvere prima Fixa?',
+  'waitlist.messagePlaceholder': 'Quale lavoro o barriera linguistica dovrebbe risolvere prima Worku?',
   'waitlist.errName': 'Aggiungi il tuo nome così sappiamo chi contattare.',
   'waitlist.errEmail': 'Inserisci un indirizzo email valido.',
   'waitlist.errLanguage': 'Dicci quale lingua ti serve o puoi offrire.',
   'waitlist.errSubmit': 'Non è stato possibile registrare il tuo interesse. Riprova.',
   'waitlist.doneKicker': 'Registrazione completata',
   'waitlist.doneTitle': 'Sei nella lista.',
-  'waitlist.doneText': 'Grazie. Useremo la tua lingua e la tua posizione per definire le prime aree di lancio di Fixa.',
+  'waitlist.doneText': 'Grazie. Useremo la tua lingua e la tua posizione per definire le prime aree di lancio di Worku.',
   'waitlist.addAnother': 'Aggiungi un\'altra persona',
-  'waitlist.createAccount': 'Crea un account Fixa',
+  'waitlist.createAccount': 'Crea un account Worku',
   'waitlist.createAccountNow': 'Crea un account ora',
 
   // Settings (shared language card)
   'settings.language': 'Lingua',
-  'settings.languageHint': 'Scegli la lingua che Fixa usa con te.',
+  'settings.languageHint': 'Scegli la lingua che Worku usa con te.',
 
   // Quotes / fees (existing)
-  'quote.feeLine': 'Commissione Fixa {fee}. Paghi {total}. Il professionista riceve {price}.',
-  'quote.detailFeeLine': 'Paghi {total}. Il professionista riceve {price}. Fixa guadagna {fee}.',
+  'quote.feeLine': 'Commissione Worku {fee}. Paghi {total}. Il professionista riceve {price}.',
+  'quote.detailFeeLine': 'Paghi {total}. Il professionista riceve {price}. Worku guadagna {fee}.',
   'quote.securePayment': 'Il pagamento sicuro supporta wallet e carte dove abilitati in Stripe. I pagamenti ai professionisti avvengono tramite Stripe Connect.',
   'quote.by': 'Preventivo di {name}',
 
@@ -69,8 +69,8 @@ export default {
   'common.viewDetails': 'Vedi dettagli',
 
   // App chrome
-  'app.opening': 'Apertura di Fixa...',
-  'app.accountTypeNotSet': 'Tipo di account non impostato. Esci e rientra, oppure scrivi a support@fixa.site.',
+  'app.opening': 'Apertura di Worku...',
+  'app.accountTypeNotSet': 'Tipo di account non impostato. Esci e rientra, oppure scrivi a support@worku.site.',
 
   // Statuses (display only — logic uses English tokens)
   'status.open': 'Aperto',
@@ -126,11 +126,11 @@ export default {
 
   // Customer jobs dashboard
   'jobs.loadError': 'Impossibile caricare i tuoi lavori.',
-  'jobs.loadingWorkspace': 'Caricamento della tua area Fixa...',
+  'jobs.loadingWorkspace': 'Caricamento della tua area Worku...',
   'jobs.couldNotLoad': 'Impossibile caricare i lavori',
   'jobs.customerEyebrow': 'Marketplace clienti',
   'jobs.greeting': 'Bello rivederti, {name}.',
-  'jobs.pipeline': 'La tua pipeline Fixa',
+  'jobs.pipeline': 'La tua pipeline Worku',
   'jobs.heroText': 'Pubblica lavori, confronta i preventivi e prenota il professionista giusto.',
   'jobs.postJob': 'Pubblica un lavoro',
   'jobs.statOpen': 'Lavori aperti',
@@ -188,9 +188,9 @@ export default {
 
   // Checkout
   'checkout.reviewPay': 'Rivedi e paga',
-  'checkout.proFallback': 'Professionista Fixa',
+  'checkout.proFallback': 'Professionista Worku',
   'checkout.quote': 'Preventivo',
-  'checkout.serviceFee': 'Commissione di servizio Fixa',
+  'checkout.serviceFee': 'Commissione di servizio Worku',
   'checkout.total': 'Totale',
   'checkout.secureLine': 'Pagamento sicuro tramite Stripe. Apple Pay, Google Pay e carte supportate.',
   'checkout.paySecurely': 'Paga {amount} in sicurezza',
@@ -242,7 +242,7 @@ export default {
   'post.postedText': 'I professionisti possono ora inviare preventivi.',
   'post.postErrorTitle': 'Impossibile pubblicare il lavoro',
   'post.newJob': 'Nuovo lavoro',
-  'post.heroTitle': 'Di\' a Fixa cosa c\'è da fare.',
+  'post.heroTitle': 'Di\' a Worku cosa c\'è da fare.',
   'post.heroSubtitle': 'Dettagli chiari aiutano i professionisti a preventivare più in fretta.',
   'post.currencyLabel': 'Valuta per i preventivi',
   'post.photoTitle': 'Foto di riferimento',
@@ -282,10 +282,10 @@ export default {
   'directory.anyLanguage': 'Qualsiasi lingua',
   'directory.applyFilters': 'Applica filtri',
   'directory.emptyTitle': 'Nessun professionista trovato',
-  'directory.emptyText': 'Prova ad ampliare la zona o a rimuovere il filtro del prezzo. Ogni settimana nuovi professionisti si uniscono a Fixa.',
+  'directory.emptyText': 'Prova ad ampliare la zona o a rimuovere il filtro del prezzo. Ogni settimana nuovi professionisti si uniscono a Worku.',
   'directory.generalServices': 'Servizi generali per la casa',
   'directory.payoutReady': 'Pronto per i pagamenti',
-  'directory.payoutReadyBookable': 'Pronto per i pagamenti: prenotabile tramite Fixa',
+  'directory.payoutReadyBookable': 'Pronto per i pagamenti: prenotabile tramite Worku',
   'directory.areaNotListed': 'Zona non ancora indicata',
   'directory.quotesSent': 'Preventivi inviati',
   'directory.avgPrice': 'Prezzo medio',
@@ -335,7 +335,7 @@ export default {
   'bids.emptyText': 'Invia un preventivo da Lavori disponibili per costruire la tua pipeline di offerte.',
   'bids.jobUnavailable': 'Lavoro non disponibile',
   'bids.payoutText': 'Il cliente ha prenotato questo preventivo. La tua quota è {amount} e viene pagata tramite Stripe Connect una volta pronto il tuo account per i pagamenti.',
-  'bids.pendingText': 'Il cliente può esaminare questo preventivo e pagare in sicurezza tramite Fixa.',
+  'bids.pendingText': 'Il cliente può esaminare questo preventivo e pagare in sicurezza tramite Worku.',
   'bids.editQuote': 'Modifica preventivo',
   'bids.withdraw': 'Ritira',
   'bids.withdrawConfirmTitle': 'Ritirare questo preventivo?',
@@ -438,7 +438,7 @@ export default {
   'settings.customerTitle': 'Impostazioni cliente',
   'settings.customerSubtitle': 'Regola gli avvisi del marketplace e l\'accesso all\'account.',
   'settings.proTitle': 'Impostazioni professionista',
-  'settings.proSubtitle': 'Controlla come Fixa mostra lavori e aggiornamenti delle offerte.',
+  'settings.proSubtitle': 'Controlla come Worku mostra lavori e aggiornamenti delle offerte.',
   'settings.quoteAlerts': 'Avvisi preventivi',
   'settings.quoteAlertsText': 'Avvisami quando un professionista invia un preventivo.',
   'settings.bookingUpdates': 'Aggiornamenti prenotazioni',
@@ -479,13 +479,13 @@ export default {
   'settings.terms': 'Termini di servizio',
 
   // Auth
-  'auth.accountKicker': 'Account Fixa',
+  'auth.accountKicker': 'Account Worku',
   'auth.welcomeBack': 'Bentornato.',
   'auth.createTitle': 'Crea il tuo account.',
   'auth.forgotTitle': 'Reimposta la password.',
   'auth.newPasswordTitle': 'Scegli una nuova password.',
-  'auth.loginText': 'Accedi per continuare su Fixa.',
-  'auth.signupText': 'Scegli come userai Fixa, poi aggiungi i tuoi dati.',
+  'auth.loginText': 'Accedi per continuare su Worku.',
+  'auth.signupText': 'Scegli come userai Worku, poi aggiungi i tuoi dati.',
   'auth.forgotText': 'Inserisci la tua email e ti invieremo un link per reimpostare la password.',
   'auth.resetText': 'Inserisci la nuova password per il tuo account.',
   'auth.login': 'Accedi',
@@ -533,7 +533,7 @@ export default {
 
   // Distanza / luogo di lavoro
   'settings.distanceUnit': 'Unità di distanza',
-  'settings.distanceUnitHint': 'Scegli come vengono mostrate le distanze in Fixa.',
+  'settings.distanceUnitHint': 'Scegli come vengono mostrate le distanze in Worku.',
   'settings.miles': 'Miglia',
   'settings.kilometres': 'Chilometri',
   'account.workLocation': 'Luogo di lavoro',

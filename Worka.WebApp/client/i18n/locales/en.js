@@ -20,7 +20,7 @@ export default {
   'list.noMatchText': 'Try a different search or filter.',
 
   // Landing
-  'landing.eyebrow': 'Fixa for expats',
+  'landing.eyebrow': 'Worku for expats',
   'landing.heroTitle': 'Get things done by someone who speaks your language.',
   'landing.heroText':
     'Find trusted local people for repairs, moving, cleaning, paperwork, installs, and everyday jobs—with language fit built in from the start.',
@@ -53,25 +53,25 @@ export default {
   'waitlist.optCanWork': 'I can work for expats',
   'waitlist.optUpdates': 'I want updates',
   'waitlist.anythingElse': 'Anything else? (optional)',
-  'waitlist.messagePlaceholder': 'What work or language gap should Fixa solve first?',
+  'waitlist.messagePlaceholder': 'What work or language gap should Worku solve first?',
   'waitlist.errName': 'Add your name so we know who to contact.',
   'waitlist.errEmail': 'Enter a valid email address.',
   'waitlist.errLanguage': 'Tell us which language you need or can offer.',
   'waitlist.errSubmit': 'Could not register your interest. Please try again.',
   'waitlist.doneKicker': 'Registration complete',
   'waitlist.doneTitle': 'You are on the list.',
-  'waitlist.doneText': 'Thanks. We will use your language and location to shape the first Fixa launch areas.',
+  'waitlist.doneText': 'Thanks. We will use your language and location to shape the first Worku launch areas.',
   'waitlist.addAnother': 'Add another person',
-  'waitlist.createAccount': 'Create a Fixa account',
+  'waitlist.createAccount': 'Create a Worku account',
   'waitlist.createAccountNow': 'Create account now',
 
   // Settings (shared language card)
   'settings.language': 'Language',
-  'settings.languageHint': 'Choose the language Fixa uses for you.',
+  'settings.languageHint': 'Choose the language Worku uses for you.',
 
   // Quotes / fees (existing)
-  'quote.feeLine': 'Fixa fee {fee}. You pay {total}. The professional receives {price}.',
-  'quote.detailFeeLine': 'You pay {total}. The professional receives {price}. Fixa earns {fee}.',
+  'quote.feeLine': 'Worku fee {fee}. You pay {total}. The professional receives {price}.',
+  'quote.detailFeeLine': 'You pay {total}. The professional receives {price}. Worku earns {fee}.',
   'quote.securePayment': 'Secure checkout supports wallets and cards where enabled in Stripe. Professional payouts are handled through Stripe Connect.',
   'quote.by': 'Quote from {name}',
 
@@ -89,8 +89,8 @@ export default {
   'common.viewDetails': 'View details',
 
   // App chrome
-  'app.opening': 'Opening Fixa...',
-  'app.accountTypeNotSet': 'Account type not set. Sign out and back in, or email support@fixa.site.',
+  'app.opening': 'Opening Worku...',
+  'app.accountTypeNotSet': 'Account type not set. Sign out and back in, or email support@worku.site.',
 
   // Statuses (display only — logic uses English tokens)
   'status.open': 'Open',
@@ -146,11 +146,11 @@ export default {
 
   // Customer jobs dashboard
   'jobs.loadError': 'Unable to load your jobs.',
-  'jobs.loadingWorkspace': 'Loading your Fixa workspace...',
+  'jobs.loadingWorkspace': 'Loading your Worku workspace...',
   'jobs.couldNotLoad': 'Could not load jobs',
   'jobs.customerEyebrow': 'Customer marketplace',
   'jobs.greeting': 'Good to see you, {name}.',
-  'jobs.pipeline': 'Your Fixa pipeline',
+  'jobs.pipeline': 'Your Worku pipeline',
   'jobs.heroText': 'Post work, compare quotes, and book the right professional.',
   'jobs.postJob': 'Post a job',
   'jobs.statOpen': 'Open jobs',
@@ -210,9 +210,9 @@ export default {
 
   // Checkout
   'checkout.reviewPay': 'Review & pay',
-  'checkout.proFallback': 'Fixa professional',
+  'checkout.proFallback': 'Worku professional',
   'checkout.quote': 'Quote',
-  'checkout.serviceFee': 'Fixa service fee',
+  'checkout.serviceFee': 'Worku service fee',
   'checkout.total': 'Total',
   'checkout.secureLine': 'Secure payment by Stripe. Apple Pay, Google Pay, and cards supported.',
   'checkout.paySecurely': 'Pay {amount} securely',
@@ -266,7 +266,7 @@ export default {
   'post.postedText': 'Professionals can now send quotes.',
   'post.postErrorTitle': 'Could not post job',
   'post.newJob': 'New job',
-  'post.heroTitle': 'Tell Fixa what needs doing.',
+  'post.heroTitle': 'Tell Worku what needs doing.',
   'post.heroSubtitle': 'Clear details help professionals quote faster.',
   'post.currencyLabel': 'Currency for quotes',
   'post.photoTitle': 'Reference photo',
@@ -324,10 +324,10 @@ export default {
   'directory.sortReviews': 'Most reviewed',
   'directory.sortPriceLow': 'Lowest price',
   'directory.emptyTitle': 'No professionals found',
-  'directory.emptyText': 'Try widening the area or clearing the price filter. New professionals join Fixa every week.',
+  'directory.emptyText': 'Try widening the area or clearing the price filter. New professionals join Worku every week.',
   'directory.generalServices': 'General home services',
   'directory.payoutReady': 'Payout ready',
-  'directory.payoutReadyBookable': 'Payout ready — bookable through Fixa',
+  'directory.payoutReadyBookable': 'Payout ready — bookable through Worku',
   'directory.areaNotListed': 'Area not listed yet',
   'directory.quotesSent': 'Quotes sent',
   'directory.avgPrice': 'Avg price',
@@ -377,7 +377,7 @@ export default {
   'bids.emptyText': 'Send a quote from Available Jobs to build your bid pipeline.',
   'bids.jobUnavailable': 'Job unavailable',
   'bids.payoutText': 'Customer booked this quote. Your share is {amount} and is paid out through Stripe Connect once your payout account is ready.',
-  'bids.pendingText': 'The customer can review this quote and pay securely through Fixa.',
+  'bids.pendingText': 'The customer can review this quote and pay securely through Worku.',
   'bids.editQuote': 'Edit quote',
   'bids.withdraw': 'Withdraw',
   'bids.withdrawConfirmTitle': 'Withdraw this quote?',
@@ -480,7 +480,7 @@ export default {
   'settings.customerTitle': 'Customer settings',
   'settings.customerSubtitle': 'Tune marketplace alerts and account access.',
   'settings.proTitle': 'Professional settings',
-  'settings.proSubtitle': 'Control how Fixa surfaces jobs and bid updates.',
+  'settings.proSubtitle': 'Control how Worku surfaces jobs and bid updates.',
   'settings.quoteAlerts': 'Quote alerts',
   'settings.quoteAlertsText': 'Notify me when a professional sends a quote.',
   'settings.bookingUpdates': 'Booking updates',
@@ -521,13 +521,13 @@ export default {
   'settings.terms': 'Terms of Service',
 
   // Auth
-  'auth.accountKicker': 'Fixa account',
+  'auth.accountKicker': 'Worku account',
   'auth.welcomeBack': 'Welcome back.',
   'auth.createTitle': 'Create your account.',
   'auth.forgotTitle': 'Reset your password.',
   'auth.newPasswordTitle': 'Choose a new password.',
-  'auth.loginText': 'Sign in to continue to Fixa.',
-  'auth.signupText': 'Choose how you will use Fixa, then add your details.',
+  'auth.loginText': 'Sign in to continue to Worku.',
+  'auth.signupText': 'Choose how you will use Worku, then add your details.',
   'auth.forgotText': 'Enter your email and we will send you a reset link.',
   'auth.resetText': 'Enter the new password for your account.',
   'auth.login': 'Log in',
@@ -609,7 +609,7 @@ export default {
 
   // Distance / work location
   'settings.distanceUnit': 'Distance unit',
-  'settings.distanceUnitHint': 'Choose how distances are shown across Fixa.',
+  'settings.distanceUnitHint': 'Choose how distances are shown across Worku.',
   'settings.miles': 'Miles',
   'settings.kilometres': 'Kilometres',
   'account.workLocation': 'Work location',

@@ -240,8 +240,8 @@ namespace Worka.Services.Payments
                             UnitAmount = ToMinorUnits(total),
                             ProductData = new SessionLineItemPriceDataProductDataOptions
                             {
-                                Name = $"Fixa booking: {job.Name}",
-                                Description = $"Quote {FormatAmount(quoteAmount, currency)} + Fixa service fee {FormatAmount(serviceFee, currency)}"
+                                Name = $"Worku booking: {job.Name}",
+                                Description = $"Quote {FormatAmount(quoteAmount, currency)} + Worku service fee {FormatAmount(serviceFee, currency)}"
                             }
                         }
                     }
@@ -529,7 +529,7 @@ namespace Worka.Services.Payments
                 var otherUserId = userGuid == customerUserId ? professionalUserId : customerUserId;
 
                 // Refund the paid charge, clawing the transfer back from the pro and
-                // returning Fixa's application fee.
+                // returning Worku's application fee.
                 var payment = await _dbContext.WorkaPayments.FirstOrDefaultAsync(p =>
                     p.JobId == job.JobId && p.QuoteId == job.AcceptedQuoteId && p.Status == PaidStatus);
 

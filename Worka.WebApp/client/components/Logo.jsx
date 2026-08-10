@@ -5,12 +5,12 @@ const INK = '#111111';
 const WHITE = '#ffffff';
 
 /**
- * The Fixa logo: the hammer-in-circle mark (assets/mark.png — the original
- * hammer artwork on a transparent field) beside the "Fixa" wordmark. `height`
+ * The Worku logo: the hammer-in-circle mark (assets/mark.png — the original
+ * hammer artwork on a transparent field) beside the "Worku" wordmark. `height`
  * sizes the square mark; the wordmark scales with it. `light` switches the
  * wordmark colour for dark backgrounds (the mark reads on either).
  */
-const Logo = ({ height = 40, light = false, style = null, accessibilityLabel = 'Fixa' }) => (
+const Logo = ({ height = 40, light = false, style = null, accessibilityLabel = 'Worku' }) => (
   <View
     style={[{ flexDirection: 'row', alignItems: 'center' }, style]}
     accessibilityRole="image"
@@ -30,7 +30,7 @@ const Logo = ({ height = 40, light = false, style = null, accessibilityLabel = '
         includeFontPadding: false,
       }}
     >
-      Fixa
+      Worku
     </Text>
   </View>
 );

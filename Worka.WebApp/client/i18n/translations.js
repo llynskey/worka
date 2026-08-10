@@ -1,5 +1,5 @@
 /**
- * Fixa UI translations.
+ * Worku UI translations.
  *
  * Dictionaries live in ./locales/<code>.js — one flat key/value map per
  * language. Every user-facing string renders through t('key').

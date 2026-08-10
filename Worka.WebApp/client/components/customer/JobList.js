@@ -174,7 +174,7 @@ const CustomerJobList = ({ navigation }) => {
         const origin =
           Platform.OS === 'web' && typeof window !== 'undefined'
             ? window.location.origin
-            : 'https://fixa.site';
+            : 'https://worku.site';
 
         const response = await api.post(`/payments/jobs/${job.jobId}/quotes/${quote.quoteId}/checkout`, {
           successUrl: `${origin}/?checkout=success`,

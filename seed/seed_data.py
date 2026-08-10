@@ -1,4 +1,4 @@
-"""Static demo-data pools for the Fixa seed generator (schema-independent).
+"""Static demo-data pools for the Worku seed generator (schema-independent).
 
 Cities carry real centre coordinates so seeded jobs populate the map. Message
 snippets deliberately include phone numbers / emails / addresses / links so the

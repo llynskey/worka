@@ -111,7 +111,7 @@ const AuthScreen: React.FC = () => {
   const { width, height: viewportHeight } = useWindowDimensions();
 
   // Hero headline cycles through every supported language, starting with the
-  // visitor's own — a quiet demo of what Fixa does.
+  // visitor's own — a quiet demo of what Worku does.
   const heroTitles = React.useMemo(() => {
     const codes = [language, ...languages.map((l) => l.code).filter((c) => c !== language)];
     return codes.map((code) => translations[code]?.["landing.heroTitle"]).filter(Boolean);
@@ -1199,7 +1199,7 @@ const AuthScreen: React.FC = () => {
               <View style={styles.footerContact}>
                 <Pressable
                   accessibilityRole="link"
-                  onPress={() => Linking.openURL("mailto:support@fixa.site")}
+                  onPress={() => Linking.openURL("mailto:support@worku.site")}
                   style={({ pressed }) => [
                     styles.footerLink,
                     pressed && styles.pressed,
@@ -1210,7 +1210,7 @@ const AuthScreen: React.FC = () => {
                     size={16}
                     color="#111"
                   />
-                  <Text style={styles.footerLinkText}>support@fixa.site</Text>
+                  <Text style={styles.footerLinkText}>support@worku.site</Text>
                 </Pressable>
                 <View style={styles.footerLink}>
                   <MaterialCommunityIcons
@@ -1227,12 +1227,12 @@ const AuthScreen: React.FC = () => {
 
             <View style={styles.footerLegal}>
               <Text style={styles.footerLegalText}>
-                © {new Date().getFullYear()} Fixa
+                © {new Date().getFullYear()} Worku
               </Text>
               <View style={styles.footerLegalLinks}>
                 <Pressable
                   accessibilityRole="link"
-                  onPress={() => Linking.openURL("https://fixa.site/privacy.html")}
+                  onPress={() => Linking.openURL("https://worku.site/privacy.html")}
                   style={({ pressed }) => [pressed && styles.pressed]}
                 >
                   <Text style={styles.footerLegalLink}>{t("landing.privacy")}</Text>
@@ -1240,7 +1240,7 @@ const AuthScreen: React.FC = () => {
                 <Text style={styles.footerLegalText}>·</Text>
                 <Pressable
                   accessibilityRole="link"
-                  onPress={() => Linking.openURL("https://fixa.site/terms.html")}
+                  onPress={() => Linking.openURL("https://worku.site/terms.html")}
                   style={({ pressed }) => [pressed && styles.pressed]}
                 >
                   <Text style={styles.footerLegalLink}>{t("landing.terms")}</Text>

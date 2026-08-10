@@ -1,16 +1,16 @@
-# Fixa demo seed
+# Worku demo seed
 
 Populates the database with a realistic demo dataset across UK & France so the
 map, job lists, quotes, messages and reviews look alive.
 
 **Contents (~778 rows):** 18 professionals, 24 customers, 120 jobs (open /
 booked / completed / cancelled), 232 quotes, 46 payments, 19 reviews, 277
-messages. Every seeded account is under `@seed.fixa.site`.
+messages. Every seeded account is under `@seed.worku.site`.
 
 ## Demo logins
-Any seeded address, password **`FixaDemo123!`**. For example:
-- Professional — `pro.jack.brown0@seed.fixa.site`
-- Customer — `cust.henry.thomas0@seed.fixa.site`
+Any seeded address, password **`WorkuDemo123!`**. For example:
+- Professional — `pro.jack.brown0@seed.worku.site`
+- Customer — `cust.henry.thomas0@seed.worku.site`
 
 (Browse `seed.sql` for the full list.)
 
@@ -33,7 +33,7 @@ docker compose --env-file .env.production exec -T postgres \
 
 # 3. Sanity check
 docker compose --env-file .env.production exec -T postgres \
-  psql -U worka -d worka -c "select count(*) from jobs where \"CustomerId\" in (select \"CustomerId\" from customers where \"Email\" like '%@seed.fixa.site');"
+  psql -U worka -d worka -c "select count(*) from jobs where \"CustomerId\" in (select \"CustomerId\" from customers where \"Email\" like '%@seed.worku.site');"
 ```
 
 ## Remove everything later
@@ -41,7 +41,7 @@ docker compose --env-file .env.production exec -T postgres \
 docker compose --env-file .env.production exec -T postgres \
   psql -U worka -d worka -v ON_ERROR_STOP=1 < seed/cleanup.sql
 ```
-This deletes only rows under `@seed.fixa.site` (and their jobs/quotes/payments/
+This deletes only rows under `@seed.worku.site` (and their jobs/quotes/payments/
 reviews/messages). Real data is untouched.
 
 ## Regenerate

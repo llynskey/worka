@@ -220,14 +220,14 @@ const CustomerSettingsScreen = ({ navigation }) => {
 
       <View style={[styles.card, isDesktop && styles.cardHalf]}>
         <Text style={styles.settingTitle}>{t('settings.support')}</Text>
-        <Text style={styles.settingText}>support@fixa.site</Text>
+        <Text style={styles.settingText}>support@worku.site</Text>
         <Text style={styles.settingText}>{t('settings.supportResponse')}</Text>
         <View style={styles.legalLinksRow}>
-          <TouchableOpacity onPress={() => Linking.openURL('https://fixa.site/privacy.html')}>
+          <TouchableOpacity onPress={() => Linking.openURL('https://worku.site/privacy.html')}>
             <Text style={styles.legalLink}>{t('settings.privacyPolicy')}</Text>
           </TouchableOpacity>
           <Text style={styles.settingText}>·</Text>
-          <TouchableOpacity onPress={() => Linking.openURL('https://fixa.site/terms.html')}>
+          <TouchableOpacity onPress={() => Linking.openURL('https://worku.site/terms.html')}>
             <Text style={styles.legalLink}>{t('settings.terms')}</Text>
           </TouchableOpacity>
         </View>
@@ -239,7 +239,7 @@ const CustomerSettingsScreen = ({ navigation }) => {
         <Text style={styles.signOutText}>{t('common.signOut')}</Text>
       </TouchableOpacity>
 
-      <Text style={styles.versionText}>Fixa v1.0.0</Text>
+      <Text style={styles.versionText}>Worku v1.0.0</Text>
 
       <AppFooter />
     </ScrollView>

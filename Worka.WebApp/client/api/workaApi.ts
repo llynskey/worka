@@ -105,7 +105,7 @@ const apiBaseUrl =
   configuredApiUrl ||
   (Platform.OS === 'web'
     ? '/api'
-    : 'https://api.fixa.site');
+    : 'https://api.worku.site');
 
 export const api = axios.create({
   baseURL: apiBaseUrl,

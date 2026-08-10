@@ -16,10 +16,10 @@ import { existsSync } from 'node:fs';
 const FILE = new URL('../dist/index.html', import.meta.url);
 const OG_IMAGE_FILE = new URL('../dist/og-image.png', import.meta.url);
 
-const TITLE = 'Fixa — get things done in your language';
+const TITLE = 'Worku — get things done in your language';
 const DESCRIPTION =
-  'Fixa connects expats and locals with trusted home-service professionals who speak your language — repairs, moving, cleaning, paperwork, installs and everyday jobs. Post a job, compare quotes, and pay securely.';
-const URL_BASE = 'https://fixa.site/';
+  'Worku connects expats and locals with trusted home-service professionals who speak your language — repairs, moving, cleaning, paperwork, installs and everyday jobs. Post a job, compare quotes, and pay securely.';
+const URL_BASE = 'https://worku.site/';
 
 // The UI ships full packs for these; declared so crawlers know the site is
 // multilingual even though every language shares the one URL (client-side i18n).
@@ -34,7 +34,7 @@ const imageTags = hasOgImage
     <meta property="og:image" content="${OG_IMAGE_URL}" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="Fixa — get things done in your language" />
+    <meta property="og:image:alt" content="Worku — get things done in your language" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content="${OG_IMAGE_URL}" />`
   : `
@@ -44,7 +44,7 @@ const jsonLd = [
   {
     '@type': 'Organization',
     '@id': `${URL_BASE}#organization`,
-    name: 'Fixa',
+    name: 'Worku',
     url: URL_BASE,
     description: DESCRIPTION,
     areaServed: 'GB',
@@ -53,7 +53,7 @@ const jsonLd = [
   {
     '@type': 'WebSite',
     '@id': `${URL_BASE}#website`,
-    name: 'Fixa',
+    name: 'Worku',
     url: URL_BASE,
     description: DESCRIPTION,
     inLanguage: LANGS,
@@ -66,7 +66,7 @@ const HEAD_EXTRA = `
     <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1" />
     <link rel="canonical" href="${URL_BASE}" />
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="Fixa" />
+    <meta property="og:site_name" content="Worku" />
     <meta property="og:title" content="${TITLE}" />
     <meta property="og:description" content="${DESCRIPTION}" />
     <meta property="og:url" content="${URL_BASE}" />
@@ -85,9 +85,9 @@ ${LOCALES.slice(1)
 const BODY_EXTRA = `
     <noscript>
       <div style="max-width:680px;margin:40px auto;padding:0 20px;font-family:system-ui,-apple-system,sans-serif;color:#111;line-height:1.6">
-        <h1>Fixa — get things done in your language</h1>
-        <p>Fixa is a home-services marketplace for expats and locals. Customers post everyday jobs — repairs, moving, cleaning, paperwork, installations — and compare quotes from trusted local professionals who speak their language. Professionals browse open jobs, send quotes, and get paid securely through Stripe.</p>
-        <p>Available in English, Spanish, French, German, Italian, Portuguese, Dutch and Romanian. Please enable JavaScript to use the Fixa app.</p>
+        <h1>Worku — get things done in your language</h1>
+        <p>Worku is a home-services marketplace for expats and locals. Customers post everyday jobs — repairs, moving, cleaning, paperwork, installations — and compare quotes from trusted local professionals who speak their language. Professionals browse open jobs, send quotes, and get paid securely through Stripe.</p>
+        <p>Available in English, Spanish, French, German, Italian, Portuguese, Dutch and Romanian. Please enable JavaScript to use the Worku app.</p>
         <p><a href="${URL_BASE}privacy.html">Privacy</a> &middot; <a href="${URL_BASE}terms.html">Terms</a></p>
       </div>
     </noscript>
