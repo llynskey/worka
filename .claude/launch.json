@@ -2,10 +2,17 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "worka-web",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["--prefix", "Worka.WebApp/client", "run", "web"],
-      "port": 8081
+      "name": "worku-web",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["expo", "start", "--web", "--port", "8081", "--clear"],
+      "cwd": "Worka.WebApp/client",
+      "port": 8081,
+      "env": {
+        "CI": "1",
+        "BROWSER": "none",
+        "EXPO_PUBLIC_API_URL": "http://localhost:8080/api",
+        "EXPO_PUBLIC_ALLOW_SEED": "true"
+      }
     }
   ]
 }

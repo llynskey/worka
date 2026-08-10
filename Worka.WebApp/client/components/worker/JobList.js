@@ -7,6 +7,7 @@ import {
   Modal,
   Platform,
   RefreshControl,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -495,6 +496,13 @@ const WorkerJobList = () => {
                 </TouchableOpacity>
               </View>
 
+              {/* Scrolls so every control stays reachable on short screens. */}
+              <ScrollView
+                style={styles.modalScroll}
+                contentContainerStyle={styles.modalScrollContent}
+                showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
+              >
               <Text style={styles.modalJobTitle}>{selectedJob?.jobName}</Text>
               {selectedJob ? (
                 <ImageBackground
@@ -565,6 +573,7 @@ const WorkerJobList = () => {
                   </>
                 )}
               </TouchableOpacity>
+              </ScrollView>
             </View>
           </KeyboardAvoidingView>
         </View>
@@ -864,6 +873,10 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   modalKeyboard: {
+    // Fills the backdrop so the card's percentage maxHeight has a definite
+    // parent to resolve against (an auto-height parent lets the card overflow
+    // the screen entirely).
+    flex: 1,
     justifyContent: 'flex-end',
   },
   modalKeyboardCentered: {
@@ -877,12 +890,21 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 8,
     borderTopRightRadius: 8,
     padding: 18,
+    // Never taller than the screen: the body scrolls instead, so the schedule
+    // picker and submit stay reachable on short phones.
+    maxHeight: '92%',
   },
   modalCardWide: {
     width: '100%',
     maxWidth: 520,
     borderRadius: 16,
     maxHeight: '90%',
+  },
+  modalScroll: {
+    flexGrow: 0,
+  },
+  modalScrollContent: {
+    paddingBottom: 4,
   },
   scheduleField: {
     marginBottom: 12,

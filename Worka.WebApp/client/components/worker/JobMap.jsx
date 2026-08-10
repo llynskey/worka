@@ -310,6 +310,7 @@ const JobMap = () => {
       <Modal visible={!!quoteJob} transparent animationType="slide" onRequestClose={() => setQuoteJob(null)}>
         <View style={styles.quoteBackdrop}>
           <View style={styles.quoteCard}>
+            <ScrollView style={styles.quoteScroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
             <View style={styles.quoteHeader}>
               <Text style={styles.quoteTitle}>{t('quotes.send')}</Text>
               <TouchableOpacity style={styles.refreshButton} onPress={() => setQuoteJob(null)}>
@@ -340,6 +341,7 @@ const JobMap = () => {
                 <Text style={styles.quoteSubmitText}>{t('quotes.send')}</Text>
               )}
             </TouchableOpacity>
+            </ScrollView>
           </View>
         </View>
       </Modal>
@@ -823,6 +825,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 8,
     padding: 18,
+    // Cap to the screen; the body scrolls so controls stay reachable on
+    // short phones and landscape.
+    maxHeight: '92%',
+  },
+  quoteScroll: {
+    flexGrow: 0,
   },
   quoteHeader: {
     flexDirection: 'row',

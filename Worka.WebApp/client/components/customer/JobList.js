@@ -575,7 +575,7 @@ const CustomerJobList = ({ navigation }) => {
       <View style={styles.editBackdrop}>
         <View style={styles.editCard}>
           {checkoutPreview ? (
-            <>
+            <ScrollView style={styles.editScroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
               <View style={styles.editHeader}>
                 <Text style={styles.editTitle}>{t('checkout.reviewPay')}</Text>
                 <TouchableOpacity
@@ -667,7 +667,7 @@ const CustomerJobList = ({ navigation }) => {
                   </Text>
                 )}
               </TouchableOpacity>
-            </>
+            </ScrollView>
           ) : null}
         </View>
       </View>
@@ -676,6 +676,7 @@ const CustomerJobList = ({ navigation }) => {
     <Modal visible={!!editJob} transparent animationType="slide" onRequestClose={() => setEditJob(null)}>
       <View style={styles.editBackdrop}>
         <View style={styles.editCard}>
+          <ScrollView style={styles.editScroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           <View style={styles.editHeader}>
             <Text style={styles.editTitle}>{t('jobs.editJob')}</Text>
             <TouchableOpacity
@@ -710,6 +711,7 @@ const CustomerJobList = ({ navigation }) => {
               <Text style={styles.editSaveText}>{t('common.saveChanges')}</Text>
             )}
           </TouchableOpacity>
+          </ScrollView>
         </View>
       </View>
     </Modal>
@@ -717,6 +719,7 @@ const CustomerJobList = ({ navigation }) => {
     <Modal visible={!!reviewJob} transparent animationType="slide" onRequestClose={() => setReviewJob(null)}>
       <View style={styles.editBackdrop}>
         <View style={styles.editCard}>
+          <ScrollView style={styles.editScroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           <View style={styles.editHeader}>
             <Text style={styles.editTitle}>{t('reviews.leave')}</Text>
             <TouchableOpacity
@@ -753,6 +756,7 @@ const CustomerJobList = ({ navigation }) => {
               <Text style={styles.editSaveText}>{t('reviews.submit')}</Text>
             )}
           </TouchableOpacity>
+          </ScrollView>
         </View>
       </View>
     </Modal>
@@ -1200,6 +1204,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 8,
     padding: 18,
+    // Cap to the screen; bodies scroll so controls stay reachable on short
+    // phones and landscape.
+    maxHeight: '92%',
+  },
+  editScroll: {
+    flexGrow: 0,
   },
   editHeader: {
     flexDirection: 'row',
