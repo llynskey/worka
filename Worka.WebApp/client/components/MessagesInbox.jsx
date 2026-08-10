@@ -211,11 +211,22 @@ const MessagesInbox = ({ role = 'customer' }) => {
 
   // Desktop: a persistent master-detail — conversation list beside the open
   // thread, so you keep list context while reading. Mobile keeps list -> modal.
+  // The header is a slim row here (not the tall hero) so the thread gets the
+  // vertical space — laptops were only showing a handful of messages.
   if (isDesktop) {
     return (
       <View style={styles.screen}>
         <View style={styles.deskWrap}>
-          {header}
+          <View style={styles.compactHeader}>
+            <Text style={styles.compactTitle}>{t('tabs.messages')}</Text>
+            {totalUnread > 0 ? (
+              <View style={styles.compactBadge}>
+                <Text style={styles.compactBadgeText}>
+                  {t('messages.unreadCount', { count: totalUnread })}
+                </Text>
+              </View>
+            ) : null}
+          </View>
           <View style={styles.twoPane}>
             <View style={styles.listPane}>{listEl}</View>
             <View style={styles.threadPane}>
@@ -275,6 +286,29 @@ const styles = StyleSheet.create({
     maxWidth: 1240,
     alignSelf: 'center',
     padding: space.lg,
+    paddingTop: 10,
+  },
+  compactHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 10,
+  },
+  compactTitle: {
+    color: colors.ink,
+    fontSize: 16,
+    fontWeight: '900',
+  },
+  compactBadge: {
+    backgroundColor: colors.accent,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+  },
+  compactBadgeText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '900',
   },
   twoPane: {
     flex: 1,

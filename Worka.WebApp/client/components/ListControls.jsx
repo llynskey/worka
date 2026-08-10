@@ -149,7 +149,8 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 0,
     color: '#111',
-    fontSize: 15,
+    // 16px+ so iOS Safari doesn't auto-zoom on focus.
+    fontSize: 16,
     paddingVertical: 10,
     ...(typeof document !== 'undefined' ? { outlineStyle: 'none' } : null),
   },

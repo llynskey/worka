@@ -106,7 +106,7 @@ const ChatThread = ({ jobId, professionalId, title, subtitle, role = 'customer',
     <View style={[styles.wrap, style]}>
       <View style={styles.header}>
         <View style={styles.headerCopy}>
-          <Text style={styles.kicker}>{t('chat.title')}</Text>
+          {onClose ? <Text style={styles.kicker}>{t('chat.title')}</Text> : null}
           <Text style={styles.title} numberOfLines={1}>{title}</Text>
           {subtitle ? (
             <Text style={styles.subtitle} numberOfLines={1}>{subtitle}</Text>
@@ -124,8 +124,8 @@ const ChatThread = ({ jobId, professionalId, title, subtitle, role = 'customer',
       </View>
 
       <View style={styles.noticeRow}>
-        <MaterialCommunityIcons name="shield-lock-outline" size={16} color={colors.muted} />
-        <Text style={styles.noticeText}>{t('chat.hiddenNotice')}</Text>
+        <MaterialCommunityIcons name="shield-lock-outline" size={14} color={colors.muted} />
+        <Text style={styles.noticeText} numberOfLines={1}>{t('chat.hiddenNotice')}</Text>
       </View>
 
       <ScrollView
@@ -221,16 +221,17 @@ const styles = StyleSheet.create({
   },
   noticeRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 7,
+    alignItems: 'center',
+    gap: 6,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radius.sm,
     backgroundColor: colors.surfaceAlt,
-    padding: 10,
-    marginBottom: 10,
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    marginBottom: 8,
   },
-  noticeText: { flex: 1, color: colors.muted, fontSize: 12, fontWeight: '700', lineHeight: 17 },
+  noticeText: { flex: 1, color: colors.muted, fontSize: 11, fontWeight: '700' },
   thread: { flex: 1, minHeight: 0 },
   threadContent: { paddingVertical: 6, gap: 8 },
   centerState: { alignItems: 'center', justifyContent: 'center', paddingVertical: 36, paddingHorizontal: 12 },
@@ -264,7 +265,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 13,
     paddingVertical: 11,
     backgroundColor: colors.surfaceAlt,
-    fontSize: 15,
+    fontSize: 16,
   },
   sendButton: {
     width: 44,
