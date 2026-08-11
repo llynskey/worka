@@ -21,6 +21,7 @@ import { useI18n } from '../../i18n/I18nContext';
 import JobCard from './JobCard';
 import AppFooter from '../AppFooter';
 import Avatar from '../Avatar';
+import IntroCard from '../IntroCard';
 import Reveal from '../Reveal';
 import Stars, { StarInput } from '../Stars';
 import { colors, radius, shadow, space, embossDark, embossTitle, useLayout } from '../../Utils/theme';
@@ -544,6 +545,7 @@ const CustomerJobList = ({ navigation }) => {
       scrollEventThrottle={80}
     >
       {checkoutBannerEl}
+      <IntroCard variant="customer" />
       <Reveal tick={scrollTick} delay={0}>{heroBanner}</Reveal>
 
       {isDesktop ? (

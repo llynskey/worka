@@ -24,7 +24,7 @@ namespace Worka.Tests
             db.SaveChanges();
 
             db.Customers.Add(new Customer { UserId = customerUser.UserId, FirstName = "Cara", LastName = "Customer", Email = "cara@example.com" });
-            db.Professionals.Add(new Professional { UserId = professionalUser.UserId, FirstName = "Paul", LastName = "Pro", Email = "paul@example.com", ServiceArea = "Leeds", Specialty = "Plumbing" });
+            db.Professionals.Add(new Professional { UserId = professionalUser.UserId, FirstName = "Paul", LastName = "Pro", Email = "paul@example.com", ServiceArea = "Leeds", LocationLabel = "Leeds", Specialty = "Plumbing" });
             db.SaveChanges();
 
             return (customerUser.UserId, professionalUser.UserId);

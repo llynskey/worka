@@ -275,13 +275,17 @@ const WorkerAccountScreen = () => {
     }
   };
 
+  // Work location (label + pin) is what makes a pro visible in the directory
+  // and on the map, so it counts toward strength — not the old free-text area.
+  const hasWorkLocation = !!form.locationLabel?.trim();
+
   const profileStrength = (() => {
     const checks = [
       !!form.firstName.trim(),
       !!form.lastName.trim(),
       !!form.email.trim(),
       !!form.specialty.trim(),
-      !!form.serviceArea.trim(),
+      hasWorkLocation,
       form.bio.trim().length >= 40,
       !!stripeStatus?.readyForPayments,
     ];
@@ -289,12 +293,12 @@ const WorkerAccountScreen = () => {
     return { done, total: checks.length, percent: Math.round((done / checks.length) * 100) };
   })();
 
-  const strengthHint = !stripeStatus?.readyForPayments
-    ? t('account.hintPayouts')
-    : form.bio.trim().length < 40
-      ? t('account.hintBio')
-      : !form.serviceArea.trim()
-        ? t('account.hintArea')
+  const strengthHint = !hasWorkLocation
+    ? t('account.hintArea')
+    : !stripeStatus?.readyForPayments
+      ? t('account.hintPayouts')
+      : form.bio.trim().length < 40
+        ? t('account.hintBio')
         : t('account.hintGreat');
 
   if (loading) {
@@ -330,7 +334,7 @@ const WorkerAccountScreen = () => {
           <View style={[styles.strengthFill, { width: `${profileStrength.percent}%` }]} />
         </View>
         <Text style={styles.strengthHint}>{strengthHint}</Text>
-        {!form.specialty?.trim() || !form.serviceArea?.trim() ? (
+        {!form.specialty?.trim() || !hasWorkLocation ? (
           <Text style={styles.strengthHint}>{t('account.directoryHint')}</Text>
         ) : null}
       </View>
@@ -487,13 +491,6 @@ const WorkerAccountScreen = () => {
           value={form.specialty}
           onChangeText={(specialty) => setForm((current) => ({ ...current, specialty }))}
           placeholder={t('account.specialty')}
-          placeholderTextColor="#686b64"
-        />
-        <TextInput
-          style={styles.input}
-          value={form.serviceArea}
-          onChangeText={(serviceArea) => setForm((current) => ({ ...current, serviceArea }))}
-          placeholder={t('account.serviceArea')}
           placeholderTextColor="#686b64"
         />
         <TextInput

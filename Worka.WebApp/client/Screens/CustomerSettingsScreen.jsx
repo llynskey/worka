@@ -10,6 +10,7 @@ import SelectField from '../components/SelectField';
 import PaymentsPanel from '../components/PaymentsPanel';
 import { useI18n } from '../i18n/I18nContext';
 import { useLayout } from '../Utils/theme';
+import useSwitchMode from '../Utils/useSwitchMode';
 
 const CustomerSettingsScreen = ({ navigation }) => {
   const { isDesktop } = useLayout();
@@ -24,6 +25,7 @@ const CustomerSettingsScreen = ({ navigation }) => {
   const [deleting, setDeleting] = useState(false);
   const [seeding, setSeeding] = useState(false);
   const { signOut } = useContext(AuthContext);
+  const { switching, switchMode } = useSwitchMode();
   const seedEnabled = process.env.EXPO_PUBLIC_ALLOW_SEED === 'true';
 
   const seedSampleData = async () => {
@@ -155,7 +157,24 @@ const CustomerSettingsScreen = ({ navigation }) => {
         <MaterialCommunityIcons name="chevron-right" size={24} color="#111" />
       </TouchableOpacity>
 
-
+      {/* Opt-in to the professional side lives here (not in the drawer) so
+          customers never stumble into an empty pro workspace by accident. */}
+      <View style={styles.card}>
+        <View style={styles.settingRow}>
+          <MaterialCommunityIcons name="briefcase-plus-outline" size={26} color="#111" />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.settingTitle}>{t('settings.becomeProTitle')}</Text>
+          </View>
+        </View>
+        <Text style={styles.settingText}>{t('settings.becomeProText')}</Text>
+        <TouchableOpacity style={styles.securityButton} onPress={switchMode} disabled={switching}>
+          {switching ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.securityButtonText}>{t('settings.becomeProButton')}</Text>
+          )}
+        </TouchableOpacity>
+      </View>
 
       <View style={styles.card}>
         <Text style={styles.settingTitle}>{t('settings.language')}</Text>

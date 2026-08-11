@@ -80,6 +80,7 @@ namespace Worka.Tests
                 LastName = "Pro",
                 Email = "paul@example.com",
                 ServiceArea = "Leeds",
+                LocationLabel = "Leeds city centre",
                 Specialty = "Plumbing",
                 Languages = "en",
             });
@@ -427,7 +428,7 @@ namespace Worka.Tests
                 LastName = "Customer",
                 Email = "curious@example.com",
                 Specialty = string.Empty,
-                ServiceArea = string.Empty,
+                LocationLabel = string.Empty,
             });
             await world.Db.SaveChangesAsync();
 

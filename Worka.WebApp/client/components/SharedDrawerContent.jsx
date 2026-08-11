@@ -1,11 +1,9 @@
-import React, { useContext, useState } from 'react';
+import React from 'react';
 import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { DrawerContentScrollView } from '@react-navigation/drawer';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { api, getErrorMessage } from '../api/workaApi';
-import notify from '../Utils/notify';
-import { AuthContext } from '../auth/AuthContext';
 import { useI18n } from '../i18n/I18nContext';
+import useSwitchMode from '../Utils/useSwitchMode';
 import Logo from './Logo';
 
 // Icon per navigable route; keeps the nav list visual and scannable.
@@ -18,30 +16,9 @@ const ROUTE_ICONS = {
 export default function SharedDrawerContent(props) {
   const { logoutHandler, userType, state, navigation, descriptors } = props;
   const { t } = useI18n();
-  const { signInWithToken } = useContext(AuthContext);
-  const [switching, setSwitching] = useState(false);
+  const { switching, switchMode } = useSwitchMode();
 
   const isCustomer = userType === 'Customer';
-
-  // Airbnb-style: one account, two workspaces. The API flips the account
-  // type, guarantees the matching profile exists, and returns a fresh
-  // token whose role claim drives which workspace renders.
-  const switchMode = async () => {
-    try {
-      setSwitching(true);
-      const response = await api.post('/account/switchMode');
-      const token = response?.data?.token;
-      if (!token) {
-        notify(t('common.tryAgain'), getErrorMessage(null, ''));
-        return;
-      }
-      await signInWithToken(token);
-    } catch (error) {
-      notify(t('common.tryAgain'), getErrorMessage(error));
-    } finally {
-      setSwitching(false);
-    }
-  };
 
   // Build the visible nav list ourselves (instead of DrawerItemList) so each
   // row carries an icon and a considered active state. Hidden routes (e.g.
@@ -98,29 +75,31 @@ export default function SharedDrawerContent(props) {
         </View>
 
         <View style={styles.footer}>
-          <Pressable
-            style={({ pressed }) => [styles.switchButton, pressed && styles.switchButtonPressed]}
-            onPress={switchMode}
-            disabled={switching}
-          >
-            {switching ? (
-              <ActivityIndicator color="#111" />
-            ) : (
-              <>
-                <View style={styles.switchIcon}>
-                  <MaterialCommunityIcons name="swap-horizontal" size={18} color="#111" />
-                </View>
-                <View style={styles.switchCopy}>
-                  <Text style={styles.switchText}>
-                    {isCustomer ? t('drawer.switchToProfessional') : t('drawer.switchToCustomer')}
-                  </Text>
-                  <Text style={styles.switchHint} numberOfLines={2}>
-                    {t('drawer.switchHint')}
-                  </Text>
-                </View>
-              </>
-            )}
-          </Pressable>
+          {/* Customers opt in via Settings → "Become a professional"; only
+              pros get the quick toggle back to their customer workspace. */}
+          {!isCustomer ? (
+            <Pressable
+              style={({ pressed }) => [styles.switchButton, pressed && styles.switchButtonPressed]}
+              onPress={switchMode}
+              disabled={switching}
+            >
+              {switching ? (
+                <ActivityIndicator color="#111" />
+              ) : (
+                <>
+                  <View style={styles.switchIcon}>
+                    <MaterialCommunityIcons name="swap-horizontal" size={18} color="#111" />
+                  </View>
+                  <View style={styles.switchCopy}>
+                    <Text style={styles.switchText}>{t('drawer.switchToCustomer')}</Text>
+                    <Text style={styles.switchHint} numberOfLines={2}>
+                      {t('drawer.switchHint')}
+                    </Text>
+                  </View>
+                </>
+              )}
+            </Pressable>
+          ) : null}
 
           <Pressable
             style={({ pressed }) => [styles.logoutButton, pressed && styles.logoutButtonPressed]}

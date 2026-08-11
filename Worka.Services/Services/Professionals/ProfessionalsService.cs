@@ -27,9 +27,9 @@ namespace Worka.Services.Professionals
                 // Only professionals with a minimally complete profile appear in
                 // the directory. Switching modes creates an (empty) professional
                 // row for curious customers — they must never be listed, and new
-                // pros appear once they set a specialty and service area.
+                // pros appear once they set a specialty and work location.
                 var query = _dbContext.Professionals
-                    .Where(p => p.Specialty != "" && p.ServiceArea != "");
+                    .Where(p => p.Specialty != "" && p.LocationLabel != "");
 
                 if (!string.IsNullOrWhiteSpace(language))
                 {
@@ -46,7 +46,7 @@ namespace Worka.Services.Professionals
                 if (!string.IsNullOrWhiteSpace(area))
                 {
                     var term = area.Trim().ToLower();
-                    query = query.Where(p => p.ServiceArea.ToLower().Contains(term));
+                    query = query.Where(p => p.LocationLabel.ToLower().Contains(term));
                 }
 
                 if (!string.IsNullOrWhiteSpace(search))
@@ -57,7 +57,7 @@ namespace Worka.Services.Professionals
                         p.LastName.ToLower().Contains(term) ||
                         p.Specialty.ToLower().Contains(term) ||
                         p.Bio.ToLower().Contains(term) ||
-                        p.ServiceArea.ToLower().Contains(term));
+                        p.LocationLabel.ToLower().Contains(term));
                 }
 
                 var professionals = await query
@@ -104,7 +104,7 @@ namespace Worka.Services.Professionals
                             LastName = p.LastName,
                             Specialty = p.Specialty,
                             Bio = p.Bio,
-                            ServiceArea = p.ServiceArea,
+                            ServiceArea = p.LocationLabel,
                             Languages = p.Languages,
                             PhotoUrl = p.PhotoUrl,
                             QuoteCount = stats?.Count ?? 0,

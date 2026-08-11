@@ -17,13 +17,15 @@ import {
 } from 'react-native';
 import notify from '../../Utils/notify';
 import useAutoRefresh from '../../Utils/useAutoRefresh';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { api, formatDate, formatMoney, getErrorMessage, resolveUploadUrl, unwrap } from '../../api/workaApi';
 import { formatDistance, getDistanceKm, requestCurrentLocation } from '../../Utils/locationUtils';
 import { useI18n } from '../../i18n/I18nContext';
 import { categoryLabel } from '../../i18n/categories';
+import useSwitchMode from '../../Utils/useSwitchMode';
 import AppFooter from '../AppFooter';
+import IntroCard from '../IntroCard';
 import JobDetailsModal from './JobDetailsModal';
 import ListControls from '../ListControls';
 
@@ -40,6 +42,8 @@ const categoryImages = {
 
 const WorkerJobList = () => {
   const { t } = useI18n();
+  const navigation = useNavigation();
+  const { switching, switchMode } = useSwitchMode();
   const [account, setAccount] = useState(null);
   const [jobs, setJobs] = useState([]);
   const [quotes, setQuotes] = useState([]);
@@ -303,6 +307,34 @@ const WorkerJobList = () => {
         ListFooterComponent={<AppFooter />}
         ListHeaderComponent={
           <View>
+          <IntroCard variant="worker" />
+          {/* Setup gate: a pro without a specialty + work location is invisible
+              to customers, so push them to finish — or bow out gracefully if
+              they landed here by accident. */}
+          {account && (!account.specialty?.trim() || !account.locationLabel?.trim()) ? (
+            <View style={styles.setupGate}>
+              <View style={styles.setupGateHeader}>
+                <MaterialCommunityIcons name="account-alert-outline" size={24} color="#111" />
+                <Text style={styles.setupGateTitle}>{t('proGate.title')}</Text>
+              </View>
+              <Text style={styles.setupGateText}>{t('proGate.text')}</Text>
+              <TouchableOpacity
+                style={styles.setupGateButton}
+                onPress={() => navigation.navigate('Account')}
+              >
+                <MaterialCommunityIcons name="arrow-right" size={18} color="#fff" />
+                <Text style={styles.setupGateButtonText}>{t('proGate.complete')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.setupGateOptOut} onPress={switchMode} disabled={switching}>
+                {switching ? (
+                  <ActivityIndicator color="#111" />
+                ) : (
+                  <Text style={styles.setupGateOptOutText}>{t('proGate.optOut')}</Text>
+                )}
+              </TouchableOpacity>
+              <Text style={styles.setupGateHint}>{t('proGate.optOutHint')}</Text>
+            </View>
+          ) : null}
           <View style={styles.hero}>
             <Text style={styles.eyebrow}>{t('work.eyebrow')}</Text>
             <Text style={styles.heroTitle}>
@@ -609,6 +641,65 @@ const styles = StyleSheet.create({
   },
   langChipMatchText: {
     color: '#24513b',
+  },
+  setupGate: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#111',
+    padding: 16,
+    marginBottom: 14,
+  },
+  setupGateHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  setupGateTitle: {
+    flex: 1,
+    color: '#111',
+    fontSize: 17,
+    fontWeight: '900',
+  },
+  setupGateText: {
+    color: '#62645c',
+    lineHeight: 20,
+    marginTop: 8,
+    marginBottom: 12,
+  },
+  setupGateButton: {
+    minHeight: 48,
+    backgroundColor: '#111',
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  setupGateButtonText: {
+    color: '#fff',
+    fontWeight: '900',
+    fontSize: 15,
+  },
+  setupGateOptOut: {
+    minHeight: 44,
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: '#d9d5ca',
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+  },
+  setupGateOptOutText: {
+    color: '#111',
+    fontWeight: '800',
+  },
+  setupGateHint: {
+    color: '#8a8d84',
+    fontSize: 12,
+    lineHeight: 17,
+    marginTop: 8,
   },
   hero: {
     backgroundColor: '#18201d',

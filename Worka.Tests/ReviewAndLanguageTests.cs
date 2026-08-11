@@ -34,6 +34,7 @@ namespace Worka.Tests
                 LastName = "Pro",
                 Email = "paul@example.com",
                 ServiceArea = "Leeds",
+                LocationLabel = "Leeds",
                 Specialty = "Plumbing",
                 Languages = "en,pl"
             });
