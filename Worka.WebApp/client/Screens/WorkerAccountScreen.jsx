@@ -330,6 +330,9 @@ const WorkerAccountScreen = () => {
           <View style={[styles.strengthFill, { width: `${profileStrength.percent}%` }]} />
         </View>
         <Text style={styles.strengthHint}>{strengthHint}</Text>
+        {!form.specialty?.trim() || !form.serviceArea?.trim() ? (
+          <Text style={styles.strengthHint}>{t('account.directoryHint')}</Text>
+        ) : null}
       </View>
 
       <View style={styles.payoutCard}>

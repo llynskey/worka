@@ -410,6 +410,37 @@ namespace Worka.Tests
         }
 
         [Fact]
+        public async Task Directory_HidesIncompleteProfiles_LikeAccidentalModeSwitchers()
+        {
+            var world = CreateWorld();
+
+            // A customer who merely toggled to professional mode gets an empty
+            // profile row — it must never appear in the directory.
+            var switcher = new User(
+                "Curious", "Customer", "curious@example.com",
+                new byte[32], new byte[16], AccountTypeEnum.Customer, DateTimeOffset.UtcNow);
+            world.Db.Users.Add(switcher);
+            world.Db.Professionals.Add(new Professional
+            {
+                UserId = switcher.UserId,
+                FirstName = "Curious",
+                LastName = "Customer",
+                Email = "curious@example.com",
+                Specialty = string.Empty,
+                ServiceArea = string.Empty,
+            });
+            await world.Db.SaveChangesAsync();
+
+            var directory = new Services.Professionals.ProfessionalsService(world.Db);
+            var result = await directory.GetDirectoryAsync(null, null, null, null);
+            Assert.True(result.Success, result.Message);
+
+            // Only the complete profile (Paul, Plumbing/Leeds) is listed.
+            var listed = Assert.Single(result.Data);
+            Assert.Equal("Paul", listed.FirstName);
+        }
+
+        [Fact]
         public async Task DevSeed_CreatesTestableWorld_AndReseedsIdempotently()
         {
             var world = CreateWorld();

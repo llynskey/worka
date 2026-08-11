@@ -24,7 +24,12 @@ namespace Worka.Services.Professionals
         {
             try
             {
-                var query = _dbContext.Professionals.AsQueryable();
+                // Only professionals with a minimally complete profile appear in
+                // the directory. Switching modes creates an (empty) professional
+                // row for curious customers — they must never be listed, and new
+                // pros appear once they set a specialty and service area.
+                var query = _dbContext.Professionals
+                    .Where(p => p.Specialty != "" && p.ServiceArea != "");
 
                 if (!string.IsNullOrWhiteSpace(language))
                 {

@@ -581,6 +581,7 @@ export default {
   'dev.seededTitle': 'Sample data loaded',
   'dev.seededText': 'Sample jobs and bookings were created.',
   'dev.errorTitle': "Couldn't load sample data",
+  'account.directoryHint': 'Add your specialty and service area to appear in the professionals directory.',
   'earnings.title': 'Earnings',
   'earnings.historyTitle': 'Payment history',
   'earnings.totalEarned': 'Total earned',
