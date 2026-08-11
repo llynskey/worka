@@ -131,6 +131,20 @@ namespace Worka.WebApp
                             Window = TimeSpan.FromMinutes(1),
                             QueueLimit = 0
                         }));
+
+                // Message sends and job invites generate notifications to the
+                // other party; cap the rate so one account can't flood another.
+                options.AddPolicy("messaging", context =>
+                    RateLimitPartition.GetFixedWindowLimiter(
+                        context.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                            ?? context.Connection.RemoteIpAddress?.ToString()
+                            ?? "unknown",
+                        _ => new FixedWindowRateLimiterOptions
+                        {
+                            PermitLimit = 30,
+                            Window = TimeSpan.FromMinutes(1),
+                            QueueLimit = 0
+                        }));
             });
 
             services.AddControllers();

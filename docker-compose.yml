@@ -45,6 +45,9 @@ services:
       Smtp__Password: ${Smtp__Password:-}
       Smtp__From: ${Smtp__From:-no-reply@worku.site}
       Smtp__UseSsl: ${Smtp__UseSsl:-true}
+      # Explicit CORS allowlist in production (the API falls back to
+      # allow-any-origin when unset, which is only meant for local dev).
+      Cors__AllowedOrigins: ${Cors__AllowedOrigins:-https://worku.site}
     depends_on:
       postgres:
         condition: service_healthy
@@ -53,6 +56,30 @@ services:
     restart: unless-stopped
     volumes:
       - worka_uploads:/app/wwwroot/uploads
+
+  # Nightly logical backups. Dumps land in ./backups on the host (gzip, one
+  # per day, 14 kept) so they survive volume wipes — copy them off the server
+  # on a schedule (cron + rsync/scp) for real disaster recovery.
+  backup:
+    image: postgres:16-alpine
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGHOST: postgres
+      PGUSER: ${POSTGRES_USER:?Set POSTGRES_USER in .env.production}
+      PGPASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env.production}
+      PGDATABASE: ${POSTGRES_DB:?Set POSTGRES_DB in .env.production}
+    entrypoint: >
+      sh -c 'while true; do
+        pg_dump | gzip > "/backups/worku-$$(date +%F).sql.gz" &&
+        echo "backup written: worku-$$(date +%F).sql.gz";
+        find /backups -name "worku-*.sql.gz" -mtime +14 -delete;
+        sleep 86400;
+      done'
+    volumes:
+      - ./backups:/backups
+    restart: unless-stopped
 
   postgres:
     image: postgres:16-alpine

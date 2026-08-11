@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Microsoft.AspNetCore.RateLimiting;
 using Worka.Services.DTOs.Jobs;
 using Worka.Services.Jobs;
 
@@ -98,6 +99,7 @@ namespace Worka.WebApp.Controllers
         }
 
         [HttpPost("Jobs/{jobId}/invite/{professionalId}")]
+        [EnableRateLimiting("messaging")]
         public async Task<IActionResult> InviteProfessional(string jobId, string professionalId)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);

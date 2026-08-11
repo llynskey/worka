@@ -58,8 +58,13 @@ namespace Worka.Services.Notifications
                 }
             }
 
-            // Mirror the notification to email, best-effort.
-            await TrySendEmailAsync(recipientUserId, notification.Title, notification.Body);
+            // Mirror the notification to email, best-effort. Chat messages stay
+            // in-app only: they arrive in bursts and would let one user flood
+            // another's inbox with emails.
+            if (!string.Equals(notification.Type, "message", StringComparison.OrdinalIgnoreCase))
+            {
+                await TrySendEmailAsync(recipientUserId, notification.Title, notification.Body);
+            }
         }
 
         private async Task TrySendEmailAsync(Guid recipientUserId, string subject, string body)

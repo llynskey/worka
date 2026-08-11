@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Microsoft.AspNetCore.RateLimiting;
 using Worka.Services.DTOs.Messages;
 using Worka.Services.Messages;
 
@@ -59,6 +60,7 @@ namespace Worka.WebApp.Controllers
         }
 
         [HttpPost("Jobs/{jobId}/messages")]
+        [EnableRateLimiting("messaging")]
         public async Task<IActionResult> Send(string jobId, [FromBody] SendJobMessageDTO request)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
