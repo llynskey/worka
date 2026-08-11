@@ -33,7 +33,6 @@ services:
       ConnectionStrings__Postgres: "Host=postgres;Port=5432;Database=${POSTGRES_DB:?Set POSTGRES_DB in .env.production};Username=${POSTGRES_USER:?Set POSTGRES_USER in .env.production};Password=${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env.production}"
       Stripe__SecretKey: ${Stripe__SecretKey:-}
       Stripe__WebhookSecret: ${Stripe__WebhookSecret:-}
-      Stripe__ConnectClientId: ${Stripe__ConnectClientId:-}
       Stripe__Currency: ${Stripe__Currency:-gbp}
       Stripe__DefaultCountry: ${Stripe__DefaultCountry:-GB}
       Worka__ServiceFeePercent: ${Worka__ServiceFeePercent:-10}
